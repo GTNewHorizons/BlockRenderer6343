@@ -1,8 +1,8 @@
 package blockrenderer6343.mixins;
 
-import static blockrenderer6343.utils.TooltipsFrameRenderer.AnimationStyle.*;
+import static blockrenderer6343.client.utils.TooltipsFrameRenderer.AnimationStyle.*;
 
-import blockrenderer6343.utils.TooltipsFrameRenderer;
+import blockrenderer6343.client.utils.TooltipsFrameRenderer;
 import java.util.Iterator;
 import java.util.List;
 import net.minecraft.client.gui.FontRenderer;

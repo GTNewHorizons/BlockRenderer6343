@@ -1,5 +1,7 @@
-package blockrenderer6343.integration.nei;
+package blockrenderer6343.client.renderer;
 
+import blockrenderer6343.api.utils.BlockPosition;
+import blockrenderer6343.client.world.TrackedDummyWorld;
 import blockrenderer6343.mixins.GuiContainerMixin;
 import codechicken.lib.vec.Vector3;
 import codechicken.nei.NEIClientUtils;

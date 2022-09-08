@@ -4,6 +4,10 @@ import static gregtech.api.GregTech_API.METATILEENTITIES;
 import static gregtech.api.enums.GT_Values.RES_PATH_GUI;
 
 import blockrenderer6343.BlockRenderer6343;
+import blockrenderer6343.api.utils.BlockPosition;
+import blockrenderer6343.client.renderer.WorldSceneRenderer;
+import blockrenderer6343.client.world.TrackedDummyWorld;
+import blockrenderer6343.client.renderer.GlStateManager;
 import blockrenderer6343.mixins.GuiContainerMixin;
 import codechicken.lib.gui.GuiDraw;
 import codechicken.lib.math.MathHelper;

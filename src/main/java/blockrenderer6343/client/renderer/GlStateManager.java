@@ -1,4 +1,4 @@
-package blockrenderer6343.integration.nei;
+package blockrenderer6343.client.renderer;
 
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;

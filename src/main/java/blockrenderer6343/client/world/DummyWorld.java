@@ -1,6 +1,9 @@
-package blockrenderer6343.integration.nei;
+package blockrenderer6343.client.world;
 
 import javax.annotation.Nonnull;
+
+import blockrenderer6343.api.utils.world.DummyChunkProvider;
+import blockrenderer6343.api.utils.world.DummySaveHandler;
 import net.minecraft.entity.Entity;
 import net.minecraft.profiler.Profiler;
 import net.minecraft.world.World;

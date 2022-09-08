@@ -1,4 +1,4 @@
-package blockrenderer6343.integration.nei;
+package blockrenderer6343.api.utils;
 
 // todo: convert any usage to vector3
 public class BlockPosition {

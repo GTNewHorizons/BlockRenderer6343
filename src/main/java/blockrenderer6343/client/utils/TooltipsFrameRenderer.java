@@ -1,4 +1,4 @@
-package blockrenderer6343.utils;
+package blockrenderer6343.client.utils;
 
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.Loader;

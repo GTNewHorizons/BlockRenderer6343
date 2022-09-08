@@ -1,4 +1,4 @@
-package blockrenderer6343.integration.nei;
+package blockrenderer6343.api.utils.world;
 
 import java.util.List;
 import javax.annotation.Nonnull;

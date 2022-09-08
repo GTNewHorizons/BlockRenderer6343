@@ -1,5 +1,8 @@
 package blockrenderer6343.integration.nei;
 
+import java.io.File;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
@@ -10,10 +13,6 @@ import net.minecraft.world.storage.IPlayerFileData;
 import net.minecraft.world.storage.ISaveHandler;
 import net.minecraft.world.storage.WorldInfo;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.io.File;
-
 public class DummySaveHandler implements ISaveHandler, IPlayerFileData, IChunkLoader {
 
     @Nullable
@@ -23,8 +22,7 @@ public class DummySaveHandler implements ISaveHandler, IPlayerFileData, IChunkLo
     }
 
     @Override
-    public void checkSessionLock() {
-    }
+    public void checkSessionLock() {}
 
     @Nonnull
     @Override
@@ -39,12 +37,10 @@ public class DummySaveHandler implements ISaveHandler, IPlayerFileData, IChunkLo
     }
 
     @Override
-    public void saveWorldInfoWithPlayer(@Nonnull WorldInfo worldInformation, @Nonnull NBTTagCompound tagCompound) {
-    }
+    public void saveWorldInfoWithPlayer(@Nonnull WorldInfo worldInformation, @Nonnull NBTTagCompound tagCompound) {}
 
     @Override
-    public void saveWorldInfo(@Nonnull WorldInfo worldInformation) {
-    }
+    public void saveWorldInfo(@Nonnull WorldInfo worldInformation) {}
 
     @Nonnull
     @Override
@@ -63,7 +59,6 @@ public class DummySaveHandler implements ISaveHandler, IPlayerFileData, IChunkLo
         return null;
     }
 
-
     @Nullable
     @Override
     public Chunk loadChunk(@Nonnull World worldIn, int x, int z) {
@@ -71,29 +66,22 @@ public class DummySaveHandler implements ISaveHandler, IPlayerFileData, IChunkLo
     }
 
     @Override
-    public void saveChunk(@Nonnull World worldIn, @Nonnull Chunk chunkIn) {
-    }
+    public void saveChunk(@Nonnull World worldIn, @Nonnull Chunk chunkIn) {}
 
     @Override
-    public void saveExtraChunkData(@Nonnull World worldIn, @Nonnull Chunk chunkIn) {
-    }
+    public void saveExtraChunkData(@Nonnull World worldIn, @Nonnull Chunk chunkIn) {}
 
     @Override
-    public void chunkTick() {
-    }
+    public void chunkTick() {}
 
     @Override
-    public void saveExtraData() {
-
-    }
+    public void saveExtraData() {}
 
     @Override
-    public void flush() {
-    }
+    public void flush() {}
 
     @Override
-    public void writePlayerData(@Nonnull EntityPlayer player) {
-    }
+    public void writePlayerData(@Nonnull EntityPlayer player) {}
 
     @Nullable
     @Override

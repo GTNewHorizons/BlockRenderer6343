@@ -1,5 +1,6 @@
 package blockrenderer6343.integration.nei;
 
+import javax.annotation.Nonnull;
 import net.minecraft.entity.Entity;
 import net.minecraft.profiler.Profiler;
 import net.minecraft.world.World;
@@ -8,12 +9,10 @@ import net.minecraft.world.WorldSettings;
 import net.minecraft.world.WorldType;
 import net.minecraft.world.chunk.IChunkProvider;
 
-import javax.annotation.Nonnull;
-
 public class DummyWorld extends World {
 
-    private static final WorldSettings DEFAULT_SETTINGS = new WorldSettings(
-        1L, WorldSettings.GameType.SURVIVAL, true, false, WorldType.DEFAULT);
+    private static final WorldSettings DEFAULT_SETTINGS =
+            new WorldSettings(1L, WorldSettings.GameType.SURVIVAL, true, false, WorldType.DEFAULT);
 
     public static final DummyWorld INSTANCE = new DummyWorld();
 
@@ -30,8 +29,7 @@ public class DummyWorld extends World {
     }
 
     @Override
-    public void markBlockRangeForRenderUpdate(int x1, int y1, int z1, int x2, int y2, int z2) {
-    }
+    public void markBlockRangeForRenderUpdate(int x1, int y1, int z1, int x2, int y2, int z2) {}
 
     @Override
     protected int func_152379_p() {

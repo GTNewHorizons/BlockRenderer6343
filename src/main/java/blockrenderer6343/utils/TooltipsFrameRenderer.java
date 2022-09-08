@@ -107,9 +107,9 @@ public class TooltipsFrameRenderer {
         GL11.glEnable(GL11.GL_TEXTURE_2D);
     }
 
-    //call this when the frame drawing is finished
-    public static void setAppleCoretooltip(int j2, int k2, int k, int i1){
-        if(Loader.isModLoaded("AppleCore")){
+    // call this when the frame drawing is finished
+    public static void setAppleCoretooltip(int j2, int k2, int k, int i1) {
+        if (Loader.isModLoaded("AppleCore")) {
             TooltipOverlayHandler.toolTipX = j2;
             TooltipOverlayHandler.toolTipY = k2;
             TooltipOverlayHandler.toolTipW = k;

@@ -1,8 +1,6 @@
 package blockrenderer6343;
 
 import java.io.File;
-
-import cpw.mods.fml.relauncher.FMLLaunchHandler;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
 

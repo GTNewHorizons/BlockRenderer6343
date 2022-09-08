@@ -1,9 +1,9 @@
 package blockrenderer6343.integration.nei;
 
+import blockrenderer6343.Tags;
 import codechicken.nei.api.IConfigureNEI;
 import codechicken.nei.recipe.GuiCraftingRecipe;
 import codechicken.nei.recipe.GuiUsageRecipe;
-import blockrenderer6343.Tags;
 
 public class NEI_config implements IConfigureNEI {
 

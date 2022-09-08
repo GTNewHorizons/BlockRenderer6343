@@ -1,11 +1,11 @@
 package blockrenderer6343.mixins;
 
-import codechicken.lib.gui.GuiDraw;
+import static blockrenderer6343.utils.TooltipsFrameRenderer.AnimationStyle.*;
+
 import blockrenderer6343.utils.TooltipsFrameRenderer;
+import codechicken.lib.gui.GuiDraw;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
-
-import static blockrenderer6343.utils.TooltipsFrameRenderer.AnimationStyle.*;
 
 @Mixin(value = GuiDraw.class)
 public class CCLGuiDrawMixin {

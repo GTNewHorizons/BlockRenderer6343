@@ -16,7 +16,7 @@ public enum Mixin {
     //
 
     // Replace with your own mixins:
-    //waiting for GTNH fix
+    // waiting for GTNH fix
     InventoryEffectRendererMixin("InventoryEffectRendererMixin", Side.CLIENT, VANILLA),
     GuiScreenMixin("GuiScreenMixin", Side.CLIENT, VANILLA),
     // You may also require multiple mods to be loaded if your mixin requires both

@@ -1,5 +1,10 @@
 package blockrenderer6343.integration.nei;
 
+import static gregtech.api.GregTech_API.METATILEENTITIES;
+import static gregtech.api.enums.GT_Values.RES_PATH_GUI;
+
+import blockrenderer6343.BlockRenderer6343;
+import blockrenderer6343.mixins.GuiContainerMixin;
 import codechicken.lib.gui.GuiDraw;
 import codechicken.lib.math.MathHelper;
 import codechicken.nei.NEIClientUtils;
@@ -13,14 +18,14 @@ import codechicken.nei.recipe.GuiUsageRecipe;
 import codechicken.nei.recipe.TemplateRecipeHandler;
 import com.gtnewhorizon.structurelib.alignment.constructable.IConstructable;
 import com.gtnewhorizon.structurelib.alignment.constructable.IConstructableProvider;
-import blockrenderer6343.BlockRenderer6343;
-import blockrenderer6343.mixins.GuiContainerMixin;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import gregtech.api.interfaces.metatileentity.IMetaTileEntity;
 import gregtech.api.interfaces.tileentity.ITurnable;
 import gregtech.api.metatileentity.implementations.GT_MetaTileEntity_MultiBlockBase;
 import gregtech.common.tileentities.machines.multi.GT_MetaTileEntity_PlasmaForge;
+import java.util.*;
+import java.util.stream.Collectors;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
@@ -32,12 +37,6 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.MovingObjectPosition;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.util.vector.Vector3f;
-
-import java.util.*;
-import java.util.stream.Collectors;
-
-import static gregtech.api.GregTech_API.METATILEENTITIES;
-import static gregtech.api.enums.GT_Values.RES_PATH_GUI;
 
 public class GT_NEI_MultiblockHandler extends TemplateRecipeHandler {
 
@@ -80,16 +79,18 @@ public class GT_NEI_MultiblockHandler extends TemplateRecipeHandler {
     private final int buttonsStartPosY = buttonsEndPosY - ICON_SIZE * 2 - 10;
     private static final Map<GuiButton, Runnable> buttons = new HashMap<>();
 
-    public GT_NEI_MultiblockHandler(){
+    public GT_NEI_MultiblockHandler() {
         super();
-        //Ban Plasma forge since it causes severe performance issue
-        for(IMetaTileEntity mte : METATILEENTITIES){
-            if(mte instanceof GT_MetaTileEntity_MultiBlockBase && !(mte instanceof GT_MetaTileEntity_PlasmaForge)){
+        // Ban Plasma forge since it causes severe performance issue
+        for (IMetaTileEntity mte : METATILEENTITIES) {
+            if (mte instanceof GT_MetaTileEntity_MultiBlockBase && !(mte instanceof GT_MetaTileEntity_PlasmaForge)) {
                 multiblocksList.add((GT_MetaTileEntity_MultiBlockBase) (mte));
             }
         }
-        this.previousLayerButton = new GuiButton(0, buttonsStartPosX, buttonsEndPosY - ICON_SIZE, ICON_SIZE, ICON_SIZE, "<");
-        this.nextLayerButton = new GuiButton(0, buttonsEndPosX - ICON_SIZE, buttonsEndPosY - ICON_SIZE, ICON_SIZE, ICON_SIZE, ">");
+        this.previousLayerButton =
+                new GuiButton(0, buttonsStartPosX, buttonsEndPosY - ICON_SIZE, ICON_SIZE, ICON_SIZE, "<");
+        this.nextLayerButton =
+                new GuiButton(0, buttonsEndPosX - ICON_SIZE, buttonsEndPosY - ICON_SIZE, ICON_SIZE, ICON_SIZE, ">");
         this.previousTierButton = new GuiButton(0, buttonsStartPosX, buttonsStartPosY, ICON_SIZE, ICON_SIZE, "<");
         this.nextTierButton = new GuiButton(0, buttonsEndPosX - ICON_SIZE, buttonsStartPosY, ICON_SIZE, ICON_SIZE, ">");
         buttons.clear();
@@ -111,11 +112,9 @@ public class GT_NEI_MultiblockHandler extends TemplateRecipeHandler {
         }
 
         @Override
-        public PositionedStack getIngredient()
-        {
+        public PositionedStack getIngredient() {
             return null;
         }
-
     }
 
     @Override
@@ -129,18 +128,14 @@ public class GT_NEI_MultiblockHandler extends TemplateRecipeHandler {
     }
 
     @Override
-    public void loadCraftingRecipes(String outputId, Object... results)
-    {
+    public void loadCraftingRecipes(String outputId, Object... results) {
         super.loadCraftingRecipes(outputId, results);
     }
 
     @Override
-    public void loadCraftingRecipes(ItemStack result)
-    {
-        for(GT_MetaTileEntity_MultiBlockBase multiblock : multiblocksList)
-        {
-            if(NEIServerUtils.areStacksSameType(((IMetaTileEntity)multiblock).getStackForm(1), result))
-            {
+    public void loadCraftingRecipes(ItemStack result) {
+        for (GT_MetaTileEntity_MultiBlockBase multiblock : multiblocksList) {
+            if (NEIServerUtils.areStacksSameType(((IMetaTileEntity) multiblock).getStackForm(1), result)) {
                 arecipes.add(new recipeCacher(result));
                 initializeSceneRenderer(multiblock, 1, true);
                 renderingController = multiblock;
@@ -151,12 +146,9 @@ public class GT_NEI_MultiblockHandler extends TemplateRecipeHandler {
     }
 
     @Override
-    public void loadUsageRecipes(ItemStack ingredient)
-    {
-        for(GT_MetaTileEntity_MultiBlockBase multiblock : multiblocksList)
-        {
-            if(NEIServerUtils.areStacksSameType(((IMetaTileEntity)multiblock).getStackForm(1), ingredient))
-            {
+    public void loadUsageRecipes(ItemStack ingredient) {
+        for (GT_MetaTileEntity_MultiBlockBase multiblock : multiblocksList) {
+            if (NEIServerUtils.areStacksSameType(((IMetaTileEntity) multiblock).getStackForm(1), ingredient)) {
                 arecipes.add(new recipeCacher(ingredient));
                 initializeSceneRenderer(multiblock, 1, true);
                 renderingController = multiblock;
@@ -193,25 +185,24 @@ public class GT_NEI_MultiblockHandler extends TemplateRecipeHandler {
     private void toggleNextLayer() {
         int height = (int) ((TrackedDummyWorld) renderer.world).getSize().getY() - 1;
         if (++this.layerIndex > height) {
-            //if current layer index is more than max height, reset it
-            //to display all layers
+            // if current layer index is more than max height, reset it
+            // to display all layers
             this.layerIndex = -1;
         }
         setNextLayer(layerIndex);
     }
 
-    private void togglePreviousLayer(){
+    private void togglePreviousLayer() {
         int height = (int) ((TrackedDummyWorld) renderer.world).getSize().getY() - 1;
-        if(this.layerIndex == -1){
+        if (this.layerIndex == -1) {
             this.layerIndex = height;
-        }
-        else if (--this.layerIndex < 0) {
+        } else if (--this.layerIndex < 0) {
             this.layerIndex = -1;
         }
         setNextLayer(layerIndex);
     }
 
-    private void setNextLayer(int newLayer){
+    private void setNextLayer(int newLayer) {
         this.layerIndex = newLayer;
         if (renderer != null) {
             TrackedDummyWorld world = ((TrackedDummyWorld) renderer.world);
@@ -223,20 +214,21 @@ public class GT_NEI_MultiblockHandler extends TemplateRecipeHandler {
                 renderBlocks = world.placedBlocks;
                 renderer.setRenderAllFaces(false);
             } else {
-                renderBlocks = world.placedBlocks.stream().filter(pos -> pos.y - minY == newLayer).collect(Collectors.toList());
+                renderBlocks = world.placedBlocks.stream()
+                        .filter(pos -> pos.y - minY == newLayer)
+                        .collect(Collectors.toList());
                 renderer.setRenderAllFaces(true);
             }
             renderer.addRenderedBlocks(renderBlocks);
         }
     }
 
-    private void toggleNextTier(){
+    private void toggleNextTier() {
         initializeSceneRenderer(renderingController, ++tierIndex, false);
     }
 
-    private void togglePreviousTier(){
-        if(tierIndex > 1)
-            initializeSceneRenderer(renderingController, --tierIndex, false);
+    private void togglePreviousTier() {
+        if (tierIndex > 1) initializeSceneRenderer(renderingController, --tierIndex, false);
     }
 
     private void resetCenter() {
@@ -248,10 +240,10 @@ public class GT_NEI_MultiblockHandler extends TemplateRecipeHandler {
     }
 
     @Override
-    public void drawExtras(int recipe){
+    public void drawExtras(int recipe) {
 
         guiMouseX = GuiDraw.getMousePosition().x;
-        guiMouseY =  GuiDraw.getMousePosition().y;
+        guiMouseY = GuiDraw.getMousePosition().y;
 
         super.drawExtras(recipe);
         renderer.render(recipeLayoutx, recipeLayouty, recipeWidth, sceneHeight, lastGuiMouseX, lastGuiMouseY);
@@ -262,10 +254,16 @@ public class GT_NEI_MultiblockHandler extends TemplateRecipeHandler {
         tooltipBlockStack = null;
 
         MovingObjectPosition rayTraceResult = renderer.getLastTraceResult();
-        int k = (NEIClientUtils.getGuiContainer().width - ((GuiContainerMixin)NEIClientUtils.getGuiContainer()).getXSize()) / 2;
-        int l = (NEIClientUtils.getGuiContainer().height - ((GuiContainerMixin)NEIClientUtils.getGuiContainer()).getYSize()) / 2;
-        boolean insideView = guiMouseX >= k + recipeLayoutx && guiMouseY >= l + recipeLayouty &&
-            guiMouseX < k + recipeLayoutx + recipeWidth && guiMouseY < l + recipeLayouty + sceneHeight;
+        int k = (NEIClientUtils.getGuiContainer().width
+                        - ((GuiContainerMixin) NEIClientUtils.getGuiContainer()).getXSize())
+                / 2;
+        int l = (NEIClientUtils.getGuiContainer().height
+                        - ((GuiContainerMixin) NEIClientUtils.getGuiContainer()).getYSize())
+                / 2;
+        boolean insideView = guiMouseX >= k + recipeLayoutx
+                && guiMouseY >= l + recipeLayouty
+                && guiMouseX < k + recipeLayoutx + recipeWidth
+                && guiMouseY < l + recipeLayouty + sceneHeight;
         boolean leftClickHeld = Mouse.isButtonDown(0);
         boolean rightClickHeld = Mouse.isButtonDown(1);
         if (insideView) {
@@ -288,19 +286,27 @@ public class GT_NEI_MultiblockHandler extends TemplateRecipeHandler {
         }
         drawButtonsTitle();
 
-        if (!(leftClickHeld || rightClickHeld) && rayTraceResult != null && !renderer.world.isAirBlock(rayTraceResult.blockX, rayTraceResult.blockY, rayTraceResult.blockZ)) {
+        if (!(leftClickHeld || rightClickHeld)
+                && rayTraceResult != null
+                && !renderer.world.isAirBlock(rayTraceResult.blockX, rayTraceResult.blockY, rayTraceResult.blockZ)) {
             Block block = renderer.world.getBlock(rayTraceResult.blockX, rayTraceResult.blockY, rayTraceResult.blockZ);
-            ItemStack itemStack = block.getPickBlock(rayTraceResult, renderer.world, rayTraceResult.blockX, rayTraceResult.blockY, rayTraceResult.blockZ, Minecraft.getMinecraft().thePlayer);
+            ItemStack itemStack = block.getPickBlock(
+                    rayTraceResult,
+                    renderer.world,
+                    rayTraceResult.blockX,
+                    rayTraceResult.blockY,
+                    rayTraceResult.blockZ,
+                    Minecraft.getMinecraft().thePlayer);
             tooltipBlockStack = itemStack;
         }
 
         lastGuiMouseX = guiMouseX;
         lastGuiMouseY = guiMouseY;
 
-//        don't activate these
-//        GlStateManager.disableRescaleNormal();
-//        GlStateManager.disableLighting();
-//        RenderHelper.disableStandardItemLighting();
+        //        don't activate these
+        //        GlStateManager.disableRescaleNormal();
+        //        GlStateManager.disableLighting();
+        //        RenderHelper.disableStandardItemLighting();
     }
 
     private void drawMultiblockName(int recipeWidth) {
@@ -308,35 +314,45 @@ public class GT_NEI_MultiblockHandler extends TemplateRecipeHandler {
         FontRenderer fontRenderer = Minecraft.getMinecraft().fontRenderer;
         List<String> lines = fontRenderer.listFormattedStringToWidth(localizedName, recipeWidth - 10);
         for (int i = 0; i < lines.size(); i++) {
-            fontRenderer.drawString(lines.get(i), (recipeWidth - fontRenderer.getStringWidth(lines.get(i))) / 2, fontRenderer.FONT_HEIGHT * i, 0x333333);
+            fontRenderer.drawString(
+                    lines.get(i),
+                    (recipeWidth - fontRenderer.getStringWidth(lines.get(i))) / 2,
+                    fontRenderer.FONT_HEIGHT * i,
+                    0x333333);
         }
     }
 
-    private void drawButtonsTitle(){
+    private void drawButtonsTitle() {
         FontRenderer fontRenderer = Minecraft.getMinecraft().fontRenderer;
         String tierText = "Tier: " + tierIndex;
-        fontRenderer.drawString(tierText,
-            buttonsStartPosX + (buttonsEndPosX - buttonsStartPosX - fontRenderer.getStringWidth(tierText)) / 2,buttonsStartPosY - 10, 0x333333);
+        fontRenderer.drawString(
+                tierText,
+                buttonsStartPosX + (buttonsEndPosX - buttonsStartPosX - fontRenderer.getStringWidth(tierText)) / 2,
+                buttonsStartPosY - 10,
+                0x333333);
         String layerText = "Layer: " + (layerIndex == -1 ? "A" : Integer.toString(layerIndex + 1));
-        fontRenderer.drawString(layerText,
-            buttonsStartPosX + (buttonsEndPosX - buttonsStartPosX - fontRenderer.getStringWidth(layerText)) / 2,buttonsStartPosY + ICON_SIZE, 0x333333);
+        fontRenderer.drawString(
+                layerText,
+                buttonsStartPosX + (buttonsEndPosX - buttonsStartPosX - fontRenderer.getStringWidth(layerText)) / 2,
+                buttonsStartPosY + ICON_SIZE,
+                0x333333);
     }
 
     private void initializeSceneRenderer(GT_MetaTileEntity_MultiBlockBase shapeInfo, int tier, boolean resetCamera) {
 
         Vector3f eyePos = new Vector3f(), lookAt = new Vector3f(), worldUp = new Vector3f();
-        if(!resetCamera){
-            try{
+        if (!resetCamera) {
+            try {
                 eyePos = renderer.getEyePos();
                 lookAt = renderer.getLookAt();
                 worldUp = renderer.getWorldUp();
-            }catch (NullPointerException e){
+            } catch (NullPointerException e) {
                 BlockRenderer6343.error("please reset camera on your first renderer call!");
             }
         }
 
         renderer = new WorldSceneRenderer(new TrackedDummyWorld());
-        //ImmediateWorldSceneRenderer worldSceneRenderer = new ImmediateWorldSceneRenderer(world);
+        // ImmediateWorldSceneRenderer worldSceneRenderer = new ImmediateWorldSceneRenderer(world);
         renderer.world.updateEntities();
         renderer.setClearColor(0xC6C6C6);
 
@@ -344,10 +360,21 @@ public class GT_NEI_MultiblockHandler extends TemplateRecipeHandler {
         BlockPosition mbBlockPos = new BlockPosition(10, 10, 10);
 
         ItemStack itemStack = shapeInfo.getStackForm(1);
-        itemStack.getItem().onItemUse(itemStack, Minecraft.getMinecraft().thePlayer, renderer.world,
-            mbBlockPos.x, mbBlockPos.y, mbBlockPos.z,0, mbBlockPos.x, mbBlockPos.y, mbBlockPos.z);
+        itemStack
+                .getItem()
+                .onItemUse(
+                        itemStack,
+                        Minecraft.getMinecraft().thePlayer,
+                        renderer.world,
+                        mbBlockPos.x,
+                        mbBlockPos.y,
+                        mbBlockPos.z,
+                        0,
+                        mbBlockPos.x,
+                        mbBlockPos.y,
+                        mbBlockPos.z);
         TileEntity tTileEntity = renderer.world.getTileEntity(mbBlockPos.x, mbBlockPos.y, mbBlockPos.z);
-        ((ITurnable)tTileEntity).setFrontFacing((byte) 3);
+        ((ITurnable) tTileEntity).setFrontFacing((byte) 3);
         if (tTileEntity instanceof IConstructableProvider) {
             constructable = ((IConstructableProvider) tTileEntity).getConstructable();
         } else if (tTileEntity instanceof IConstructable) {
@@ -357,21 +384,24 @@ public class GT_NEI_MultiblockHandler extends TemplateRecipeHandler {
             constructable.construct(shapeInfo.getStackForm(tier), false);
         }
 
-        for(int i = 0; i<20; i ++)
-            for(int j = 0; j<20; j ++)
-                for(int k = 0; k<20; k ++)
-                    ((TrackedDummyWorld)renderer.world).addBlock(new BlockPosition(i,j,k));
+        for (int i = 0; i < 20; i++)
+            for (int j = 0; j < 20; j++)
+                for (int k = 0; k < 20; k++) ((TrackedDummyWorld) renderer.world).addBlock(new BlockPosition(i, j, k));
 
-        Vector3f size = ((TrackedDummyWorld)renderer.world).getSize();
-        Vector3f minPos = ((TrackedDummyWorld)renderer.world).getMinPos();
+        Vector3f size = ((TrackedDummyWorld) renderer.world).getSize();
+        Vector3f minPos = ((TrackedDummyWorld) renderer.world).getMinPos();
         center = new Vector3f(minPos.x + size.x / 2, minPos.y + size.y / 2, minPos.z + size.z / 2);
 
-        renderer.addRenderedBlocks(((TrackedDummyWorld)renderer.world).placedBlocks);
+        renderer.addRenderedBlocks(((TrackedDummyWorld) renderer.world).placedBlocks);
         renderer.setOnLookingAt(ray -> {});
 
         renderer.setAfterWorldRender(renderer -> {
-            BlockPosition look = renderer.getLastTraceResult() == null ? null :
-                new BlockPosition(renderer.getLastTraceResult().blockX, renderer.getLastTraceResult().blockY,renderer.getLastTraceResult().blockZ);
+            BlockPosition look = renderer.getLastTraceResult() == null
+                    ? null
+                    : new BlockPosition(
+                            renderer.getLastTraceResult().blockX,
+                            renderer.getLastTraceResult().blockY,
+                            renderer.getLastTraceResult().blockZ);
             if (look != null && look.equals(selected)) {
                 renderBlockOverLay(selected, 200, 75, 75);
                 return;
@@ -379,12 +409,13 @@ public class GT_NEI_MultiblockHandler extends TemplateRecipeHandler {
             renderBlockOverLay(look, 150, 150, 150);
             renderBlockOverLay(selected, 255, 0, 0);
         });
-//        world.setRenderFilter(pos -> worldSceneRenderer.renderedBlocksMap.keySet().stream().anyMatch(c -> c.contains(pos)));
+        //        world.setRenderFilter(pos -> worldSceneRenderer.renderedBlocksMap.keySet().stream().anyMatch(c ->
+        // c.contains(pos)));
 
         selected = null;
         setNextLayer(layerIndex);
 
-        if(resetCamera){
+        if (resetCamera) {
             float max = Math.max(Math.max(Math.max(size.x, size.y), size.z), 1);
             this.zoom = (float) (3.5 * Math.sqrt(max));
             this.rotationYaw = 20.0f;
@@ -392,38 +423,37 @@ public class GT_NEI_MultiblockHandler extends TemplateRecipeHandler {
             if (renderer != null) {
                 resetCenter();
             }
-        }
-        else{
-            renderer.setCameraLookAt(eyePos,lookAt,worldUp);
+        } else {
+            renderer.setCameraLookAt(eyePos, lookAt, worldUp);
         }
     }
 
     @SideOnly(Side.CLIENT)
     private void renderBlockOverLay(BlockPosition pos, int r, int g, int b) {
-        //it is not working but we don't need this...for now
-//        if (pos == null) return;
-//        GlStateManager.enableBlend();
-//        GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
-//        GlStateManager.translate((pos.x + 0.5), (pos.y + 0.5), (pos.z + 0.5));
-//        GlStateManager.scale(1.01, 1.01, 1.01);
-//        GlStateManager.disableTexture2D();
-//        CCRenderState.startDrawing(GL11.GL_QUADS);
-//        ColourMultiplier multiplier = new ColourMultiplier(0);
-//        CCRenderState.setPipeline(new Translation(-0.5, -0.5, -0.5), multiplier);
-//        BlockRenderer.BlockFace blockFace = new BlockRenderer.BlockFace();
-//        CCRenderState.setModel(blockFace);
-//        for (int side = 0; side < 6 ; side ++) {
-//            multiplier.colour = packColor(r, g, b, 255);
-//            blockFace.loadCuboidFace(Cuboid6.full, side);
-//            CCRenderState.render();
-//        }
-//        CCRenderState.draw();
-//        GlStateManager.scale(1 / 1.01, 1 / 1.01, 1 / 1.01);
-//        GlStateManager.translate(-(pos.x + 0.5), -(pos.y + 0.5), -(pos.z + 0.5));
-//        GlStateManager.enableTexture2D();
-//
-//        GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-//        GlStateManager.color(1, 1, 1, 1);
+        // it is not working but we don't need this...for now
+        //        if (pos == null) return;
+        //        GlStateManager.enableBlend();
+        //        GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
+        //        GlStateManager.translate((pos.x + 0.5), (pos.y + 0.5), (pos.z + 0.5));
+        //        GlStateManager.scale(1.01, 1.01, 1.01);
+        //        GlStateManager.disableTexture2D();
+        //        CCRenderState.startDrawing(GL11.GL_QUADS);
+        //        ColourMultiplier multiplier = new ColourMultiplier(0);
+        //        CCRenderState.setPipeline(new Translation(-0.5, -0.5, -0.5), multiplier);
+        //        BlockRenderer.BlockFace blockFace = new BlockRenderer.BlockFace();
+        //        CCRenderState.setModel(blockFace);
+        //        for (int side = 0; side < 6 ; side ++) {
+        //            multiplier.colour = packColor(r, g, b, 255);
+        //            blockFace.loadCuboidFace(Cuboid6.full, side);
+        //            CCRenderState.render();
+        //        }
+        //        CCRenderState.draw();
+        //        GlStateManager.scale(1 / 1.01, 1 / 1.01, 1 / 1.01);
+        //        GlStateManager.translate(-(pos.x + 0.5), -(pos.y + 0.5), -(pos.z + 0.5));
+        //        GlStateManager.enableTexture2D();
+        //
+        //        GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+        //        GlStateManager.color(1, 1, 1, 1);
     }
 
     public static int packColor(int red, int green, int blue, int alpha) {
@@ -439,9 +469,9 @@ public class GT_NEI_MultiblockHandler extends TemplateRecipeHandler {
 
         public boolean canHandle(GuiContainer gui) {
             return (gui instanceof GuiUsageRecipe
-                && ((GuiUsageRecipe)gui).getHandler() instanceof GT_NEI_MultiblockHandler)
-                || (gui instanceof GuiCraftingRecipe
-                && ((GuiCraftingRecipe)gui).getHandler() instanceof GT_NEI_MultiblockHandler);
+                            && ((GuiUsageRecipe) gui).getHandler() instanceof GT_NEI_MultiblockHandler)
+                    || (gui instanceof GuiCraftingRecipe
+                            && ((GuiCraftingRecipe) gui).getHandler() instanceof GT_NEI_MultiblockHandler);
         }
 
         @Override
@@ -449,9 +479,15 @@ public class GT_NEI_MultiblockHandler extends TemplateRecipeHandler {
             rectMouseX = mousex;
             rectMouseY = mousey;
             for (Map.Entry<GuiButton, Runnable> buttons : buttons.entrySet()) {
-                int k = (NEIClientUtils.getGuiContainer().width - ((GuiContainerMixin)NEIClientUtils.getGuiContainer()).getXSize()) / 2;
-                int l = (NEIClientUtils.getGuiContainer().height - ((GuiContainerMixin)NEIClientUtils.getGuiContainer()).getYSize()) / 2;
-                if (buttons.getKey().mousePressed(Minecraft.getMinecraft(), guiMouseX - k - mouseOffsetX, guiMouseY - l - mouseOffsetY)) {
+                int k = (NEIClientUtils.getGuiContainer().width
+                                - ((GuiContainerMixin) NEIClientUtils.getGuiContainer()).getXSize())
+                        / 2;
+                int l = (NEIClientUtils.getGuiContainer().height
+                                - ((GuiContainerMixin) NEIClientUtils.getGuiContainer()).getYSize())
+                        / 2;
+                if (buttons.getKey()
+                        .mousePressed(
+                                Minecraft.getMinecraft(), guiMouseX - k - mouseOffsetX, guiMouseY - l - mouseOffsetY)) {
                     buttons.getValue().run();
                     selected = null;
                     return true;
@@ -465,7 +501,10 @@ public class GT_NEI_MultiblockHandler extends TemplateRecipeHandler {
                     }
                     return false;
                 }
-                selected = new BlockPosition(renderer.getLastTraceResult().blockX, renderer.getLastTraceResult().blockY, renderer.getLastTraceResult().blockZ);
+                selected = new BlockPosition(
+                        renderer.getLastTraceResult().blockX,
+                        renderer.getLastTraceResult().blockY,
+                        renderer.getLastTraceResult().blockZ);
             }
             return false;
         }
@@ -477,8 +516,10 @@ public class GT_NEI_MultiblockHandler extends TemplateRecipeHandler {
 
         @Override
         public List<String> handleTooltip(GuiContainer gui, int mousex, int mousey, List<String> currenttip) {
-            if(canHandle(gui) && tooltipBlockStack != null)
-                currenttip.addAll(tooltipBlockStack.getTooltip(Minecraft.getMinecraft().thePlayer,Minecraft.getMinecraft().gameSettings.advancedItemTooltips));
+            if (canHandle(gui) && tooltipBlockStack != null)
+                currenttip.addAll(tooltipBlockStack.getTooltip(
+                        Minecraft.getMinecraft().thePlayer,
+                        Minecraft.getMinecraft().gameSettings.advancedItemTooltips));
             return currenttip;
         }
 
@@ -489,7 +530,7 @@ public class GT_NEI_MultiblockHandler extends TemplateRecipeHandler {
 
         @Override
         public List<String> handleItemTooltip(
-            GuiContainer gui, ItemStack itemstack, int mousex, int mousey, List<String> currenttip) {
+                GuiContainer gui, ItemStack itemstack, int mousex, int mousey, List<String> currenttip) {
             return currenttip;
         }
 

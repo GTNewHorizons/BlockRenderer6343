@@ -2,10 +2,9 @@ package blockrenderer6343.mixins;
 
 import static blockrenderer6343.utils.TooltipsFrameRenderer.AnimationStyle.*;
 
+import blockrenderer6343.utils.TooltipsFrameRenderer;
 import java.util.Iterator;
 import java.util.List;
-
-import blockrenderer6343.utils.TooltipsFrameRenderer;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiScreen;
@@ -40,12 +39,13 @@ public class GuiScreenMixin extends Gui {
      */
     @SuppressWarnings("rawtypes")
     @Inject(method = "drawHoveringText", at = @At("HEAD"), cancellable = true, remap = false)
-    protected void drawHoveringText(List p_146283_1_, int p_146283_2_, int p_146283_3_, FontRenderer font, CallbackInfo ci) {
+    protected void drawHoveringText(
+            List p_146283_1_, int p_146283_2_, int p_146283_3_, FontRenderer font, CallbackInfo ci) {
         DrawHoveringText_2(p_146283_1_, p_146283_2_, p_146283_3_, font);
         ci.cancel();
     }
 
-    private void DrawHoveringText_2(List p_146283_1_, int p_146283_2_, int p_146283_3_, FontRenderer font){
+    private void DrawHoveringText_2(List p_146283_1_, int p_146283_2_, int p_146283_3_, FontRenderer font) {
         if (!p_146283_1_.isEmpty()) {
 
             GL11.glDisable(GL12.GL_RESCALE_NORMAL);
@@ -92,7 +92,7 @@ public class GuiScreenMixin extends Gui {
             int l1 = (k1 & 16711422) >> 1 | k1 & -16777216;
             TooltipsFrameRenderer.drawFrame(j2 - 3, k2 - 3 + 1, j2 - 3 + 1, k2 + i1 + 3 - 1, k1, l1, zLevel, Vertical);
             TooltipsFrameRenderer.drawFrame(
-                j2 + k + 2, k2 - 3 + 1, j2 + k + 3, k2 + i1 + 3 - 1, k1, l1, zLevel, Vertical);
+                    j2 + k + 2, k2 - 3 + 1, j2 + k + 3, k2 + i1 + 3 - 1, k1, l1, zLevel, Vertical);
             TooltipsFrameRenderer.drawFrame(j2 - 3, k2 - 3, j2 + k + 3, k2 - 3 + 1, k1, k1, zLevel, Horizontal);
             TooltipsFrameRenderer.drawFrame(j2 - 3, k2 + i1 + 2, j2 + k + 3, k2 + i1 + 3, l1, l1, zLevel, Horizontal);
 

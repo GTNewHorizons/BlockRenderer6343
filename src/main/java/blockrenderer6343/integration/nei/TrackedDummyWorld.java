@@ -1,13 +1,12 @@
 package blockrenderer6343.integration.nei;
 
+import java.util.*;
 import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
 import org.lwjgl.util.vector.Vector3f;
-
-import java.util.*;
 
 public class TrackedDummyWorld extends DummyWorld {
     public final List<BlockPosition> placedBlocks = new ArrayList<>();
@@ -36,8 +35,7 @@ public class TrackedDummyWorld extends DummyWorld {
     }
 
     public void addBlock(BlockPosition pos) {
-        if (getBlock(pos.x, pos.y, pos.z) == Blocks.air)
-            return;
+        if (getBlock(pos.x, pos.y, pos.z) == Blocks.air) return;
         this.placedBlocks.add(pos);
         minPos.x = Math.min(minPos.x, pos.x);
         minPos.y = Math.min(minPos.y, pos.y);
@@ -68,16 +66,19 @@ public class TrackedDummyWorld extends DummyWorld {
         return maxPos;
     }
 
-
-    public MovingObjectPosition rayTraceBlockswithTargetMap(Vec3 start, Vec3 end, List<BlockPosition> targetedBlocks){
+    public MovingObjectPosition rayTraceBlockswithTargetMap(Vec3 start, Vec3 end, List<BlockPosition> targetedBlocks) {
         return rayTraceBlockswithTargetMap(start, end, targetedBlocks, false, false, false);
     }
 
-    public MovingObjectPosition rayTraceBlockswithTargetMap(Vec3 start, Vec3 end, List<BlockPosition> targetedBlocks, boolean stopOnLiquid, boolean ignoreBlockWithoutBoundingBox, boolean returnLastUncollidableBlock) {
-        if (!Double.isNaN(start.xCoord) && !Double.isNaN(start.yCoord) && !Double.isNaN(start.zCoord))
-        {
-            if (!Double.isNaN(end.xCoord) && !Double.isNaN(end.yCoord) && !Double.isNaN(end.zCoord))
-            {
+    public MovingObjectPosition rayTraceBlockswithTargetMap(
+            Vec3 start,
+            Vec3 end,
+            List<BlockPosition> targetedBlocks,
+            boolean stopOnLiquid,
+            boolean ignoreBlockWithoutBoundingBox,
+            boolean returnLastUncollidableBlock) {
+        if (!Double.isNaN(start.xCoord) && !Double.isNaN(start.yCoord) && !Double.isNaN(start.zCoord)) {
+            if (!Double.isNaN(end.xCoord) && !Double.isNaN(end.yCoord) && !Double.isNaN(end.zCoord)) {
                 int i = MathHelper.floor_double(end.xCoord);
                 int j = MathHelper.floor_double(end.yCoord);
                 int k = MathHelper.floor_double(end.zCoord);
@@ -87,12 +88,11 @@ public class TrackedDummyWorld extends DummyWorld {
                 Block block = this.getBlock(l, i1, j1);
                 int k1 = this.getBlockMetadata(l, i1, j1);
 
-                if ((!ignoreBlockWithoutBoundingBox || block.getCollisionBoundingBoxFromPool(this, l, i1, j1) != null) && block.canCollideCheck(k1, stopOnLiquid))
-                {
+                if ((!ignoreBlockWithoutBoundingBox || block.getCollisionBoundingBoxFromPool(this, l, i1, j1) != null)
+                        && block.canCollideCheck(k1, stopOnLiquid)) {
                     MovingObjectPosition movingobjectposition = block.collisionRayTrace(this, l, i1, j1, start, end);
 
-                    if (movingobjectposition != null && isBlockTargeted(movingobjectposition, targetedBlocks))
-                    {
+                    if (movingobjectposition != null && isBlockTargeted(movingobjectposition, targetedBlocks)) {
                         return movingobjectposition;
                     }
                 }
@@ -100,15 +100,12 @@ public class TrackedDummyWorld extends DummyWorld {
                 MovingObjectPosition movingobjectposition2 = null;
                 k1 = 200;
 
-                while (k1-- >= 0)
-                {
-                    if (Double.isNaN(start.xCoord) || Double.isNaN(start.yCoord) || Double.isNaN(start.zCoord))
-                    {
+                while (k1-- >= 0) {
+                    if (Double.isNaN(start.xCoord) || Double.isNaN(start.yCoord) || Double.isNaN(start.zCoord)) {
                         return null;
                     }
 
-                    if (l == i && i1 == j && j1 == k)
-                    {
+                    if (l == i && i1 == j && j1 == k) {
                         return returnLastUncollidableBlock ? movingobjectposition2 : null;
                     }
 
@@ -119,42 +116,27 @@ public class TrackedDummyWorld extends DummyWorld {
                     double d1 = 999.0D;
                     double d2 = 999.0D;
 
-                    if (i > l)
-                    {
-                        d0 = (double)l + 1.0D;
-                    }
-                    else if (i < l)
-                    {
-                        d0 = (double)l + 0.0D;
-                    }
-                    else
-                    {
+                    if (i > l) {
+                        d0 = (double) l + 1.0D;
+                    } else if (i < l) {
+                        d0 = (double) l + 0.0D;
+                    } else {
                         flag6 = false;
                     }
 
-                    if (j > i1)
-                    {
-                        d1 = (double)i1 + 1.0D;
-                    }
-                    else if (j < i1)
-                    {
-                        d1 = (double)i1 + 0.0D;
-                    }
-                    else
-                    {
+                    if (j > i1) {
+                        d1 = (double) i1 + 1.0D;
+                    } else if (j < i1) {
+                        d1 = (double) i1 + 0.0D;
+                    } else {
                         flag3 = false;
                     }
 
-                    if (k > j1)
-                    {
-                        d2 = (double)j1 + 1.0D;
-                    }
-                    else if (k < j1)
-                    {
-                        d2 = (double)j1 + 0.0D;
-                    }
-                    else
-                    {
+                    if (k > j1) {
+                        d2 = (double) j1 + 1.0D;
+                    } else if (k < j1) {
+                        d2 = (double) j1 + 0.0D;
+                    } else {
                         flag4 = false;
                     }
 
@@ -165,62 +147,45 @@ public class TrackedDummyWorld extends DummyWorld {
                     double d7 = end.yCoord - start.yCoord;
                     double d8 = end.zCoord - start.zCoord;
 
-                    if (flag6)
-                    {
+                    if (flag6) {
                         d3 = (d0 - start.xCoord) / d6;
                     }
 
-                    if (flag3)
-                    {
+                    if (flag3) {
                         d4 = (d1 - start.yCoord) / d7;
                     }
 
-                    if (flag4)
-                    {
+                    if (flag4) {
                         d5 = (d2 - start.zCoord) / d8;
                     }
 
                     boolean flag5 = false;
                     byte b0;
 
-                    if (d3 < d4 && d3 < d5)
-                    {
-                        if (i > l)
-                        {
+                    if (d3 < d4 && d3 < d5) {
+                        if (i > l) {
                             b0 = 4;
-                        }
-                        else
-                        {
+                        } else {
                             b0 = 5;
                         }
 
                         start.xCoord = d0;
                         start.yCoord += d7 * d3;
                         start.zCoord += d8 * d3;
-                    }
-                    else if (d4 < d5)
-                    {
-                        if (j > i1)
-                        {
+                    } else if (d4 < d5) {
+                        if (j > i1) {
                             b0 = 0;
-                        }
-                        else
-                        {
+                        } else {
                             b0 = 1;
                         }
 
                         start.xCoord += d6 * d4;
                         start.yCoord = d1;
                         start.zCoord += d8 * d4;
-                    }
-                    else
-                    {
-                        if (k > j1)
-                        {
+                    } else {
+                        if (k > j1) {
                             b0 = 2;
-                        }
-                        else
-                        {
+                        } else {
                             b0 = 3;
                         }
 
@@ -230,26 +195,23 @@ public class TrackedDummyWorld extends DummyWorld {
                     }
 
                     Vec3 vec32 = Vec3.createVectorHelper(start.xCoord, start.yCoord, start.zCoord);
-                    l = (int)(vec32.xCoord = (double)MathHelper.floor_double(start.xCoord));
+                    l = (int) (vec32.xCoord = (double) MathHelper.floor_double(start.xCoord));
 
-                    if (b0 == 5)
-                    {
+                    if (b0 == 5) {
                         --l;
                         ++vec32.xCoord;
                     }
 
-                    i1 = (int)(vec32.yCoord = (double)MathHelper.floor_double(start.yCoord));
+                    i1 = (int) (vec32.yCoord = (double) MathHelper.floor_double(start.yCoord));
 
-                    if (b0 == 1)
-                    {
+                    if (b0 == 1) {
                         --i1;
                         ++vec32.yCoord;
                     }
 
-                    j1 = (int)(vec32.zCoord = (double)MathHelper.floor_double(start.zCoord));
+                    j1 = (int) (vec32.zCoord = (double) MathHelper.floor_double(start.zCoord));
 
-                    if (b0 == 3)
-                    {
+                    if (b0 == 3) {
                         --j1;
                         ++vec32.zCoord;
                     }
@@ -257,41 +219,36 @@ public class TrackedDummyWorld extends DummyWorld {
                     Block block1 = this.getBlock(l, i1, j1);
                     int l1 = this.getBlockMetadata(l, i1, j1);
 
-                    if (!ignoreBlockWithoutBoundingBox || block1.getCollisionBoundingBoxFromPool(this, l, i1, j1) != null)
-                    {
-                        if (block1.canCollideCheck(l1, stopOnLiquid))
-                        {
-                            MovingObjectPosition movingobjectposition1 = block1.collisionRayTrace(this, l, i1, j1, start, end);
+                    if (!ignoreBlockWithoutBoundingBox
+                            || block1.getCollisionBoundingBoxFromPool(this, l, i1, j1) != null) {
+                        if (block1.canCollideCheck(l1, stopOnLiquid)) {
+                            MovingObjectPosition movingobjectposition1 =
+                                    block1.collisionRayTrace(this, l, i1, j1, start, end);
 
-                            if (movingobjectposition1 != null && isBlockTargeted(movingobjectposition1, targetedBlocks))
-                            {
+                            if (movingobjectposition1 != null
+                                    && isBlockTargeted(movingobjectposition1, targetedBlocks)) {
                                 return movingobjectposition1;
                             }
-                        }
-                        else
-                        {
+                        } else {
                             movingobjectposition2 = new MovingObjectPosition(l, i1, j1, b0, start, false);
                         }
                     }
                 }
 
                 return returnLastUncollidableBlock ? movingobjectposition2 : null;
-            }
-            else
-            {
+            } else {
                 return null;
             }
-        }
-        else
-        {
+        } else {
             return null;
         }
     }
 
-    private boolean isBlockTargeted(MovingObjectPosition result, List<BlockPosition> targetedBlocks){
-        for(BlockPosition targetedBlock : targetedBlocks){
-            if(result.blockX == targetedBlock.x && result.blockY == targetedBlock.y && result.blockZ == targetedBlock.z)
-                return true;
+    private boolean isBlockTargeted(MovingObjectPosition result, List<BlockPosition> targetedBlocks) {
+        for (BlockPosition targetedBlock : targetedBlocks) {
+            if (result.blockX == targetedBlock.x
+                    && result.blockY == targetedBlock.y
+                    && result.blockZ == targetedBlock.z) return true;
         }
         return false;
     }

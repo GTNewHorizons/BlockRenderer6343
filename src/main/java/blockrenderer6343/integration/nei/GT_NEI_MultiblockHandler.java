@@ -16,6 +16,7 @@ import codechicken.nei.guihook.IContainerTooltipHandler;
 import codechicken.nei.recipe.GuiCraftingRecipe;
 import codechicken.nei.recipe.GuiUsageRecipe;
 import codechicken.nei.recipe.TemplateRecipeHandler;
+import com.gtnewhorizon.structurelib.alignment.constructable.ConstructableUtility;
 import com.gtnewhorizon.structurelib.alignment.constructable.IConstructable;
 import com.gtnewhorizon.structurelib.alignment.constructable.IConstructableProvider;
 import cpw.mods.fml.relauncher.Side;
@@ -30,10 +31,13 @@ import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.resources.I18n;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.MovingObjectPosition;
+import net.minecraft.util.Vec3;
+import net.minecraft.world.World;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.util.vector.Vector3f;
 
@@ -43,6 +47,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static codechicken.nei.NEIClientConfig.world;
 import static gregtech.api.GregTech_API.METATILEENTITIES;
 import static gregtech.api.enums.GT_Values.RES_PATH_GUI;
 
@@ -263,7 +268,27 @@ public class GT_NEI_MultiblockHandler extends TemplateRecipeHandler {
     }
 
     private void projectMultiblocks(){
-        Minecraft.getMinecraft().thePlayer.sendChatMessage("this button will project multiblocks hint on ground");
+        EntityPlayer player = Minecraft.getMinecraft().thePlayer;
+        World baseWorld = Minecraft.getMinecraft().theWorld;
+        MovingObjectPosition lookingPos = player.rayTrace(10,1);
+        if(lookingPos.typeOfHit == MovingObjectPosition.MovingObjectType.MISS)
+            return;
+        int playerDir = MathHelper.floor_double((player.rotationYaw * 4F) / 360F + 0.5D) & 3;
+        ItemStack itemStack = renderingController.getStackForm(1);
+        if(!baseWorld.isAirBlock(lookingPos.blockX, lookingPos.blockY + 1, lookingPos.blockZ))
+            return;
+        itemStack
+            .getItem()
+            .onItemUse(
+                itemStack,
+                player,
+                baseWorld,
+                lookingPos.blockX, lookingPos.blockY + 1, lookingPos.blockZ,
+                0,
+                lookingPos.blockX, lookingPos.blockY, lookingPos.blockZ);
+        ConstructableUtility.handle(renderingController.getStackForm(tierIndex), player, baseWorld, lookingPos.blockX, lookingPos.blockY + 1, lookingPos.blockZ, playerDir);
+        baseWorld.setBlockToAir(lookingPos.blockX, lookingPos.blockY + 1, lookingPos.blockZ);
+        baseWorld.removeTileEntity(lookingPos.blockX, lookingPos.blockY + 1, lookingPos.blockZ);
     }
 
     private void resetCenter() {

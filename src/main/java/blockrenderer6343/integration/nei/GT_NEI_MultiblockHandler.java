@@ -52,9 +52,9 @@ public class GT_NEI_MultiblockHandler extends TemplateRecipeHandler {
     public static List<GT_MetaTileEntity_MultiBlockBase> multiblocksList = new ArrayList<>();
     private static WorldSceneRenderer renderer;
 
-    private final int SLOT_SIZE = 18;
+    private static final int SLOT_SIZE = 18;
     private static final int SLOTS_X = 5;
-    private final int SLOTS_Y = 135;
+    private static final int SLOTS_Y = 135;
 
     private static final int recipeLayoutx = 8;
     private static final int recipeLayouty = 50;
@@ -64,29 +64,30 @@ public class GT_NEI_MultiblockHandler extends TemplateRecipeHandler {
     private static int guiMouseY;
     private static int lastGuiMouseX;
     private static int lastGuiMouseY;
-    private Vector3f center;
-    private float rotationYaw;
-    private float rotationPitch;
-    private float zoom;
+    private static Vector3f center;
+    private static float rotationYaw;
+    private static float rotationPitch;
+    private static float zoom;
 
     private static ItemStack tooltipBlockStack;
     private static BlockPosition selected;
-    private GT_MetaTileEntity_MultiBlockBase renderingController;
-    private int layerIndex = -1;
-    private int tierIndex = 1;
+    private static GT_MetaTileEntity_MultiBlockBase renderingController;
+    private static GT_MetaTileEntity_MultiBlockBase lastRenderingController;
+    private static int layerIndex = -1;
+    private static int tierIndex = 1;
     private List<ItemStack> ingredients = new ArrayList<>();
 
-    private final int ICON_SIZE = 20;
+    private static final int ICON_SIZE = 20;
     private static final int mouseOffsetX = 5;
     private static final int mouseOffsetY = 43;
     private final GuiButton previousLayerButton;
     private final GuiButton nextLayerButton;
     private final GuiButton previousTierButton;
     private final GuiButton nextTierButton;
-    private final int buttonsEndPosX = 165;
-    private final int buttonsEndPosY = 155;
-    private final int buttonsStartPosX = buttonsEndPosX - ICON_SIZE * 2 - 10;
-    private final int buttonsStartPosY = buttonsEndPosY - ICON_SIZE * 2 - 10;
+    private static final int buttonsEndPosX = 165;
+    private static final int buttonsEndPosY = 155;
+    private static final int buttonsStartPosX = buttonsEndPosX - ICON_SIZE * 2 - 10;
+    private static final int buttonsStartPosY = buttonsEndPosY - ICON_SIZE * 2 - 10;
     private static final Map<GuiButton, Runnable> buttons = new HashMap<>();
 
     public GT_NEI_MultiblockHandler() {
@@ -147,9 +148,17 @@ public class GT_NEI_MultiblockHandler extends TemplateRecipeHandler {
     @Override
     public void loadCraftingRecipes(ItemStack result) {
         for (GT_MetaTileEntity_MultiBlockBase multiblock : multiblocksList) {
-            if (NEIServerUtils.areStacksSameType(((IMetaTileEntity) multiblock).getStackForm(1), result)) {
-                initializeSceneRenderer(multiblock, 1, true);
+            if (NEIClientUtils.areStacksSameType(((IMetaTileEntity) multiblock).getStackForm(1), result)) {
                 renderingController = multiblock;
+                if(lastRenderingController == null || lastRenderingController != renderingController) {
+                    tierIndex = 1;
+                    layerIndex = -1;
+                    initializeSceneRenderer(tierIndex, true);
+                }
+                else{
+                    initializeSceneRenderer(tierIndex, false);
+                }
+                lastRenderingController = renderingController;
                 break;
             }
         }
@@ -159,9 +168,17 @@ public class GT_NEI_MultiblockHandler extends TemplateRecipeHandler {
     @Override
     public void loadUsageRecipes(ItemStack ingredient) {
         for (GT_MetaTileEntity_MultiBlockBase multiblock : multiblocksList) {
-            if (NEIServerUtils.areStacksSameType(((IMetaTileEntity) multiblock).getStackForm(1), ingredient)) {
-                initializeSceneRenderer(multiblock, 1, true);
+            if (NEIClientUtils.areStacksSameType(((IMetaTileEntity) multiblock).getStackForm(1), ingredient)) {
                 renderingController = multiblock;
+                if(lastRenderingController == null || lastRenderingController != renderingController) {
+                    tierIndex = 1;
+                    layerIndex = -1;
+                    initializeSceneRenderer(tierIndex, true);
+                }
+                else{
+                    initializeSceneRenderer(tierIndex, false);
+                }
+                lastRenderingController = renderingController;
                 break;
             }
         }
@@ -235,11 +252,11 @@ public class GT_NEI_MultiblockHandler extends TemplateRecipeHandler {
     }
 
     private void toggleNextTier() {
-        initializeSceneRenderer(renderingController, ++tierIndex, false);
+        initializeSceneRenderer(++tierIndex, false);
     }
 
     private void togglePreviousTier() {
-        if (tierIndex > 1) initializeSceneRenderer(renderingController, --tierIndex, false);
+        if (tierIndex > 1) initializeSceneRenderer(--tierIndex, false);
     }
 
     private void resetCenter() {
@@ -357,8 +374,7 @@ public class GT_NEI_MultiblockHandler extends TemplateRecipeHandler {
             GuiContainerManager.drawItem( SLOTS_X + i * SLOT_SIZE, SLOTS_Y, ingredients.get(i));
     }
 
-    private void initializeSceneRenderer(GT_MetaTileEntity_MultiBlockBase shapeInfo, int tier, boolean resetCamera) {
-
+    private void initializeSceneRenderer(int tier, boolean resetCamera) {
         Vector3f eyePos = new Vector3f(), lookAt = new Vector3f(), worldUp = new Vector3f();
         if (!resetCamera) {
             try {
@@ -378,7 +394,7 @@ public class GT_NEI_MultiblockHandler extends TemplateRecipeHandler {
         IConstructable constructable = null;
         BlockPosition mbBlockPos = new BlockPosition(10, 10, 10);
 
-        ItemStack itemStack = shapeInfo.getStackForm(1);
+        ItemStack itemStack = renderingController.getStackForm(1);
         itemStack
                 .getItem()
                 .onItemUse(
@@ -400,7 +416,7 @@ public class GT_NEI_MultiblockHandler extends TemplateRecipeHandler {
             constructable = (IConstructable) tTileEntity;
         }
         if (constructable != null) {
-            constructable.construct(shapeInfo.getStackForm(tier), false);
+            constructable.construct(renderingController.getStackForm(tier), false);
         }
 
         Vector3f size = ((TrackedDummyWorld) renderer.world).getSize();

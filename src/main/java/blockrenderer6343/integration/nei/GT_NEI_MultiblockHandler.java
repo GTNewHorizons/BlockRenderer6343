@@ -9,7 +9,6 @@ import blockrenderer6343.mixins.GuiContainerMixin;
 import codechicken.lib.gui.GuiDraw;
 import codechicken.lib.math.MathHelper;
 import codechicken.nei.NEIClientUtils;
-import codechicken.nei.NEIServerUtils;
 import codechicken.nei.PositionedStack;
 import codechicken.nei.guihook.GuiContainerManager;
 import codechicken.nei.guihook.IContainerInputHandler;
@@ -77,17 +76,19 @@ public class GT_NEI_MultiblockHandler extends TemplateRecipeHandler {
     private static int tierIndex = 1;
     private List<ItemStack> ingredients = new ArrayList<>();
 
-    private static final int ICON_SIZE = 20;
+    private static final int ICON_SIZE_X = 20;
+    private static final int ICON_SIZE_Y = 20;
     private static final int mouseOffsetX = 5;
     private static final int mouseOffsetY = 43;
     private final GuiButton previousLayerButton;
     private final GuiButton nextLayerButton;
     private final GuiButton previousTierButton;
     private final GuiButton nextTierButton;
+    private final GuiButton projectMultiblocksButton;
     private static final int buttonsEndPosX = 165;
     private static final int buttonsEndPosY = 155;
-    private static final int buttonsStartPosX = buttonsEndPosX - ICON_SIZE * 2 - 10;
-    private static final int buttonsStartPosY = buttonsEndPosY - ICON_SIZE * 2 - 10;
+    private static final int buttonsStartPosX = buttonsEndPosX - ICON_SIZE_X * 2 - 10;
+    private static final int buttonsStartPosY = buttonsEndPosY - ICON_SIZE_Y * 2 - 10;
     private static final Map<GuiButton, Runnable> buttons = new HashMap<>();
 
     public GT_NEI_MultiblockHandler() {
@@ -99,16 +100,18 @@ public class GT_NEI_MultiblockHandler extends TemplateRecipeHandler {
             }
         }
         this.previousLayerButton =
-                new GuiButton(0, buttonsStartPosX, buttonsEndPosY - ICON_SIZE, ICON_SIZE, ICON_SIZE, "<");
+                new GuiButton(0, buttonsStartPosX, buttonsEndPosY - ICON_SIZE_Y, ICON_SIZE_X, ICON_SIZE_Y, "<");
         this.nextLayerButton =
-                new GuiButton(0, buttonsEndPosX - ICON_SIZE, buttonsEndPosY - ICON_SIZE, ICON_SIZE, ICON_SIZE, ">");
-        this.previousTierButton = new GuiButton(0, buttonsStartPosX, buttonsStartPosY, ICON_SIZE, ICON_SIZE, "<");
-        this.nextTierButton = new GuiButton(0, buttonsEndPosX - ICON_SIZE, buttonsStartPosY, ICON_SIZE, ICON_SIZE, ">");
+                new GuiButton(0, buttonsEndPosX - ICON_SIZE_X, buttonsEndPosY - ICON_SIZE_Y, ICON_SIZE_X, ICON_SIZE_Y, ">");
+        this.previousTierButton = new GuiButton(0, buttonsStartPosX, buttonsStartPosY, ICON_SIZE_X, ICON_SIZE_Y, "<");
+        this.nextTierButton = new GuiButton(0, buttonsEndPosX - ICON_SIZE_X, buttonsStartPosY, ICON_SIZE_X, ICON_SIZE_Y, ">");
+        this.projectMultiblocksButton = new GuiButton(0, buttonsEndPosX - ICON_SIZE_X, 5, ICON_SIZE_X, ICON_SIZE_Y, "P");
         buttons.clear();
         buttons.put(previousLayerButton, this::togglePreviousLayer);
         buttons.put(nextLayerButton, this::toggleNextLayer);
         buttons.put(previousTierButton, this::togglePreviousTier);
         buttons.put(nextTierButton, this::toggleNextTier);
+        buttons.put(projectMultiblocksButton, this::projectMultiblocks);
     }
 
     public class recipeCacher extends CachedRecipe {
@@ -192,7 +195,7 @@ public class GT_NEI_MultiblockHandler extends TemplateRecipeHandler {
 
     @Override
     public String getRecipeName() {
-        return "Multiblock Structure";
+        return "Multiblocks Structure";
     }
 
     @Override
@@ -257,6 +260,10 @@ public class GT_NEI_MultiblockHandler extends TemplateRecipeHandler {
 
     private void togglePreviousTier() {
         if (tierIndex > 1) initializeSceneRenderer(--tierIndex, false);
+    }
+
+    private void projectMultiblocks(){
+        Minecraft.getMinecraft().thePlayer.sendChatMessage("this button will project multiblocks hint on ground");
     }
 
     private void resetCenter() {
@@ -365,7 +372,7 @@ public class GT_NEI_MultiblockHandler extends TemplateRecipeHandler {
         fontRenderer.drawString(
                 layerText,
                 buttonsStartPosX + (buttonsEndPosX - buttonsStartPosX - fontRenderer.getStringWidth(layerText)) / 2,
-                buttonsStartPosY + ICON_SIZE,
+                buttonsStartPosY + ICON_SIZE_Y,
                 0x333333);
     }
 

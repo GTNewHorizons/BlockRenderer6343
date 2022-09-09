@@ -404,14 +404,16 @@ public class GT_NEI_MultiblockHandler extends TemplateRecipeHandler {
             constructable.construct(shapeInfo.getStackForm(tier), false);
         }
 
-        for (int i = 0; i < 20; i++)
-            for (int j = 0; j < 20; j++)
-                for (int k = 0; k < 20; k++) ((TrackedDummyWorld) renderer.world).addBlock(new BlockPosition(i, j, k));
+        ((TrackedDummyWorld) renderer.world).placedBlocks.clear();
+        for (int i = -10; i < 30; i++)
+            for (int j = 0; j < 30; j++)
+                for (int k = -10; k < 30; k++) ((TrackedDummyWorld) renderer.world).addBlock(new BlockPosition(i, j, k));
 
         Vector3f size = ((TrackedDummyWorld) renderer.world).getSize();
         Vector3f minPos = ((TrackedDummyWorld) renderer.world).getMinPos();
         center = new Vector3f(minPos.x + size.x / 2, minPos.y + size.y / 2, minPos.z + size.z / 2);
 
+        renderer.renderedBlocks.clear();
         renderer.addRenderedBlocks(((TrackedDummyWorld) renderer.world).placedBlocks);
         renderer.setOnLookingAt(ray -> {});
 

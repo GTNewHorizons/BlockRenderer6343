@@ -32,7 +32,6 @@ import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.init.Blocks;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.MovingObjectPosition;
@@ -451,17 +450,18 @@ public class GT_NEI_MultiblockHandler extends TemplateRecipeHandler {
             Block block = renderer.world.getBlock(renderedBlock.x,renderedBlock.y,renderedBlock.z);
             if(block.equals(Blocks.air))
                 continue;
-            Item item = Item.getItemFromBlock(block);
+            int meta = renderer.world.getBlockMetadata(renderedBlock.x,renderedBlock.y,renderedBlock.z);
+            ArrayList<ItemStack> itemstacks = block.getDrops(renderer.world, renderedBlock.x,renderedBlock.y,renderedBlock.z,meta,0);
             boolean added = false;
             for (ItemStack ingredient : ingredients) {
-                if(ingredient.getItem().equals(item)){
+                if(ingredient.getItem().equals(itemstacks.get(0).getItem())){
                     ingredient.stackSize++;
                     added = true;
                     break;
                 }
             }
             if(!added)
-                ingredients.add(new ItemStack(block));
+                ingredients.add(itemstacks.get(0));
         }
         this.ingredients = ingredients;
 

@@ -1,7 +1,7 @@
 package blockrenderer6343;
 
 import blockrenderer6343.integration.nei.NEI_config;
-import blockrenderer6343.client.utils.TooltipsFrameRenderer;
+import blockrenderer6343.client.renderer.TooltipsFrameRenderer;
 import cpw.mods.fml.common.event.*;
 
 public class ClientProxy extends CommonProxy {

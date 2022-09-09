@@ -1,20 +1,14 @@
 package blockrenderer6343.client.renderer;
 
 import blockrenderer6343.api.utils.BlockPosition;
+import blockrenderer6343.client.utils.ProjectionUtils;
 import blockrenderer6343.client.world.TrackedDummyWorld;
 import blockrenderer6343.mixins.GuiContainerMixin;
 import codechicken.lib.vec.Vector3;
 import codechicken.nei.NEIClientUtils;
 import gregtech.common.render.GT_Renderer_Block;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.FloatBuffer;
-import java.nio.IntBuffer;
-import java.util.*;
-import java.util.function.Consumer;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.Tessellator;
@@ -30,18 +24,11 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.glu.GLU;
 import org.lwjgl.util.vector.Vector3f;
 
-public class WorldSceneRenderer {
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
 
-    private static final FloatBuffer MODELVIEW_MATRIX_BUFFER =
-            ByteBuffer.allocateDirect(16 * 4).order(ByteOrder.nativeOrder()).asFloatBuffer();
-    private static final FloatBuffer PROJECTION_MATRIX_BUFFER =
-            ByteBuffer.allocateDirect(16 * 4).order(ByteOrder.nativeOrder()).asFloatBuffer();
-    private static final IntBuffer VIEWPORT_BUFFER =
-            ByteBuffer.allocateDirect(16 * 4).order(ByteOrder.nativeOrder()).asIntBuffer();
-    protected static final FloatBuffer PIXEL_DEPTH_BUFFER =
-            ByteBuffer.allocateDirect(4).order(ByteOrder.nativeOrder()).asFloatBuffer();
-    protected static final FloatBuffer OBJECT_POS_BUFFER =
-            ByteBuffer.allocateDirect(3 * 4).order(ByteOrder.nativeOrder()).asFloatBuffer();
+public class WorldSceneRenderer {
 
     public final World world;
     // the Blocks which this renderer needs to render
@@ -125,7 +112,7 @@ public class WorldSceneRenderer {
                 && mouseX < x + k + width
                 && mouseY > y + l
                 && mouseY < y + l + height) {
-            Vector3f hitPos = unProject(screenMouseX, screenMouseY);
+            Vector3f hitPos = ProjectionUtils.unProject(screenMouseX, screenMouseY);
             MovingObjectPosition result = rayTrace(hitPos);
             if (result != null) {
                 this.lastTraceResult = result;
@@ -165,7 +152,6 @@ public class WorldSceneRenderer {
 
     public void setupCamera(int x, int y, int width, int height) {
         Minecraft mc = Minecraft.getMinecraft();
-        ScaledResolution resolution = new ScaledResolution(mc, mc.displayWidth, mc.displayHeight);
 
         GlStateManager.pushAttrib();
         mc.entityRenderer.disableLightmap(0);
@@ -195,7 +181,7 @@ public class WorldSceneRenderer {
 
         GL11.glEnable(GL11.GL_SCISSOR_TEST);
         GL11.glScissor(windowX, windowY, windowWidth, windowHeight);
-        clearView(x, y, width, height);
+        clearView();
         GL11.glDisable(GL11.GL_SCISSOR_TEST);
 
         // setup projection matrix to perspective
@@ -220,7 +206,7 @@ public class WorldSceneRenderer {
         GL11.glClearColor(i / 255.0f, j / 255.0f, k / 255.0f, opacity / 255.0f);
     }
 
-    protected void clearView(int x, int y, int width, int height) {
+    protected void clearView() {
         setGlClearColorFromInt(clearColor, clearColor >> 24);
         GlStateManager.clear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
     }
@@ -328,97 +314,6 @@ public class WorldSceneRenderer {
         return ((TrackedDummyWorld) this.world).rayTraceBlockswithTargetMap(startPos, endPos, renderedBlocks);
     }
 
-    public Vector3f project(BlockPosition pos) {
-        // read current rendering parameters
-        GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX, MODELVIEW_MATRIX_BUFFER);
-        GL11.glGetFloat(GL11.GL_PROJECTION_MATRIX, PROJECTION_MATRIX_BUFFER);
-        GL11.glGetInteger(GL11.GL_VIEWPORT, VIEWPORT_BUFFER);
-
-        // rewind buffers after write by OpenGL glGet calls
-        MODELVIEW_MATRIX_BUFFER.rewind();
-        PROJECTION_MATRIX_BUFFER.rewind();
-        VIEWPORT_BUFFER.rewind();
-
-        // call gluProject with retrieved parameters
-        GLU.gluProject(
-                pos.x + 0.5f,
-                pos.y + 0.5f,
-                pos.z + 0.5f,
-                MODELVIEW_MATRIX_BUFFER,
-                PROJECTION_MATRIX_BUFFER,
-                VIEWPORT_BUFFER,
-                OBJECT_POS_BUFFER);
-
-        // rewind buffers after read by gluProject
-        VIEWPORT_BUFFER.rewind();
-        PROJECTION_MATRIX_BUFFER.rewind();
-        MODELVIEW_MATRIX_BUFFER.rewind();
-
-        // rewind buffer after write by gluProject
-        OBJECT_POS_BUFFER.rewind();
-
-        // obtain position in Screen
-        float winX = OBJECT_POS_BUFFER.get();
-        float winY = OBJECT_POS_BUFFER.get();
-        float winZ = OBJECT_POS_BUFFER.get();
-
-        // rewind buffer after read
-        OBJECT_POS_BUFFER.rewind();
-
-        return new Vector3f(winX, winY, winZ);
-    }
-
-    public Vector3f unProject(int mouseX, int mouseY) {
-        // read depth of pixel under mouse
-        GL11.glReadPixels(mouseX, mouseY, 1, 1, GL11.GL_DEPTH_COMPONENT, GL11.GL_FLOAT, PIXEL_DEPTH_BUFFER);
-
-        // rewind buffer after write by glReadPixels
-        PIXEL_DEPTH_BUFFER.rewind();
-
-        // retrieve depth from buffer (0.0-1.0f)
-        float pixelDepth = PIXEL_DEPTH_BUFFER.get();
-
-        // rewind buffer after read
-        PIXEL_DEPTH_BUFFER.rewind();
-
-        // read current rendering parameters
-        GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX, MODELVIEW_MATRIX_BUFFER);
-        GL11.glGetFloat(GL11.GL_PROJECTION_MATRIX, PROJECTION_MATRIX_BUFFER);
-        GL11.glGetInteger(GL11.GL_VIEWPORT, VIEWPORT_BUFFER);
-
-        // rewind buffers after write by OpenGL glGet calls
-        MODELVIEW_MATRIX_BUFFER.rewind();
-        PROJECTION_MATRIX_BUFFER.rewind();
-        VIEWPORT_BUFFER.rewind();
-
-        // call gluUnProject with retrieved parameters
-        GLU.gluUnProject(
-                mouseX,
-                mouseY,
-                pixelDepth,
-                MODELVIEW_MATRIX_BUFFER,
-                PROJECTION_MATRIX_BUFFER,
-                VIEWPORT_BUFFER,
-                OBJECT_POS_BUFFER);
-
-        // rewind buffers after read by gluUnProject
-        VIEWPORT_BUFFER.rewind();
-        PROJECTION_MATRIX_BUFFER.rewind();
-        MODELVIEW_MATRIX_BUFFER.rewind();
-
-        // rewind buffer after write by gluUnProject
-        OBJECT_POS_BUFFER.rewind();
-
-        // obtain absolute position in world
-        float posX = OBJECT_POS_BUFFER.get();
-        float posY = OBJECT_POS_BUFFER.get();
-        float posZ = OBJECT_POS_BUFFER.get();
-
-        // rewind buffer after read
-        OBJECT_POS_BUFFER.rewind();
-        return new Vector3f(posX, posY, posZ);
-    }
-
     /***
      * For better performance, You'd better handle the event setOnLookingAt(Consumer) or getLastTraceResult()
      * @param mouseX xPos in Texture
@@ -432,7 +327,7 @@ public class WorldSceneRenderer {
 
         drawWorld();
 
-        Vector3f hitPos = unProject(mouseX, mouseY);
+        Vector3f hitPos = ProjectionUtils.unProject(mouseX, mouseY);
         MovingObjectPosition result = rayTrace(hitPos);
 
         resetCamera();
@@ -452,7 +347,7 @@ public class WorldSceneRenderer {
         setupCamera(x, y, width, height);
 
         drawWorld();
-        Vector3f winPos = project(pos);
+        Vector3f winPos = ProjectionUtils.project(pos);
 
         resetCamera();
 

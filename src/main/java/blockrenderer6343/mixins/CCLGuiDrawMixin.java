@@ -1,8 +1,8 @@
 package blockrenderer6343.mixins;
 
-import static blockrenderer6343.client.utils.TooltipsFrameRenderer.AnimationStyle.*;
+import static blockrenderer6343.client.renderer.TooltipsFrameRenderer.AnimationStyle.*;
 
-import blockrenderer6343.client.utils.TooltipsFrameRenderer;
+import blockrenderer6343.client.renderer.TooltipsFrameRenderer;
 import codechicken.lib.gui.GuiDraw;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;

@@ -4,6 +4,7 @@ import blockrenderer6343.BlockRenderer6343;
 import blockrenderer6343.api.utils.BlockPosition;
 import blockrenderer6343.client.renderer.GlStateManager;
 import blockrenderer6343.client.renderer.ImmediateWorldSceneRenderer;
+import blockrenderer6343.client.renderer.WorldSceneRenderer;
 import blockrenderer6343.client.world.TrackedDummyWorld;
 import blockrenderer6343.mixins.GuiContainerMixin;
 import codechicken.lib.gui.GuiDraw;
@@ -71,28 +72,23 @@ public class GT_GUI_MultiblocksHandler {
     private static final int ICON_SIZE_Y = 20;
     private static final int mouseOffsetX = 5;
     private static final int mouseOffsetY = 43;
-    private final GuiButton previousLayerButton;
-    private final GuiButton nextLayerButton;
-    private final GuiButton previousTierButton;
-    private final GuiButton nextTierButton;
-    private final GuiButton projectMultiblocksButton;
     private static final int buttonsEndPosX = 165;
     private static final int buttonsEndPosY = 155;
     private static final int buttonsStartPosX = buttonsEndPosX - ICON_SIZE_X * 2 - 10;
     private static final int buttonsStartPosY = buttonsEndPosY - ICON_SIZE_Y * 2 - 10;
     private static final Map<GuiButton, Runnable> buttons = new HashMap<>();
 
-    public Consumer<List<ItemStack>> onIngredientChanged;
+    private Consumer<List<ItemStack>> onIngredientChanged;
 
     public GT_GUI_MultiblocksHandler() {
-        this.previousLayerButton =
-            new GuiButton(0, buttonsStartPosX, buttonsEndPosY - ICON_SIZE_Y, ICON_SIZE_X, ICON_SIZE_Y, "<");
-        this.nextLayerButton =
-            new GuiButton(0, buttonsEndPosX - ICON_SIZE_X, buttonsEndPosY - ICON_SIZE_Y, ICON_SIZE_X, ICON_SIZE_Y, ">");
-        this.previousTierButton = new GuiButton(0, buttonsStartPosX, buttonsStartPosY, ICON_SIZE_X, ICON_SIZE_Y, "<");
-        this.nextTierButton = new GuiButton(0, buttonsEndPosX - ICON_SIZE_X, buttonsStartPosY, ICON_SIZE_X, ICON_SIZE_Y, ">");
-        this.projectMultiblocksButton = new GuiButton(0, buttonsEndPosX - ICON_SIZE_X, 5, ICON_SIZE_X, ICON_SIZE_Y, "P");
+        GuiButton previousLayerButton = new GuiButton(0, buttonsStartPosX, buttonsEndPosY - ICON_SIZE_Y, ICON_SIZE_X, ICON_SIZE_Y, "<");
+        GuiButton nextLayerButton = new GuiButton(0, buttonsEndPosX - ICON_SIZE_X, buttonsEndPosY - ICON_SIZE_Y, ICON_SIZE_X, ICON_SIZE_Y, ">");
+        GuiButton previousTierButton = new GuiButton(0, buttonsStartPosX, buttonsStartPosY, ICON_SIZE_X, ICON_SIZE_Y, "<");
+        GuiButton nextTierButton = new GuiButton(0, buttonsEndPosX - ICON_SIZE_X, buttonsStartPosY, ICON_SIZE_X, ICON_SIZE_Y, ">");
+        GuiButton projectMultiblocksButton = new GuiButton(0, buttonsEndPosX - ICON_SIZE_X, 5, ICON_SIZE_X, ICON_SIZE_Y, "P");
+
         buttons.clear();
+
         buttons.put(previousLayerButton, this::togglePreviousLayer);
         buttons.put(nextLayerButton, this::toggleNextLayer);
         buttons.put(previousTierButton, this::togglePreviousTier);
@@ -102,6 +98,11 @@ public class GT_GUI_MultiblocksHandler {
 
     public int getLayerIndex() {
         return layerIndex;
+    }
+
+    public GT_GUI_MultiblocksHandler setOnIngredientChanged(Consumer<List<ItemStack>> callback) {
+        onIngredientChanged = callback;
+        return this;
     }
 
     public void loadMultiblocks(GT_MetaTileEntity_MultiBlockBase multiblocks){
@@ -120,26 +121,26 @@ public class GT_GUI_MultiblocksHandler {
 
     private void toggleNextLayer() {
         int height = (int) ((TrackedDummyWorld) renderer.world).getSize().getY() - 1;
-        if (++this.layerIndex > height) {
+        if (++layerIndex > height) {
             // if current layer index is more than max height, reset it
             // to display all layers
-            this.layerIndex = -1;
+            layerIndex = -1;
         }
         setNextLayer(layerIndex);
     }
 
     private void togglePreviousLayer() {
         int height = (int) ((TrackedDummyWorld) renderer.world).getSize().getY() - 1;
-        if (this.layerIndex == -1) {
-            this.layerIndex = height;
-        } else if (--this.layerIndex < 0) {
-            this.layerIndex = -1;
+        if (layerIndex == -1) {
+            layerIndex = height;
+        } else if (--layerIndex < 0) {
+            layerIndex = -1;
         }
         setNextLayer(layerIndex);
     }
 
     private void setNextLayer(int newLayer) {
-        this.layerIndex = newLayer;
+        layerIndex = newLayer;
         if (renderer != null) {
             TrackedDummyWorld world = ((TrackedDummyWorld) renderer.world);
             resetCenter();
@@ -211,7 +212,7 @@ public class GT_GUI_MultiblocksHandler {
             - ((GuiContainerMixin) NEIClientUtils.getGuiContainer()).getYSize())
             / 2;
         renderer.render(recipeLayoutx + k, recipeLayouty + l, recipeWidth, sceneHeight, lastGuiMouseX, lastGuiMouseY);
-        drawMultiblockName(recipeWidth);
+        drawMultiblockName();
 
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
 
@@ -232,7 +233,7 @@ public class GT_GUI_MultiblocksHandler {
             } else if (rightClickHeld) {
                 int mouseDeltaY = guiMouseY - lastGuiMouseY;
                 if (Math.abs(mouseDeltaY) > 1) {
-                    this.zoom = (float) MathHelper.clip(zoom + (mouseDeltaY > 0 ? 0.5 : -0.5), 3, 999);
+                    zoom = (float) MathHelper.clip(zoom + (mouseDeltaY > 0 ? 0.5 : -0.5), 3, 999);
                 }
             }
             renderer.setCameraLookAt(center, zoom, Math.toRadians(rotationPitch), Math.toRadians(rotationYaw));
@@ -248,14 +249,13 @@ public class GT_GUI_MultiblocksHandler {
             && rayTraceResult != null
             && !renderer.world.isAirBlock(rayTraceResult.blockX, rayTraceResult.blockY, rayTraceResult.blockZ)) {
             Block block = renderer.world.getBlock(rayTraceResult.blockX, rayTraceResult.blockY, rayTraceResult.blockZ);
-            ItemStack itemStack = block.getPickBlock(
+            tooltipBlockStack = block.getPickBlock(
                 rayTraceResult,
                 renderer.world,
                 rayTraceResult.blockX,
                 rayTraceResult.blockY,
                 rayTraceResult.blockZ,
                 Minecraft.getMinecraft().thePlayer);
-            tooltipBlockStack = itemStack;
         }
 
         //draw ingredients again because it was hidden by worldrenderer
@@ -271,14 +271,14 @@ public class GT_GUI_MultiblocksHandler {
     }
 
 
-    private void drawMultiblockName(int recipeWidth) {
+    private void drawMultiblockName() {
         String localizedName = I18n.format(renderingController.getStackForm(1).getDisplayName());
         FontRenderer fontRenderer = Minecraft.getMinecraft().fontRenderer;
-        List<String> lines = fontRenderer.listFormattedStringToWidth(localizedName, recipeWidth - 10);
+        List<String> lines = fontRenderer.listFormattedStringToWidth(localizedName, GT_GUI_MultiblocksHandler.recipeWidth - 10);
         for (int i = 0; i < lines.size(); i++) {
             fontRenderer.drawString(
                 lines.get(i),
-                (recipeWidth - fontRenderer.getStringWidth(lines.get(i))) / 2,
+                (GT_GUI_MultiblocksHandler.recipeWidth - fontRenderer.getStringWidth(lines.get(i))) / 2,
                 fontRenderer.FONT_HEIGHT * i,
                 0x333333);
         }
@@ -321,6 +321,37 @@ public class GT_GUI_MultiblocksHandler {
         renderer.world.updateEntities();
         renderer.setClearColor(0xC6C6C6);
 
+        placeMultiblocks(tier);
+
+        Vector3f size = ((TrackedDummyWorld) renderer.world).getSize();
+        Vector3f minPos = ((TrackedDummyWorld) renderer.world).getMinPos();
+        center = new Vector3f(minPos.x + size.x / 2, minPos.y + size.y / 2, minPos.z + size.z / 2);
+
+        renderer.renderedBlocks.clear();
+        renderer.addRenderedBlocks(((TrackedDummyWorld) renderer.world).placedBlocks);
+        renderer.setOnLookingAt(ray -> {});
+
+        renderer.setAfterWorldRender(this::onAfterRender);
+        //        world.setRenderFilter(pos -> worldSceneRenderer.renderedBlocksMap.keySet().stream().anyMatch(c ->
+        // c.contains(pos)));
+
+        selected = null;
+        setNextLayer(layerIndex);
+
+        if (resetCamera) {
+            float max = Math.max(Math.max(Math.max(size.x, size.y), size.z), 1);
+            zoom = (float) (3.5 * Math.sqrt(max));
+            rotationYaw = 20.0f;
+            rotationPitch = 50f;
+            if (renderer != null) {
+                resetCenter();
+            }
+        } else {
+            renderer.setCameraLookAt(eyePos, lookAt, worldUp);
+        }
+    }
+
+    private void placeMultiblocks(int tier){
         IConstructable constructable = null;
         BlockPosition mbBlockPos = new BlockPosition(10, 10, 10);
 
@@ -348,46 +379,21 @@ public class GT_GUI_MultiblocksHandler {
         if (constructable != null) {
             constructable.construct(renderingController.getStackForm(tier), false);
         }
+    }
 
-        Vector3f size = ((TrackedDummyWorld) renderer.world).getSize();
-        Vector3f minPos = ((TrackedDummyWorld) renderer.world).getMinPos();
-        center = new Vector3f(minPos.x + size.x / 2, minPos.y + size.y / 2, minPos.z + size.z / 2);
-
-        renderer.renderedBlocks.clear();
-        renderer.addRenderedBlocks(((TrackedDummyWorld) renderer.world).placedBlocks);
-        renderer.setOnLookingAt(ray -> {});
-
-        renderer.setAfterWorldRender(renderer -> {
-            BlockPosition look = renderer.getLastTraceResult() == null
-                ? null
-                : new BlockPosition(
-                renderer.getLastTraceResult().blockX,
-                renderer.getLastTraceResult().blockY,
-                renderer.getLastTraceResult().blockZ);
-            if (look != null && look.equals(selected)) {
-                renderBlockOverLay(selected, 200, 75, 75);
-                return;
-            }
-            renderBlockOverLay(look, 150, 150, 150);
-            renderBlockOverLay(selected, 255, 0, 0);
-        });
-        //        world.setRenderFilter(pos -> worldSceneRenderer.renderedBlocksMap.keySet().stream().anyMatch(c ->
-        // c.contains(pos)));
-
-        selected = null;
-        setNextLayer(layerIndex);
-
-        if (resetCamera) {
-            float max = Math.max(Math.max(Math.max(size.x, size.y), size.z), 1);
-            this.zoom = (float) (3.5 * Math.sqrt(max));
-            this.rotationYaw = 20.0f;
-            this.rotationPitch = 50f;
-            if (renderer != null) {
-                resetCenter();
-            }
-        } else {
-            renderer.setCameraLookAt(eyePos, lookAt, worldUp);
+    public void onAfterRender(WorldSceneRenderer renderer){
+        BlockPosition look = renderer.getLastTraceResult() == null
+            ? null
+            : new BlockPosition(
+            renderer.getLastTraceResult().blockX,
+            renderer.getLastTraceResult().blockY,
+            renderer.getLastTraceResult().blockZ);
+        if (look != null && look.equals(selected)) {
+            renderBlockOverLay(selected, 200, 75, 75);
+            return;
         }
+        renderBlockOverLay(look, 150, 150, 150);
+        renderBlockOverLay(selected, 255, 0, 0);
     }
 
     private void scanIngredients(){
@@ -448,7 +454,7 @@ public class GT_GUI_MultiblocksHandler {
         return (red & 0xFF) << 24 | (green & 0xFF) << 16 | (blue & 0xFF) << 8 | (alpha & 0xFF);
     }
 
-    public boolean mouseClicked(GuiContainer gui, int mousex, int mousey, int button){
+    public boolean mouseClicked(int button){
         for (Map.Entry<GuiButton, Runnable> buttons : buttons.entrySet()) {
             int k = (NEIClientUtils.getGuiContainer().width
                 - ((GuiContainerMixin) NEIClientUtils.getGuiContainer()).getXSize())

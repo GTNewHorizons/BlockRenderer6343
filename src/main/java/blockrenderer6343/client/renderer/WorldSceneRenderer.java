@@ -6,13 +6,10 @@ import blockrenderer6343.api.utils.PositionedRect;
 import blockrenderer6343.api.utils.Size;
 import blockrenderer6343.client.utils.ProjectionUtils;
 import blockrenderer6343.client.world.TrackedDummyWorld;
-import blockrenderer6343.mixins.GuiContainerMixin;
 import codechicken.lib.vec.Vector3;
-import codechicken.nei.NEIClientUtils;
 import gregtech.common.render.GT_Renderer_Block;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.Tessellator;
@@ -41,6 +38,7 @@ import java.util.function.Consumer;
  */
 public abstract class WorldSceneRenderer {
 
+    //you have to place blocks in the world before use
     public final World world;
     // the Blocks which this renderer needs to render
     public final List<BlockPosition> renderedBlocks;
@@ -111,7 +109,6 @@ public abstract class WorldSceneRenderer {
         drawWorld();
 
         // check lookingAt
-        Minecraft mc = Minecraft.getMinecraft();
         this.lastTraceResult = null;
         if (onLookingAt != null
                 && mouseX > positionedRect.position.x

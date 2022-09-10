@@ -32,21 +32,6 @@ public class TrackedDummyWorld extends DummyWorld {
         return super.setBlock(x, y, z, block, meta, flags);
     }
 
-    public void addBlocks(List<BlockPosition> renderedBlocks) {
-        renderedBlocks.forEach(this::addBlock);
-    }
-
-    public void addBlock(BlockPosition pos) {
-        if (getBlock(pos.x, pos.y, pos.z) == Blocks.air) return;
-        this.placedBlocks.add(pos);
-        minPos.x = Math.min(minPos.x, pos.x);
-        minPos.y = Math.min(minPos.y, pos.y);
-        minPos.z = Math.min(minPos.z, pos.z);
-        maxPos.x = Math.max(maxPos.x, pos.x);
-        maxPos.y = Math.max(maxPos.y, pos.y);
-        maxPos.z = Math.max(maxPos.z, pos.z);
-    }
-
     @Override
     public Block getBlock(int x, int y, int z) {
         return super.getBlock(x, y, z);
@@ -197,21 +182,21 @@ public class TrackedDummyWorld extends DummyWorld {
                     }
 
                     Vec3 vec32 = Vec3.createVectorHelper(start.xCoord, start.yCoord, start.zCoord);
-                    l = (int) (vec32.xCoord = (double) MathHelper.floor_double(start.xCoord));
+                    l = (int) (vec32.xCoord = MathHelper.floor_double(start.xCoord));
 
                     if (b0 == 5) {
                         --l;
                         ++vec32.xCoord;
                     }
 
-                    i1 = (int) (vec32.yCoord = (double) MathHelper.floor_double(start.yCoord));
+                    i1 = (int) (vec32.yCoord = MathHelper.floor_double(start.yCoord));
 
                     if (b0 == 1) {
                         --i1;
                         ++vec32.yCoord;
                     }
 
-                    j1 = (int) (vec32.zCoord = (double) MathHelper.floor_double(start.zCoord));
+                    j1 = (int) (vec32.zCoord = MathHelper.floor_double(start.zCoord));
 
                     if (b0 == 3) {
                         --j1;

@@ -25,7 +25,7 @@ import static gregtech.api.enums.GT_Values.RES_PATH_GUI;
 public class GT_NEI_MultiblocksHandler extends TemplateRecipeHandler {
 
     public static List<GT_MetaTileEntity_MultiBlockBase> multiblocksList = new ArrayList<>();
-    private static GT_GUI_MultiblocksHandler baseHandler = new GT_GUI_MultiblocksHandler();
+    private static final GT_GUI_MultiblocksHandler baseHandler = new GT_GUI_MultiblocksHandler();
 
     public GT_NEI_MultiblocksHandler() {
         super();
@@ -35,11 +35,11 @@ public class GT_NEI_MultiblocksHandler extends TemplateRecipeHandler {
                 multiblocksList.add((GT_MetaTileEntity_MultiBlockBase) (mte));
             }
         }
-        baseHandler.onIngredientChanged = this::setIngredients;
+        baseHandler.setOnIngredientChanged(this::setIngredients);
     }
 
     public class recipeCacher extends CachedRecipe {
-        private List<PositionedStack> positionedIngredients = new ArrayList<>();
+        private final List<PositionedStack> positionedIngredients = new ArrayList<>();
 
         public recipeCacher(List<ItemStack> ingredients) {
             for(int i = 0 ; i< ingredients.size() ; i++)
@@ -104,14 +104,13 @@ public class GT_NEI_MultiblocksHandler extends TemplateRecipeHandler {
         super.drawForeground(recipe);
     }
 
-    private boolean tryLoadMultiblocks(ItemStack candidate){
+    private void tryLoadMultiblocks(ItemStack candidate){
         for (GT_MetaTileEntity_MultiBlockBase multiblocks : multiblocksList) {
             if (NEIClientUtils.areStacksSameType(((IMetaTileEntity) multiblocks).getStackForm(1), candidate)) {
                 baseHandler.loadMultiblocks(multiblocks);
-                return true;
+                return;
             }
         }
-        return false;
     }
 
     @Override
@@ -142,7 +141,7 @@ public class GT_NEI_MultiblocksHandler extends TemplateRecipeHandler {
         @Override
         public boolean mouseClicked(GuiContainer gui, int mousex, int mousey, int button) {
             if(canHandle(gui)){
-                return baseHandler.mouseClicked(gui, mousex, mousey, button);
+                return baseHandler.mouseClicked(button);
             }
             return false;
         }

@@ -63,7 +63,7 @@ public class GT_NEI_MultiblocksHandler extends TemplateRecipeHandler {
 
     @Override
     public String getOverlayIdentifier() {
-        return "gregtech.nei.multiblockHandler";
+        return "gregtech.nei.multiblockhandler";
     }
 
     @Override

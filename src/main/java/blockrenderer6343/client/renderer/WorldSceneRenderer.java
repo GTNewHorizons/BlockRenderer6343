@@ -1,6 +1,9 @@
 package blockrenderer6343.client.renderer;
 
 import blockrenderer6343.api.utils.BlockPosition;
+import blockrenderer6343.api.utils.Position;
+import blockrenderer6343.api.utils.PositionedRect;
+import blockrenderer6343.api.utils.Size;
 import blockrenderer6343.client.utils.ProjectionUtils;
 import blockrenderer6343.client.world.TrackedDummyWorld;
 import blockrenderer6343.mixins.GuiContainerMixin;
@@ -9,6 +12,7 @@ import codechicken.nei.NEIClientUtils;
 import gregtech.common.render.GT_Renderer_Block;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.Tessellator;
@@ -89,30 +93,25 @@ public class WorldSceneRenderer {
      * It will return matrices of projection and view in previous state after rendering
      */
     public void render(int x, int y, int width, int height, int mouseX, int mouseY) {
+        PositionedRect positionedRect = getPositionedRect(x, y, width, height);
+        PositionedRect mouse = getPositionedRect(mouseX, mouseY, 0, 0);
+        mouseX = mouse.position.x;
+        mouseY = mouse.position.y;
         // setupCamera
-        setupCamera(x, y, width, height);
+        setupCamera(positionedRect);
 
         // render TrackedDummyWorld
         drawWorld();
 
         // check lookingAt
         Minecraft mc = Minecraft.getMinecraft();
-        int k = (NEIClientUtils.getGuiContainer().width
-                        - ((GuiContainerMixin) NEIClientUtils.getGuiContainer()).getXSize())
-                / 2;
-        int l = (NEIClientUtils.getGuiContainer().height
-                        - ((GuiContainerMixin) NEIClientUtils.getGuiContainer()).getYSize())
-                / 2;
-        int screenMouseX = (int) (mouseX / (NEIClientUtils.getGuiContainer().width * 1.0) * mc.displayWidth);
-        int screenMouseY =
-                mc.displayHeight - (int) (mouseY / (NEIClientUtils.getGuiContainer().height * 1.0) * mc.displayHeight);
         this.lastTraceResult = null;
         if (onLookingAt != null
-                && mouseX > x + k
-                && mouseX < x + k + width
-                && mouseY > y + l
-                && mouseY < y + l + height) {
-            Vector3f hitPos = ProjectionUtils.unProject(screenMouseX, screenMouseY);
+                && mouseX > positionedRect.position.x
+                && mouseX < positionedRect.position.x + positionedRect.size.width
+                && mouseY > positionedRect.position.y
+                && mouseY < positionedRect.position.y + positionedRect.size.height) {
+            Vector3f hitPos = ProjectionUtils.unProject(mouseX, mouseY);
             MovingObjectPosition result = rayTrace(hitPos);
             if (result != null) {
                 this.lastTraceResult = result;
@@ -150,37 +149,37 @@ public class WorldSceneRenderer {
         this.eyePos = pos.add(lookAt.x, lookAt.y, lookAt.z).vector3f();
     }
 
-    public void setupCamera(int x, int y, int width, int height) {
+    protected PositionedRect getPositionedRect(int x, int y, int width, int height) {
         Minecraft mc = Minecraft.getMinecraft();
+        ScaledResolution resolution = new ScaledResolution(mc, mc.displayWidth, mc.displayHeight);
+        //compute window size from scaled width & height
+        int windowWidth = (int) (width / (resolution.getScaledWidth() * 1.0) * mc.displayWidth);
+        int windowHeight = (int) (height / (resolution.getScaledHeight() * 1.0) * mc.displayHeight);
+        //translate gui coordinates to window's ones (y is inverted)
+        int windowX = (int) (x / (resolution.getScaledWidth() * 1.0) * mc.displayWidth);
+        int windowY = mc.displayHeight - (int) (y / (resolution.getScaledHeight() * 1.0) * mc.displayHeight) - windowHeight;
 
+        return new PositionedRect(new Position(windowX, windowY), new Size(windowWidth, windowHeight));
+    }
+
+    public void setupCamera(PositionedRect positionedRect) {
+        int x = positionedRect.getPosition().x;
+        int y = positionedRect.getPosition().y;
+        int width = positionedRect.getSize().width;
+        int height = positionedRect.getSize().height;
+
+        Minecraft mc = Minecraft.getMinecraft();
         GlStateManager.pushAttrib();
         mc.entityRenderer.disableLightmap(0);
         GlStateManager.disableLighting();
         GlStateManager.enableDepth();
         GlStateManager.enableBlend();
 
-        // translate gui coordinates to window ones (y is inverted)
-        int k = (NEIClientUtils.getGuiContainer().width
-                        - ((GuiContainerMixin) NEIClientUtils.getGuiContainer()).getXSize())
-                / 2;
-        int l = (NEIClientUtils.getGuiContainer().height
-                        - ((GuiContainerMixin) NEIClientUtils.getGuiContainer()).getYSize())
-                / 2;
-        int windowX = (int) ((x + k) / (NEIClientUtils.getGuiContainer().width * 1.0) * mc.displayWidth);
-        int windowWidth = (int) (Math.min(width, NEIClientUtils.getGuiContainer().width)
-                / (NEIClientUtils.getGuiContainer().width * 1.0)
-                * mc.displayWidth);
-        int windowHeight = (int) (Math.min(height, NEIClientUtils.getGuiContainer().height)
-                / (NEIClientUtils.getGuiContainer().height * 1.0)
-                * mc.displayHeight);
-        int windowY = mc.displayHeight
-                - (int) ((y + l) / (NEIClientUtils.getGuiContainer().height * 1.0) * mc.displayHeight)
-                - windowHeight;
         // setup viewport and clear GL buffers
-        GlStateManager.viewport(windowX, windowY, windowWidth, windowHeight);
+        GlStateManager.viewport(x, y, width, height);
 
         GL11.glEnable(GL11.GL_SCISSOR_TEST);
-        GL11.glScissor(windowX, windowY, windowWidth, windowHeight);
+        GL11.glScissor(x, y, width, height);
         clearView();
         GL11.glDisable(GL11.GL_SCISSOR_TEST);
 
@@ -323,7 +322,7 @@ public class WorldSceneRenderer {
     protected MovingObjectPosition screenPos2BlockPosFace(int mouseX, int mouseY, int x, int y, int width, int height) {
         // render a frame
         GlStateManager.enableDepth();
-        setupCamera(x, y, width, height);
+        setupCamera(getPositionedRect(x, y, width, height));
 
         drawWorld();
 
@@ -344,7 +343,7 @@ public class WorldSceneRenderer {
     protected Vector3f blockPos2ScreenPos(BlockPosition pos, boolean depth, int x, int y, int width, int height) {
         // render a frame
         GlStateManager.enableDepth();
-        setupCamera(x, y, width, height);
+        setupCamera(getPositionedRect(x, y, width, height));
 
         drawWorld();
         Vector3f winPos = ProjectionUtils.project(pos);

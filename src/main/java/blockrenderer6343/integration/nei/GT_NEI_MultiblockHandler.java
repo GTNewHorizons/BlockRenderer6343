@@ -306,7 +306,13 @@ public class GT_NEI_MultiblockHandler extends TemplateRecipeHandler {
         guiMouseY = GuiDraw.getMousePosition().y;
 
         super.drawExtras(recipe);
-        renderer.render(recipeLayoutx, recipeLayouty, recipeWidth, sceneHeight, lastGuiMouseX, lastGuiMouseY);
+        int k = (NEIClientUtils.getGuiContainer().width
+            - ((GuiContainerMixin) NEIClientUtils.getGuiContainer()).getXSize())
+            / 2;
+        int l = (NEIClientUtils.getGuiContainer().height
+            - ((GuiContainerMixin) NEIClientUtils.getGuiContainer()).getYSize())
+            / 2;
+        renderer.render(recipeLayoutx + k, recipeLayouty + l, recipeWidth, sceneHeight, lastGuiMouseX, lastGuiMouseY);
         drawMultiblockName(recipeWidth);
 
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
@@ -314,12 +320,6 @@ public class GT_NEI_MultiblockHandler extends TemplateRecipeHandler {
         tooltipBlockStack = null;
 
         MovingObjectPosition rayTraceResult = renderer.getLastTraceResult();
-        int k = (NEIClientUtils.getGuiContainer().width
-                        - ((GuiContainerMixin) NEIClientUtils.getGuiContainer()).getXSize())
-                / 2;
-        int l = (NEIClientUtils.getGuiContainer().height
-                        - ((GuiContainerMixin) NEIClientUtils.getGuiContainer()).getYSize())
-                / 2;
         boolean insideView = guiMouseX >= k + recipeLayoutx
                 && guiMouseY >= l + recipeLayouty
                 && guiMouseX < k + recipeLayoutx + recipeWidth

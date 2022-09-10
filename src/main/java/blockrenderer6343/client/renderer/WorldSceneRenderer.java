@@ -32,7 +32,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-public class WorldSceneRenderer {
+/**
+ * Created with IntelliJ IDEA.
+ *
+ * @Author: KilaBash, backported by Quarri6343
+ * @Date: 2021/08/23
+ * @Description: Abstract class, and extend a lot of features compared with the original one.
+ */
+public abstract class WorldSceneRenderer {
 
     public final World world;
     // the Blocks which this renderer needs to render

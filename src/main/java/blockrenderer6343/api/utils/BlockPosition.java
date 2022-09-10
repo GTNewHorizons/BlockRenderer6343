@@ -1,6 +1,5 @@
 package blockrenderer6343.api.utils;
 
-// todo: convert any usage to vector3
 public class BlockPosition {
     public int x;
     public int y;

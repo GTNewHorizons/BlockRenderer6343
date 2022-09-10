@@ -150,16 +150,7 @@ public class WorldSceneRenderer {
     }
 
     protected PositionedRect getPositionedRect(int x, int y, int width, int height) {
-        Minecraft mc = Minecraft.getMinecraft();
-        ScaledResolution resolution = new ScaledResolution(mc, mc.displayWidth, mc.displayHeight);
-        //compute window size from scaled width & height
-        int windowWidth = (int) (width / (resolution.getScaledWidth() * 1.0) * mc.displayWidth);
-        int windowHeight = (int) (height / (resolution.getScaledHeight() * 1.0) * mc.displayHeight);
-        //translate gui coordinates to window's ones (y is inverted)
-        int windowX = (int) (x / (resolution.getScaledWidth() * 1.0) * mc.displayWidth);
-        int windowY = mc.displayHeight - (int) (y / (resolution.getScaledHeight() * 1.0) * mc.displayHeight) - windowHeight;
-
-        return new PositionedRect(new Position(windowX, windowY), new Size(windowWidth, windowHeight));
+        return new PositionedRect(new Position(x, y), new Size(width, height));
     }
 
     public void setupCamera(PositionedRect positionedRect) {
@@ -178,10 +169,7 @@ public class WorldSceneRenderer {
         // setup viewport and clear GL buffers
         GlStateManager.viewport(x, y, width, height);
 
-        GL11.glEnable(GL11.GL_SCISSOR_TEST);
-        GL11.glScissor(x, y, width, height);
-        clearView();
-        GL11.glDisable(GL11.GL_SCISSOR_TEST);
+        clearView(x,y,width,height);
 
         // setup projection matrix to perspective
         GlStateManager.matrixMode(GL11.GL_PROJECTION);
@@ -205,7 +193,7 @@ public class WorldSceneRenderer {
         GL11.glClearColor(i / 255.0f, j / 255.0f, k / 255.0f, opacity / 255.0f);
     }
 
-    protected void clearView() {
+    protected void clearView(int x, int y, int width, int height) {
         setGlClearColorFromInt(clearColor, clearColor >> 24);
         GlStateManager.clear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
     }

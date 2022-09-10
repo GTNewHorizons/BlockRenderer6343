@@ -8,12 +8,12 @@ import codechicken.nei.recipe.GuiUsageRecipe;
 public class NEI_config implements IConfigureNEI {
 
     public static boolean isAdded = true;
-    private static GT_NEI_MultiblockHandler handler;
+    private static GT_NEI_MultiblocksHandler handler;
 
     @Override
     public void loadConfig() {
         isAdded = false;
-        handler = new GT_NEI_MultiblockHandler();
+        handler = new GT_NEI_MultiblocksHandler();
         GuiCraftingRecipe.craftinghandlers.add(handler);
         GuiUsageRecipe.usagehandlers.add(handler);
         isAdded = true;

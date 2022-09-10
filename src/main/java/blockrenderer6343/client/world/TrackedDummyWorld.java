@@ -1,8 +1,7 @@
 package blockrenderer6343.client.world;
 
-import java.util.*;
-
 import blockrenderer6343.api.utils.BlockPosition;
+import java.util.*;
 import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.MathHelper;

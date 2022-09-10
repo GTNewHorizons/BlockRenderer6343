@@ -1,27 +1,26 @@
 package blockrenderer6343.client.utils;
 
 import blockrenderer6343.api.utils.BlockPosition;
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.util.glu.GLU;
-import org.lwjgl.util.vector.Vector3f;
-
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.util.glu.GLU;
+import org.lwjgl.util.vector.Vector3f;
 
 public class ProjectionUtils {
 
     private static final FloatBuffer MODELVIEW_MATRIX_BUFFER =
-        ByteBuffer.allocateDirect(16 * 4).order(ByteOrder.nativeOrder()).asFloatBuffer();
+            ByteBuffer.allocateDirect(16 * 4).order(ByteOrder.nativeOrder()).asFloatBuffer();
     private static final FloatBuffer PROJECTION_MATRIX_BUFFER =
-        ByteBuffer.allocateDirect(16 * 4).order(ByteOrder.nativeOrder()).asFloatBuffer();
+            ByteBuffer.allocateDirect(16 * 4).order(ByteOrder.nativeOrder()).asFloatBuffer();
     private static final IntBuffer VIEWPORT_BUFFER =
-        ByteBuffer.allocateDirect(16 * 4).order(ByteOrder.nativeOrder()).asIntBuffer();
+            ByteBuffer.allocateDirect(16 * 4).order(ByteOrder.nativeOrder()).asIntBuffer();
     protected static final FloatBuffer PIXEL_DEPTH_BUFFER =
-        ByteBuffer.allocateDirect(4).order(ByteOrder.nativeOrder()).asFloatBuffer();
+            ByteBuffer.allocateDirect(4).order(ByteOrder.nativeOrder()).asFloatBuffer();
     protected static final FloatBuffer OBJECT_POS_BUFFER =
-        ByteBuffer.allocateDirect(3 * 4).order(ByteOrder.nativeOrder()).asFloatBuffer();
+            ByteBuffer.allocateDirect(3 * 4).order(ByteOrder.nativeOrder()).asFloatBuffer();
 
     public static Vector3f project(BlockPosition pos) {
         // read current rendering parameters
@@ -36,13 +35,13 @@ public class ProjectionUtils {
 
         // call gluProject with retrieved parameters
         GLU.gluProject(
-            pos.x + 0.5f,
-            pos.y + 0.5f,
-            pos.z + 0.5f,
-            MODELVIEW_MATRIX_BUFFER,
-            PROJECTION_MATRIX_BUFFER,
-            VIEWPORT_BUFFER,
-            OBJECT_POS_BUFFER);
+                pos.x + 0.5f,
+                pos.y + 0.5f,
+                pos.z + 0.5f,
+                MODELVIEW_MATRIX_BUFFER,
+                PROJECTION_MATRIX_BUFFER,
+                VIEWPORT_BUFFER,
+                OBJECT_POS_BUFFER);
 
         // rewind buffers after read by gluProject
         VIEWPORT_BUFFER.rewind();
@@ -88,13 +87,13 @@ public class ProjectionUtils {
 
         // call gluUnProject with retrieved parameters
         GLU.gluUnProject(
-            mouseX,
-            mouseY,
-            pixelDepth,
-            MODELVIEW_MATRIX_BUFFER,
-            PROJECTION_MATRIX_BUFFER,
-            VIEWPORT_BUFFER,
-            OBJECT_POS_BUFFER);
+                mouseX,
+                mouseY,
+                pixelDepth,
+                MODELVIEW_MATRIX_BUFFER,
+                PROJECTION_MATRIX_BUFFER,
+                VIEWPORT_BUFFER,
+                OBJECT_POS_BUFFER);
 
         // rewind buffers after read by gluUnProject
         VIEWPORT_BUFFER.rewind();

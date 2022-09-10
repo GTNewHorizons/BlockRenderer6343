@@ -8,6 +8,9 @@ import blockrenderer6343.client.utils.ProjectionUtils;
 import blockrenderer6343.client.world.TrackedDummyWorld;
 import codechicken.lib.vec.Vector3;
 import gregtech.common.render.GT_Renderer_Block;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderBlocks;
@@ -25,10 +28,6 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.glu.GLU;
 import org.lwjgl.util.vector.Vector3f;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Consumer;
-
 /**
  * Created with IntelliJ IDEA.
  *
@@ -38,7 +37,7 @@ import java.util.function.Consumer;
  */
 public abstract class WorldSceneRenderer {
 
-    //you have to place blocks in the world before use
+    // you have to place blocks in the world before use
     public final World world;
     // the Blocks which this renderer needs to render
     public final List<BlockPosition> renderedBlocks;
@@ -173,7 +172,7 @@ public abstract class WorldSceneRenderer {
         // setup viewport and clear GL buffers
         GlStateManager.viewport(x, y, width, height);
 
-        clearView(x,y,width,height);
+        clearView(x, y, width, height);
 
         // setup projection matrix to perspective
         GlStateManager.matrixMode(GL11.GL_PROJECTION);

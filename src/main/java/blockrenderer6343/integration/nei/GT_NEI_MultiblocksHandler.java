@@ -1,5 +1,9 @@
 package blockrenderer6343.integration.nei;
 
+import static blockrenderer6343.integration.gregtech.GT_GUI_MultiblocksHandler.*;
+import static gregtech.api.GregTech_API.METATILEENTITIES;
+import static gregtech.api.enums.GT_Values.RES_PATH_GUI;
+
 import blockrenderer6343.integration.gregtech.GT_GUI_MultiblocksHandler;
 import codechicken.nei.NEIClientUtils;
 import codechicken.nei.PositionedStack;
@@ -12,15 +16,10 @@ import codechicken.nei.recipe.TemplateRecipeHandler;
 import gregtech.api.interfaces.metatileentity.IMetaTileEntity;
 import gregtech.api.metatileentity.implementations.GT_MetaTileEntity_MultiBlockBase;
 import gregtech.common.tileentities.machines.multi.GT_MetaTileEntity_PlasmaForge;
-import net.minecraft.client.gui.inventory.GuiContainer;
-import net.minecraft.item.ItemStack;
-
 import java.util.ArrayList;
 import java.util.List;
-
-import static blockrenderer6343.integration.gregtech.GT_GUI_MultiblocksHandler.*;
-import static gregtech.api.GregTech_API.METATILEENTITIES;
-import static gregtech.api.enums.GT_Values.RES_PATH_GUI;
+import net.minecraft.client.gui.inventory.GuiContainer;
+import net.minecraft.item.ItemStack;
 
 public class GT_NEI_MultiblocksHandler extends TemplateRecipeHandler {
 
@@ -42,7 +41,7 @@ public class GT_NEI_MultiblocksHandler extends TemplateRecipeHandler {
         private final List<PositionedStack> positionedIngredients = new ArrayList<>();
 
         public recipeCacher(List<ItemStack> ingredients) {
-            for(int i = 0 ; i< ingredients.size() ; i++)
+            for (int i = 0; i < ingredients.size(); i++)
                 positionedIngredients.add(new PositionedStack(ingredients.get(i), SLOTS_X + i * SLOT_SIZE, SLOTS_Y));
         }
 
@@ -104,7 +103,7 @@ public class GT_NEI_MultiblocksHandler extends TemplateRecipeHandler {
         super.drawForeground(recipe);
     }
 
-    private void tryLoadMultiblocks(ItemStack candidate){
+    private void tryLoadMultiblocks(ItemStack candidate) {
         for (GT_MetaTileEntity_MultiBlockBase multiblocks : multiblocksList) {
             if (NEIClientUtils.areStacksSameType(((IMetaTileEntity) multiblocks).getStackForm(1), candidate)) {
                 baseHandler.loadMultiblocks(multiblocks);
@@ -119,7 +118,7 @@ public class GT_NEI_MultiblocksHandler extends TemplateRecipeHandler {
         baseHandler.drawMultiblock();
     }
 
-    public void setIngredients(List<ItemStack> ingredients){
+    public void setIngredients(List<ItemStack> ingredients) {
         arecipes.clear();
         arecipes.add(new GT_NEI_MultiblocksHandler.recipeCacher(ingredients));
     }
@@ -140,7 +139,7 @@ public class GT_NEI_MultiblocksHandler extends TemplateRecipeHandler {
 
         @Override
         public boolean mouseClicked(GuiContainer gui, int mousex, int mousey, int button) {
-            if(canHandle(gui)){
+            if (canHandle(gui)) {
                 return baseHandler.mouseClicked(button);
             }
             return false;
@@ -153,8 +152,7 @@ public class GT_NEI_MultiblocksHandler extends TemplateRecipeHandler {
 
         @Override
         public List<String> handleTooltip(GuiContainer gui, int mousex, int mousey, List<String> currenttip) {
-            if (canHandle(gui) && baseHandler.handleTooltip() != null)
-                    currenttip.addAll(baseHandler.handleTooltip());
+            if (canHandle(gui) && baseHandler.handleTooltip() != null) currenttip.addAll(baseHandler.handleTooltip());
             return currenttip;
         }
 

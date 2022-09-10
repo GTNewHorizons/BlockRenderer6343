@@ -1,6 +1,5 @@
 package blockrenderer6343.api.utils;
 
-
 import java.util.Objects;
 
 public class PositionedRect {
@@ -30,17 +29,17 @@ public class PositionedRect {
     }
 
     public boolean intersects(Position other) {
-        return position.x <= other.x &&
-            position.y <= other.y &&
-            position.x + size.width >= other.x &&
-            position.y + size.height >= other.y;
+        return position.x <= other.x
+                && position.y <= other.y
+                && position.x + size.width >= other.x
+                && position.y + size.height >= other.y;
     }
 
     public boolean intersects(PositionedRect other) {
-        return intersects(other.position) ||
-            intersects(other.position.add(other.size)) ||
-            intersects(other.position.add(new Size(other.size.width, 0))) ||
-            intersects(other.position.add(new Size(0, other.size.height)));
+        return intersects(other.position)
+                || intersects(other.position.add(other.size))
+                || intersects(other.position.add(new Size(other.size.width, 0)))
+                || intersects(other.position.add(new Size(0, other.size.height)));
     }
 
     @Override
@@ -48,8 +47,7 @@ public class PositionedRect {
         if (this == o) return true;
         if (!(o instanceof PositionedRect)) return false;
         PositionedRect that = (PositionedRect) o;
-        return position.equals(that.position) &&
-            size.equals(that.size);
+        return position.equals(that.position) && size.equals(that.size);
     }
 
     @Override
@@ -60,8 +58,8 @@ public class PositionedRect {
     @Override
     public String toString() {
         return com.google.common.base.Objects.toStringHelper(this)
-            .add("position", position)
-            .add("size", size)
-            .toString();
+                .add("position", position)
+                .add("size", size)
+                .toString();
     }
 }

@@ -27,8 +27,7 @@ public class Size {
         if (this == o) return true;
         if (!(o instanceof Size)) return false;
         Size size = (Size) o;
-        return width == size.width &&
-            height == size.height;
+        return width == size.width && height == size.height;
     }
 
     @Override
@@ -39,8 +38,8 @@ public class Size {
     @Override
     public String toString() {
         return com.google.common.base.Objects.toStringHelper(this)
-            .add("width", width)
-            .add("height", height)
-            .toString();
+                .add("width", width)
+                .add("height", height)
+                .toString();
     }
 }

@@ -1,6 +1,5 @@
 package blockrenderer6343.api.utils;
 
-
 import java.util.Objects;
 
 public class Position {
@@ -40,8 +39,7 @@ public class Position {
         if (this == o) return true;
         if (!(o instanceof Position)) return false;
         Position position = (Position) o;
-        return x == position.x &&
-            y == position.y;
+        return x == position.x && y == position.y;
     }
 
     @Override
@@ -52,8 +50,8 @@ public class Position {
     @Override
     public String toString() {
         return com.google.common.base.Objects.toStringHelper(this)
-            .add("x", x)
-            .add("y", y)
-            .toString();
+                .add("x", x)
+                .add("y", y)
+                .toString();
     }
 }

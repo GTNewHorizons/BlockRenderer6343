@@ -11,14 +11,12 @@ import blockrenderer6343.client.world.TrackedDummyWorld;
 import blockrenderer6343.mixins.GuiContainerMixin;
 import codechicken.lib.gui.GuiDraw;
 import codechicken.lib.math.MathHelper;
-import codechicken.nei.ItemList;
 import codechicken.nei.NEIClientUtils;
 import codechicken.nei.guihook.GuiContainerManager;
 import com.gtnewhorizon.structurelib.alignment.constructable.ConstructableUtility;
 import com.gtnewhorizon.structurelib.alignment.constructable.IConstructable;
 import com.gtnewhorizon.structurelib.alignment.constructable.IConstructableProvider;
 import com.gtnewhorizon.structurelib.alignment.constructable.ISurvivalConstructable;
-import com.gtnewhorizon.structurelib.structure.IItemSource;
 import com.gtnewhorizon.structurelib.structure.ISurvivalBuildEnvironment;
 import com.mojang.authlib.GameProfile;
 import cpw.mods.fml.relauncher.Side;
@@ -26,15 +24,10 @@ import cpw.mods.fml.relauncher.SideOnly;
 import gregtech.api.interfaces.metatileentity.IMetaTileEntity;
 import gregtech.api.interfaces.tileentity.IGregTechTileEntity;
 import gregtech.api.interfaces.tileentity.ITurnable;
-import gregtech.api.metatileentity.BaseTileEntity;
-import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.implementations.GT_MetaTileEntity_MultiBlockBase;
-
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
-
-import gregtech.common.tileentities.machines.multi.GT_MetaTileEntity_PlasmaForge;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
@@ -46,11 +39,8 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.world.World;
-import net.minecraftforge.common.util.FakePlayerFactory;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.util.vector.Vector3f;
-
-import static gregtech.api.GregTech_API.METATILEENTITIES;
 
 public class GT_GUI_MultiblocksHandler {
     private static ImmediateWorldSceneRenderer renderer;
@@ -378,8 +368,8 @@ public class GT_GUI_MultiblocksHandler {
     }
 
     private void placeMultiblocks(int tier) {
-        fakeMultiblockBuilder = new ClientFakePlayer(renderer.world,
-            new GameProfile(UUID.fromString("518FDF18-EC2A-4322-832A-58ED1721309B"), "[GregTech]"));
+        fakeMultiblockBuilder = new ClientFakePlayer(
+                renderer.world, new GameProfile(UUID.fromString("518FDF18-EC2A-4322-832A-58ED1721309B"), "[GregTech]"));
         renderer.world.unloadEntities(Arrays.asList(fakeMultiblockBuilder));
 
         IConstructable constructable = null;
@@ -390,7 +380,7 @@ public class GT_GUI_MultiblocksHandler {
                 .getItem()
                 .onItemUse(
                         itemStack,
-                        Minecraft.getMinecraft().thePlayer,
+                        fakeMultiblockBuilder,
                         renderer.world,
                         mbBlockPos.x,
                         mbBlockPos.y,
@@ -399,18 +389,21 @@ public class GT_GUI_MultiblocksHandler {
                         mbBlockPos.x,
                         mbBlockPos.y,
                         mbBlockPos.z);
+
         TileEntity tTileEntity = renderer.world.getTileEntity(mbBlockPos.x, mbBlockPos.y, mbBlockPos.z);
         ((ITurnable) tTileEntity).setFrontFacing((byte) 3);
-        IMetaTileEntity mte = ((IGregTechTileEntity)tTileEntity).getMetaTileEntity();
-        if(mte instanceof ISurvivalConstructable){
+        IMetaTileEntity mte = ((IGregTechTileEntity) tTileEntity).getMetaTileEntity();
+
+        if (mte instanceof ISurvivalConstructable) {
             int result;
             do {
-                result = ((ISurvivalConstructable)mte).survivalConstruct(renderingController.getStackForm(tier),
-                    Integer.MAX_VALUE,
-                    ISurvivalBuildEnvironment.create(CreativeItemSource.instance, fakeMultiblockBuilder));
-            }while(result > 0);
-        }
-        else if (tTileEntity instanceof IConstructableProvider) {
+                result = ((ISurvivalConstructable) mte)
+                        .survivalConstruct(
+                                renderingController.getStackForm(tier),
+                                Integer.MAX_VALUE,
+                                ISurvivalBuildEnvironment.create(CreativeItemSource.instance, fakeMultiblockBuilder));
+            } while (result > 0);
+        } else if (tTileEntity instanceof IConstructableProvider) {
             constructable = ((IConstructableProvider) tTileEntity).getConstructable();
         } else if (tTileEntity instanceof IConstructable) {
             constructable = (IConstructable) tTileEntity;
@@ -443,9 +436,12 @@ public class GT_GUI_MultiblocksHandler {
             int meta = renderer.world.getBlockMetadata(renderedBlock.x, renderedBlock.y, renderedBlock.z);
             ArrayList<ItemStack> itemstacks =
                     block.getDrops(renderer.world, renderedBlock.x, renderedBlock.y, renderedBlock.z, meta, 0);
+            if (itemstacks.size() == 0) { // glass
+                itemstacks.add(new ItemStack(block));
+            }
             boolean added = false;
             for (ItemStack ingredient : ingredients) {
-                if (ingredient.getItem().equals(itemstacks.get(0).getItem())) {
+                if (NEIClientUtils.areStacksSameTypeWithNBT(ingredient, itemstacks.get(0))) {
                     ingredient.stackSize++;
                     added = true;
                     break;

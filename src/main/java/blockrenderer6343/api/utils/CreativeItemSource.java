@@ -32,6 +32,19 @@ public class CreativeItemSource implements IItemSource {
         return store;
     }
 
+    public Map<ItemStack, Integer> takeEverythingMatches(Predicate<ItemStack> predicate, boolean b, int i) {
+        Map<ItemStack, Integer> store = new HashMap<>();
+        if (!ItemList.loadFinished) return store;
+
+        for (ItemStack itemStack : ItemList.items) {
+            if (predicate.test(itemStack)) {
+                store.put(itemStack, Integer.MAX_VALUE);
+            }
+        }
+
+        return store;
+    }
+
     @Override
     public boolean takeOne(ItemStack stack, boolean simulate) {
         return true;

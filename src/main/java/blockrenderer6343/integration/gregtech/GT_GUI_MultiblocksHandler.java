@@ -1,8 +1,10 @@
 package blockrenderer6343.integration.gregtech;
 
 import blockrenderer6343.BlockRenderer6343;
+import blockrenderer6343.Tags;
 import blockrenderer6343.api.utils.BlockPosition;
 import blockrenderer6343.api.utils.CreativeItemSource;
+import blockrenderer6343.api.utils.PositionedIStructureElement;
 import blockrenderer6343.client.renderer.GlStateManager;
 import blockrenderer6343.client.renderer.ImmediateWorldSceneRenderer;
 import blockrenderer6343.client.renderer.WorldSceneRenderer;
@@ -13,12 +15,15 @@ import codechicken.lib.gui.GuiDraw;
 import codechicken.lib.math.MathHelper;
 import codechicken.nei.NEIClientUtils;
 import codechicken.nei.guihook.GuiContainerManager;
+import com.gtnewhorizon.structurelib.StructureEvent;
+import com.gtnewhorizon.structurelib.StructureLibAPI;
 import com.gtnewhorizon.structurelib.alignment.constructable.ConstructableUtility;
 import com.gtnewhorizon.structurelib.alignment.constructable.IConstructable;
 import com.gtnewhorizon.structurelib.alignment.constructable.IConstructableProvider;
 import com.gtnewhorizon.structurelib.alignment.constructable.ISurvivalConstructable;
-import com.gtnewhorizon.structurelib.structure.ISurvivalBuildEnvironment;
+import com.gtnewhorizon.structurelib.structure.*;
 import com.mojang.authlib.GameProfile;
+import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import gregtech.api.interfaces.metatileentity.IMetaTileEntity;
@@ -28,6 +33,7 @@ import gregtech.api.metatileentity.implementations.GT_MetaTileEntity_MultiBlockB
 
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import net.minecraft.block.Block;
@@ -50,8 +56,10 @@ public class GT_GUI_MultiblocksHandler {
     private static ImmediateWorldSceneRenderer renderer;
 
     public static final int SLOT_SIZE = 18;
-    public static final int SLOTS_X = 5;
-    public static final int SLOTS_Y = 135;
+    public static final int INGREDIENT_SLOTS_X = 5;
+    public static final int INGREDIENT_SLOTS_Y = 135;
+    public static final int CANDIDATE_SLOTS_X = 5;
+    public static final int CANDIDATE_SLOTS_Y = 20;
 
     private static final int recipeLayoutx = 8;
     private static final int recipeLayouty = 50;
@@ -73,6 +81,9 @@ public class GT_GUI_MultiblocksHandler {
     private static int layerIndex = -1;
     private static int tierIndex = 1;
     private List<ItemStack> ingredients = new ArrayList<>();
+    private List<PositionedIStructureElement> structureElements = new ArrayList<>();
+    private List<ItemStack> candidates = new ArrayList<>();
+    private static final BlockPosition mbPlacePos = new BlockPosition(10,10,10);
 
     private static final int ICON_SIZE_X = 20;
     private static final int ICON_SIZE_Y = 20;
@@ -280,6 +291,7 @@ public class GT_GUI_MultiblocksHandler {
 
         // draw ingredients again because it was hidden by worldrenderer
         drawIngredients();
+        drawCandidates();
 
         lastGuiMouseX = guiMouseX;
         lastGuiMouseY = guiMouseY;
@@ -322,7 +334,12 @@ public class GT_GUI_MultiblocksHandler {
 
     private void drawIngredients() {
         for (int i = 0; i < ingredients.size(); i++)
-            GuiContainerManager.drawItem(SLOTS_X + i * SLOT_SIZE, SLOTS_Y, ingredients.get(i));
+            GuiContainerManager.drawItem(INGREDIENT_SLOTS_X + i * SLOT_SIZE, INGREDIENT_SLOTS_Y, ingredients.get(i));
+    }
+
+    private void drawCandidates(){
+        for (int i = 0; i < candidates.size(); i++)
+            GuiContainerManager.drawItem(CANDIDATE_SLOTS_X, CANDIDATE_SLOTS_Y + i * SLOT_SIZE, candidates.get(i));
     }
 
     private void initializeSceneRenderer(int tier, boolean resetCamera) {
@@ -352,7 +369,7 @@ public class GT_GUI_MultiblocksHandler {
         renderer.setOnLookingAt(ray -> {
         });
 
-        renderer.setOnWorldRender(this::onRender);
+        renderer.setOnWorldRender(this::onRendererRender);
         //        world.setRenderFilter(pos -> worldSceneRenderer.renderedBlocksMap.keySet().stream().anyMatch(c ->
         // c.contains(pos)));
 
@@ -378,7 +395,6 @@ public class GT_GUI_MultiblocksHandler {
         renderer.world.unloadEntities(Arrays.asList(fakeMultiblockBuilder));
 
         IConstructable constructable = null;
-        BlockPosition mbBlockPos = new BlockPosition(10, 10, 10);
 
         ItemStack itemStack = renderingController.getStackForm(1);
         itemStack
@@ -387,17 +403,21 @@ public class GT_GUI_MultiblocksHandler {
                 itemStack,
                 fakeMultiblockBuilder,
                 renderer.world,
-                mbBlockPos.x,
-                mbBlockPos.y,
-                mbBlockPos.z,
+                mbPlacePos.x,
+                mbPlacePos.y,
+                mbPlacePos.z,
                 0,
-                mbBlockPos.x,
-                mbBlockPos.y,
-                mbBlockPos.z);
+                mbPlacePos.x,
+                mbPlacePos.y,
+                mbPlacePos.z);
 
-        TileEntity tTileEntity = renderer.world.getTileEntity(mbBlockPos.x, mbBlockPos.y, mbBlockPos.z);
+        TileEntity tTileEntity = renderer.world.getTileEntity(mbPlacePos.x, mbPlacePos.y, mbPlacePos.z);
         ((ITurnable) tTileEntity).setFrontFacing((byte) 3);
         IMetaTileEntity mte = ((IGregTechTileEntity) tTileEntity).getMetaTileEntity();
+
+        if(!StructureLibAPI.isInstrumentEnabled())
+            StructureLibAPI.enableInstrument(Tags.MODID);
+        structureElements.clear();
 
         if (mte instanceof ISurvivalConstructable) {
             int result;
@@ -416,9 +436,12 @@ public class GT_GUI_MultiblocksHandler {
         if (constructable != null) {
             constructable.construct(renderingController.getStackForm(tier), false);
         }
+
+        if(StructureLibAPI.isInstrumentEnabled())
+            StructureLibAPI.disableInstrument();
     }
 
-    public void onRender(WorldSceneRenderer renderer) {
+    public void onRendererRender(WorldSceneRenderer renderer) {
         BlockPosition look = renderer.getLastTraceResult() == null
             ? null
             : new BlockPosition(
@@ -458,6 +481,49 @@ public class GT_GUI_MultiblocksHandler {
 
         if (onIngredientChanged != null) {
             onIngredientChanged.accept(ingredients);
+        }
+    }
+
+    private void scanCandidates(){
+        candidates.clear();
+        for (PositionedIStructureElement structureElement : structureElements) {
+            if(structureElement.x == selected.x
+            && structureElement.y == selected.y
+            && structureElement.z == selected.z){
+                ItemStack newController = renderingController.getStackForm(1).copy();
+
+                fakeMultiblockBuilder = new ClientFakePlayer(
+                    renderer.world, new GameProfile(UUID.fromString("518FDF18-EC2A-4322-832A-58ED1721309B"), "[GregTech]"));
+                renderer.world.unloadEntities(Arrays.asList(fakeMultiblockBuilder));
+
+                newController
+                    .getItem()
+                    .onItemUse(
+                        newController,
+                        fakeMultiblockBuilder,
+                        renderer.world,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                       0);
+
+                TileEntity tTileEntity = renderer.world.getTileEntity(0, 0, 0);
+                ((ITurnable) tTileEntity).setFrontFacing((byte) 3);
+                IMetaTileEntity mte = ((IGregTechTileEntity) tTileEntity).getMetaTileEntity();
+
+                IStructureElement.BlocksToPlace blocksToPlace = structureElement.element.getBlocksToPlace(
+                    (GT_MetaTileEntity_MultiBlockBase)mte, renderer.world, selected.x - mbPlacePos.x, selected.y - mbPlacePos.y, selected.z - mbPlacePos.z,
+                    mte.getStackForm(tierIndex),
+                    AutoPlaceEnvironment.fromLegacy(CreativeItemSource.instance, fakeMultiblockBuilder, iChatComponent -> {}));
+                if(blocksToPlace != null){
+                    Predicate<ItemStack> predicate = blocksToPlace.getPredicate();
+                    candidates.addAll(CreativeItemSource.instance.takeEverythingMatches(predicate, false, 0).keySet());
+                }
+                return;
+            }
         }
     }
 
@@ -506,6 +572,7 @@ public class GT_GUI_MultiblocksHandler {
                 renderer.getLastTraceResult().blockX,
                 renderer.getLastTraceResult().blockY,
                 renderer.getLastTraceResult().blockZ);
+            scanCandidates();
         }
         return false;
     }
@@ -515,5 +582,10 @@ public class GT_GUI_MultiblocksHandler {
             return tooltipBlockStack.getTooltip(
                 Minecraft.getMinecraft().thePlayer, Minecraft.getMinecraft().gameSettings.advancedItemTooltips);
         else return null;
+    }
+
+    @SubscribeEvent
+    public void OnStructureEvent(StructureEvent.StructureElementVisitedEvent event){
+        structureElements.add(new PositionedIStructureElement(event.getX(), event.getY(), event.getZ(), (IStructureElement<GT_MetaTileEntity_MultiBlockBase>) event.getElement()));
     }
 }

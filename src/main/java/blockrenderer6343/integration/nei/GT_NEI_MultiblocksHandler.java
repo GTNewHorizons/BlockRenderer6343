@@ -4,6 +4,7 @@ import static blockrenderer6343.integration.gregtech.GT_GUI_MultiblocksHandler.*
 import static gregtech.api.GregTech_API.METATILEENTITIES;
 import static gregtech.api.enums.GT_Values.RES_PATH_GUI;
 
+import blockrenderer6343.ClientProxy;
 import blockrenderer6343.integration.gregtech.GT_GUI_MultiblocksHandler;
 import codechicken.nei.NEIClientUtils;
 import codechicken.nei.PositionedStack;
@@ -24,7 +25,7 @@ import net.minecraft.item.ItemStack;
 public class GT_NEI_MultiblocksHandler extends TemplateRecipeHandler {
 
     public static List<GT_MetaTileEntity_MultiBlockBase> multiblocksList = new ArrayList<>();
-    private static final GT_GUI_MultiblocksHandler baseHandler = new GT_GUI_MultiblocksHandler();
+    private static final GT_GUI_MultiblocksHandler baseHandler = ClientProxy.guiMultiblocksHandler;
 
     public GT_NEI_MultiblocksHandler() {
         super();
@@ -42,7 +43,7 @@ public class GT_NEI_MultiblocksHandler extends TemplateRecipeHandler {
 
         public recipeCacher(List<ItemStack> ingredients) {
             for (int i = 0; i < ingredients.size(); i++)
-                positionedIngredients.add(new PositionedStack(ingredients.get(i), SLOTS_X + i * SLOT_SIZE, SLOTS_Y));
+                positionedIngredients.add(new PositionedStack(ingredients.get(i), INGREDIENT_SLOTS_X + i * SLOT_SIZE, INGREDIENT_SLOTS_Y));
         }
 
         @Override

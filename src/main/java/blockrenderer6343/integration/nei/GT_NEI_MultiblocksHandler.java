@@ -58,11 +58,13 @@ public class GT_NEI_MultiblocksHandler extends TemplateRecipeHandler {
             }
         }
 
-        public void setResults(List<ItemStack> results) {
+        public void setResults(List<List<ItemStack>> results) {
             positionedResults.clear();
             for (int i = 0; i < results.size(); i++) {
-                positionedResults.add(
-                        new PositionedStack(results.get(i), CANDIDATE_SLOTS_X, CANDIDATE_SLOTS_Y + i * SLOT_SIZE));
+                PositionedStack result =
+                        new PositionedStack(results.get(i), CANDIDATE_SLOTS_X, CANDIDATE_SLOTS_Y + i * SLOT_SIZE);
+                result.generatePermutations();
+                positionedResults.add(result);
             }
         }
 
@@ -78,7 +80,7 @@ public class GT_NEI_MultiblocksHandler extends TemplateRecipeHandler {
 
         @Override
         public List<PositionedStack> getOtherStacks() {
-            return positionedResults;
+            return getCycledIngredients(cycleticks / 20, positionedResults);
         }
     }
 
@@ -145,7 +147,7 @@ public class GT_NEI_MultiblocksHandler extends TemplateRecipeHandler {
         arecipes.add(recipeCacher);
     }
 
-    public void setResults(List<ItemStack> results) {
+    public void setResults(List<List<ItemStack>> results) {
         arecipes.clear();
         recipeCacher.setResults(results);
         arecipes.add(recipeCacher);

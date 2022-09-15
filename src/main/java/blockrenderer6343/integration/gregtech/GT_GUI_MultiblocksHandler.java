@@ -22,10 +22,7 @@ import gregtech.api.interfaces.metatileentity.IMetaTileEntity;
 import gregtech.api.interfaces.tileentity.IGregTechTileEntity;
 import gregtech.api.interfaces.tileentity.ITurnable;
 import gregtech.api.metatileentity.implementations.GT_MetaTileEntity_MultiBlockBase;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import net.minecraft.client.Minecraft;
@@ -42,12 +39,12 @@ public class GT_GUI_MultiblocksHandler extends GUI_MultiblocksHandler<GT_MetaTil
 
     protected static int tierIndex = 1;
 
-    private List<ItemStack> candidates = new ArrayList<>();
+    private List<List<ItemStack>> candidates = new ArrayList<>();
     private static final BlockPosition mbPlacePos = new BlockPosition(10, 10, 10);
 
     private static EntityPlayer fakeMultiblockBuilder;
 
-    protected Consumer<List<ItemStack>> onCandidateChanged;
+    protected Consumer<List<List<ItemStack>>> onCandidateChanged;
 
     public GT_GUI_MultiblocksHandler() {
         super();
@@ -64,7 +61,7 @@ public class GT_GUI_MultiblocksHandler extends GUI_MultiblocksHandler<GT_MetaTil
         buttons.put(projectMultiblocksButton, this::projectMultiblocks);
     }
 
-    public void setOnCandidateChanged(Consumer<List<ItemStack>> callback) {
+    public void setOnCandidateChanged(Consumer<List<List<ItemStack>>> callback) {
         onCandidateChanged = callback;
     }
 
@@ -208,9 +205,36 @@ public class GT_GUI_MultiblocksHandler extends GUI_MultiblocksHandler<GT_MetaTil
                                 CreativeItemSource.instance, fakeMultiblockBuilder, iChatComponent -> {}));
                 if (blocksToPlace != null) {
                     Predicate<ItemStack> predicate = blocksToPlace.getPredicate();
-                    candidates.addAll(CreativeItemSource.instance
+                    Set<ItemStack> rawCandidates = CreativeItemSource.instance
                             .takeEverythingMatches(predicate, false, 0)
-                            .keySet());
+                            .keySet();
+
+                    List<List<ItemStack>> stackedCandidates = new ArrayList<>();
+                    Iterator<ItemStack> iterator = rawCandidates.iterator();
+                    while (iterator.hasNext()) {
+                        ItemStack rawCandidate = iterator.next();
+                        boolean added = false;
+                        for (List<ItemStack> stackedCandidate : stackedCandidates) {
+                            if (stackedCandidate
+                                    .get(0)
+                                    .getTooltip(fakeMultiblockBuilder, false)
+                                    .get(1)
+                                    .equals(rawCandidate
+                                            .getTooltip(fakeMultiblockBuilder, false)
+                                            .get(1))) {
+                                stackedCandidate.add(rawCandidate);
+                                added = true;
+                                break;
+                            }
+                        }
+                        if (!added) {
+                            List<ItemStack> newStackedCandidate = new ArrayList<>();
+                            newStackedCandidate.add(rawCandidate);
+                            stackedCandidates.add(newStackedCandidate);
+                        }
+                    }
+
+                    candidates.addAll(stackedCandidates);
 
                     if (onCandidateChanged != null) {
                         onCandidateChanged.accept(candidates);
@@ -218,6 +242,9 @@ public class GT_GUI_MultiblocksHandler extends GUI_MultiblocksHandler<GT_MetaTil
                 }
                 return;
             }
+        }
+        if (onCandidateChanged != null) {
+            onCandidateChanged.accept(candidates);
         }
     }
 

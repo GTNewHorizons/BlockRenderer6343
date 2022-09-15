@@ -11,6 +11,12 @@ import blockrenderer6343.mixins.GuiContainerMixin;
 import codechicken.lib.gui.GuiDraw;
 import codechicken.lib.math.MathHelper;
 import codechicken.nei.NEIClientUtils;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
@@ -22,13 +28,6 @@ import net.minecraft.util.IIcon;
 import net.minecraft.util.MovingObjectPosition;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.util.vector.Vector3f;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 public abstract class GUI_MultiblocksHandler<T> {
     protected static ImmediateWorldSceneRenderer renderer;
@@ -71,13 +70,13 @@ public abstract class GUI_MultiblocksHandler<T> {
     protected T renderingController;
     protected T lastRenderingController;
 
-    public GUI_MultiblocksHandler(){
+    public GUI_MultiblocksHandler() {
         buttons.clear();
 
         GuiButton previousLayerButton =
-            new GuiButton(0, buttonsStartPosX, buttonsEndPosY - ICON_SIZE_Y, ICON_SIZE_X, ICON_SIZE_Y, "<");
+                new GuiButton(0, buttonsStartPosX, buttonsEndPosY - ICON_SIZE_Y, ICON_SIZE_X, ICON_SIZE_Y, "<");
         GuiButton nextLayerButton = new GuiButton(
-            0, buttonsEndPosX - ICON_SIZE_X, buttonsEndPosY - ICON_SIZE_Y, ICON_SIZE_X, ICON_SIZE_Y, ">");
+                0, buttonsEndPosX - ICON_SIZE_X, buttonsEndPosY - ICON_SIZE_Y, ICON_SIZE_X, ICON_SIZE_Y, ">");
 
         buttons.put(previousLayerButton, this::togglePreviousLayer);
         buttons.put(nextLayerButton, this::toggleNextLayer);
@@ -92,13 +91,13 @@ public abstract class GUI_MultiblocksHandler<T> {
         }
     }
 
-    protected void loadNewMultiblock(){
+    protected void loadNewMultiblock() {
         layerIndex = -1;
         initializeSceneRenderer(true);
         lastRenderingController = renderingController;
     }
 
-    protected void loadPreviousMultiblockAgain(){
+    protected void loadPreviousMultiblockAgain() {
         initializeSceneRenderer(false);
     }
 
@@ -139,8 +138,8 @@ public abstract class GUI_MultiblocksHandler<T> {
                 renderer.setRenderAllFaces(false);
             } else {
                 renderBlocks = world.placedBlocks.stream()
-                    .filter(pos -> pos.y - minY == newLayer)
-                    .collect(Collectors.toList());
+                        .filter(pos -> pos.y - minY == newLayer)
+                        .collect(Collectors.toList());
                 renderer.setRenderAllFaces(true);
             }
             renderer.addRenderedBlocks(renderBlocks);
@@ -156,15 +155,15 @@ public abstract class GUI_MultiblocksHandler<T> {
         renderer.setCameraLookAt(center, zoom, Math.toRadians(rotationPitch), Math.toRadians(rotationYaw));
     }
 
-    public void drawMultiblock(){
+    public void drawMultiblock() {
         guiMouseX = GuiDraw.getMousePosition().x;
         guiMouseY = GuiDraw.getMousePosition().y;
         int k = (NEIClientUtils.getGuiContainer().width
-            - ((GuiContainerMixin) NEIClientUtils.getGuiContainer()).getXSize())
-            / 2;
+                        - ((GuiContainerMixin) NEIClientUtils.getGuiContainer()).getXSize())
+                / 2;
         int l = (NEIClientUtils.getGuiContainer().height
-            - ((GuiContainerMixin) NEIClientUtils.getGuiContainer()).getYSize())
-            / 2;
+                        - ((GuiContainerMixin) NEIClientUtils.getGuiContainer()).getYSize())
+                / 2;
         renderer.render(recipeLayoutx + k, recipeLayouty + l, recipeWidth, sceneHeight, lastGuiMouseX, lastGuiMouseY);
         drawMultiblockName();
 
@@ -174,9 +173,9 @@ public abstract class GUI_MultiblocksHandler<T> {
 
         MovingObjectPosition rayTraceResult = renderer.getLastTraceResult();
         boolean insideView = guiMouseX >= k + recipeLayoutx
-            && guiMouseY >= l + recipeLayouty
-            && guiMouseX < k + recipeLayoutx + recipeWidth
-            && guiMouseY < l + recipeLayouty + sceneHeight;
+                && guiMouseY >= l + recipeLayouty
+                && guiMouseX < k + recipeLayoutx + recipeWidth
+                && guiMouseY < l + recipeLayouty + sceneHeight;
         boolean leftClickHeld = Mouse.isButtonDown(0);
         boolean rightClickHeld = Mouse.isButtonDown(1);
         if (insideView) {
@@ -200,16 +199,16 @@ public abstract class GUI_MultiblocksHandler<T> {
         drawButtonsTitle();
 
         if (!(leftClickHeld || rightClickHeld)
-            && rayTraceResult != null
-            && !renderer.world.isAirBlock(rayTraceResult.blockX, rayTraceResult.blockY, rayTraceResult.blockZ)) {
+                && rayTraceResult != null
+                && !renderer.world.isAirBlock(rayTraceResult.blockX, rayTraceResult.blockY, rayTraceResult.blockZ)) {
             Block block = renderer.world.getBlock(rayTraceResult.blockX, rayTraceResult.blockY, rayTraceResult.blockZ);
             tooltipBlockStack = block.getPickBlock(
-                rayTraceResult,
-                renderer.world,
-                rayTraceResult.blockX,
-                rayTraceResult.blockY,
-                rayTraceResult.blockZ,
-                Minecraft.getMinecraft().thePlayer);
+                    rayTraceResult,
+                    renderer.world,
+                    rayTraceResult.blockX,
+                    rayTraceResult.blockY,
+                    rayTraceResult.blockZ,
+                    Minecraft.getMinecraft().thePlayer);
         }
 
         lastGuiMouseX = guiMouseX;
@@ -221,17 +220,16 @@ public abstract class GUI_MultiblocksHandler<T> {
         //        RenderHelper.disableStandardItemLighting();
     }
 
-    private void drawMultiblockName(){
+    private void drawMultiblockName() {
         String localizedName = getMultiblockName();
         FontRenderer fontRenderer = Minecraft.getMinecraft().fontRenderer;
-        List<String> lines =
-            fontRenderer.listFormattedStringToWidth(localizedName, recipeWidth - 10);
+        List<String> lines = fontRenderer.listFormattedStringToWidth(localizedName, recipeWidth - 10);
         for (int i = 0; i < lines.size(); i++) {
             fontRenderer.drawString(
-                lines.get(i),
-                (recipeWidth - fontRenderer.getStringWidth(lines.get(i))) / 2,
-                fontRenderer.FONT_HEIGHT * i,
-                0x333333);
+                    lines.get(i),
+                    (recipeWidth - fontRenderer.getStringWidth(lines.get(i))) / 2,
+                    fontRenderer.FONT_HEIGHT * i,
+                    0x333333);
         }
     }
 
@@ -241,10 +239,10 @@ public abstract class GUI_MultiblocksHandler<T> {
         FontRenderer fontRenderer = Minecraft.getMinecraft().fontRenderer;
         String layerText = "Layer: " + (layerIndex == -1 ? "A" : Integer.toString(layerIndex + 1));
         fontRenderer.drawString(
-            layerText,
-            buttonsStartPosX + (buttonsEndPosX - buttonsStartPosX - fontRenderer.getStringWidth(layerText)) / 2,
-            buttonsStartPosY + ICON_SIZE_Y,
-            0x333333);
+                layerText,
+                buttonsStartPosX + (buttonsEndPosX - buttonsStartPosX - fontRenderer.getStringWidth(layerText)) / 2,
+                buttonsStartPosY + ICON_SIZE_Y,
+                0x333333);
     }
 
     protected void initializeSceneRenderer(boolean resetCamera) {
@@ -271,8 +269,7 @@ public abstract class GUI_MultiblocksHandler<T> {
 
         renderer.renderedBlocks.clear();
         renderer.addRenderedBlocks(((TrackedDummyWorld) renderer.world).placedBlocks);
-        renderer.setOnLookingAt(ray -> {
-        });
+        renderer.setOnLookingAt(ray -> {});
 
         renderer.setOnWorldRender(this::onRendererRender);
         //        world.setRenderFilter(pos -> worldSceneRenderer.renderedBlocksMap.keySet().stream().anyMatch(c ->
@@ -298,17 +295,17 @@ public abstract class GUI_MultiblocksHandler<T> {
 
     public void onRendererRender(WorldSceneRenderer renderer) {
         BlockPosition look = renderer.getLastTraceResult() == null
-            ? null
-            : new BlockPosition(
-            renderer.getLastTraceResult().blockX,
-            renderer.getLastTraceResult().blockY,
-            renderer.getLastTraceResult().blockZ);
+                ? null
+                : new BlockPosition(
+                        renderer.getLastTraceResult().blockX,
+                        renderer.getLastTraceResult().blockY,
+                        renderer.getLastTraceResult().blockZ);
         if (look != null && look.equals(selectedBlock)) {
-            renderBlockOverLay(selectedBlock, Blocks.glass.getIcon(0,6));
+            renderBlockOverLay(selectedBlock, Blocks.glass.getIcon(0, 6));
             return;
         }
-        renderBlockOverLay(look, Blocks.stained_glass.getIcon(0,7));
-        renderBlockOverLay(selectedBlock, Blocks.stained_glass.getIcon(0,14));
+        renderBlockOverLay(look, Blocks.stained_glass.getIcon(0, 7));
+        renderBlockOverLay(selectedBlock, Blocks.stained_glass.getIcon(0, 14));
     }
 
     private void scanIngredients() {
@@ -318,7 +315,7 @@ public abstract class GUI_MultiblocksHandler<T> {
             if (block.equals(Blocks.air)) continue;
             int meta = renderer.world.getBlockMetadata(renderedBlock.x, renderedBlock.y, renderedBlock.z);
             ArrayList<ItemStack> itemstacks =
-                block.getDrops(renderer.world, renderedBlock.x, renderedBlock.y, renderedBlock.z, meta, 0);
+                    block.getDrops(renderer.world, renderedBlock.x, renderedBlock.y, renderedBlock.z, meta, 0);
             if (itemstacks.size() == 0) { // glass
                 itemstacks.add(new ItemStack(block));
             }
@@ -340,8 +337,7 @@ public abstract class GUI_MultiblocksHandler<T> {
     }
 
     private void renderBlockOverLay(BlockPosition pos, IIcon icon) {
-        if(pos == null)
-            return;
+        if (pos == null) return;
 
         RenderBlocks bufferBuilder = new RenderBlocks();
         bufferBuilder.blockAccess = renderer.world;
@@ -354,14 +350,14 @@ public abstract class GUI_MultiblocksHandler<T> {
     public boolean mouseClicked(int button) {
         for (Map.Entry<GuiButton, Runnable> buttons : buttons.entrySet()) {
             int k = (NEIClientUtils.getGuiContainer().width
-                - ((GuiContainerMixin) NEIClientUtils.getGuiContainer()).getXSize())
-                / 2;
+                            - ((GuiContainerMixin) NEIClientUtils.getGuiContainer()).getXSize())
+                    / 2;
             int l = (NEIClientUtils.getGuiContainer().height
-                - ((GuiContainerMixin) NEIClientUtils.getGuiContainer()).getYSize())
-                / 2;
+                            - ((GuiContainerMixin) NEIClientUtils.getGuiContainer()).getYSize())
+                    / 2;
             if (buttons.getKey()
-                .mousePressed(
-                    Minecraft.getMinecraft(), guiMouseX - k - mouseOffsetX, guiMouseY - l - mouseOffsetY)) {
+                    .mousePressed(
+                            Minecraft.getMinecraft(), guiMouseX - k - mouseOffsetX, guiMouseY - l - mouseOffsetY)) {
                 buttons.getValue().run();
                 selectedBlock = null;
                 return true;
@@ -376,9 +372,9 @@ public abstract class GUI_MultiblocksHandler<T> {
                 return false;
             }
             selectedBlock = new BlockPosition(
-                renderer.getLastTraceResult().blockX,
-                renderer.getLastTraceResult().blockY,
-                renderer.getLastTraceResult().blockZ);
+                    renderer.getLastTraceResult().blockX,
+                    renderer.getLastTraceResult().blockY,
+                    renderer.getLastTraceResult().blockZ);
             onBlockSelected();
         }
         return false;
@@ -389,7 +385,7 @@ public abstract class GUI_MultiblocksHandler<T> {
     public List<String> handleTooltip() {
         if (tooltipBlockStack != null)
             return tooltipBlockStack.getTooltip(
-                Minecraft.getMinecraft().thePlayer, Minecraft.getMinecraft().gameSettings.advancedItemTooltips);
+                    Minecraft.getMinecraft().thePlayer, Minecraft.getMinecraft().gameSettings.advancedItemTooltips);
         else return null;
     }
 }

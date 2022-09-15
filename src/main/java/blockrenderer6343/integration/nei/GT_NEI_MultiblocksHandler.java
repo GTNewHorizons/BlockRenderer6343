@@ -52,15 +52,17 @@ public class GT_NEI_MultiblocksHandler extends TemplateRecipeHandler {
 
         public void setIngredients(List<ItemStack> ingredients) {
             positionedIngredients.clear();
-            for (int i = 0; i < ingredients.size(); i++){
-                positionedIngredients.add(new PositionedStack(ingredients.get(i), INGREDIENT_SLOTS_X + i * SLOT_SIZE, INGREDIENT_SLOTS_Y));
+            for (int i = 0; i < ingredients.size(); i++) {
+                positionedIngredients.add(new PositionedStack(
+                        ingredients.get(i), INGREDIENT_SLOTS_X + i * SLOT_SIZE, INGREDIENT_SLOTS_Y));
             }
         }
 
-        public void setResults(List<ItemStack> results){
+        public void setResults(List<ItemStack> results) {
             positionedResults.clear();
-            for (int i = 0; i < results.size(); i++){
-                positionedResults.add(new PositionedStack(results.get(i), CANDIDATE_SLOTS_X, CANDIDATE_SLOTS_Y + i * SLOT_SIZE));
+            for (int i = 0; i < results.size(); i++) {
+                positionedResults.add(
+                        new PositionedStack(results.get(i), CANDIDATE_SLOTS_X, CANDIDATE_SLOTS_Y + i * SLOT_SIZE));
             }
         }
 

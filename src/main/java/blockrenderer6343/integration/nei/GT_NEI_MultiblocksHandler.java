@@ -107,7 +107,7 @@ public class GT_NEI_MultiblocksHandler extends TemplateRecipeHandler {
     private void tryLoadMultiblocks(ItemStack candidate) {
         for (GT_MetaTileEntity_MultiBlockBase multiblocks : multiblocksList) {
             if (NEIClientUtils.areStacksSameType(((IMetaTileEntity) multiblocks).getStackForm(1), candidate)) {
-                baseHandler.loadMultiblocks(multiblocks);
+                baseHandler.loadMultiblock(multiblocks);
                 return;
             }
         }

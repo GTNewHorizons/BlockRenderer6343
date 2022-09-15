@@ -11,7 +11,6 @@ import blockrenderer6343.mixins.GuiContainerMixin;
 import codechicken.lib.gui.GuiDraw;
 import codechicken.lib.math.MathHelper;
 import codechicken.nei.NEIClientUtils;
-import codechicken.nei.guihook.GuiContainerManager;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
@@ -103,15 +102,11 @@ public abstract class GUI_MultiblocksHandler<T> {
         initializeSceneRenderer(false);
     }
 
-    public int getLayerIndex() {
-        return layerIndex;
-    }
-
     public void setOnIngredientChanged(Consumer<List<ItemStack>> callback) {
         onIngredientChanged = callback;
     }
 
-    protected void toggleNextLayer() {
+    private void toggleNextLayer() {
         int height = (int) ((TrackedDummyWorld) renderer.world).getSize().getY() - 1;
         if (++layerIndex > height) {
             // if current layer index is more than max height, reset it
@@ -121,7 +116,7 @@ public abstract class GUI_MultiblocksHandler<T> {
         setNextLayer(layerIndex);
     }
 
-    protected void togglePreviousLayer() {
+    private void togglePreviousLayer() {
         int height = (int) ((TrackedDummyWorld) renderer.world).getSize().getY() - 1;
         if (layerIndex == -1) {
             layerIndex = height;
@@ -131,7 +126,7 @@ public abstract class GUI_MultiblocksHandler<T> {
         setNextLayer(layerIndex);
     }
 
-    protected void setNextLayer(int newLayer) {
+    private void setNextLayer(int newLayer) {
         layerIndex = newLayer;
         if (renderer != null) {
             TrackedDummyWorld world = ((TrackedDummyWorld) renderer.world);
@@ -153,7 +148,7 @@ public abstract class GUI_MultiblocksHandler<T> {
         }
     }
 
-    protected void resetCenter() {
+    private void resetCenter() {
         TrackedDummyWorld world = (TrackedDummyWorld) renderer.world;
         Vector3f size = world.getSize();
         Vector3f minPos = world.getMinPos();
@@ -226,7 +221,7 @@ public abstract class GUI_MultiblocksHandler<T> {
         //        RenderHelper.disableStandardItemLighting();
     }
 
-    protected void drawMultiblockName(){
+    private void drawMultiblockName(){
         String localizedName = getMultiblockName();
         FontRenderer fontRenderer = Minecraft.getMinecraft().fontRenderer;
         List<String> lines =
@@ -301,7 +296,6 @@ public abstract class GUI_MultiblocksHandler<T> {
 
     protected abstract void placeMultiblock();
 
-
     public void onRendererRender(WorldSceneRenderer renderer) {
         BlockPosition look = renderer.getLastTraceResult() == null
             ? null
@@ -317,7 +311,7 @@ public abstract class GUI_MultiblocksHandler<T> {
         renderBlockOverLay(selectedBlock, Blocks.stained_glass.getIcon(0,14));
     }
 
-    protected void scanIngredients() {
+    private void scanIngredients() {
         List<ItemStack> ingredients = new ArrayList<>();
         for (BlockPosition renderedBlock : renderer.renderedBlocks) {
             Block block = renderer.world.getBlock(renderedBlock.x, renderedBlock.y, renderedBlock.z);
@@ -345,7 +339,7 @@ public abstract class GUI_MultiblocksHandler<T> {
         }
     }
 
-    protected void renderBlockOverLay(BlockPosition pos, IIcon icon) {
+    private void renderBlockOverLay(BlockPosition pos, IIcon icon) {
         if(pos == null)
             return;
 

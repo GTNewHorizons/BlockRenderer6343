@@ -71,7 +71,7 @@ public class GT_GUI_MultiblocksHandler extends GUI_MultiblocksHandler<GT_MetaTil
     }
 
     @Override
-    public void loadNewMultiblock(){
+    protected void loadNewMultiblock(){
         tierIndex = 1;
         layerIndex = -1;
         initializeSceneRenderer(true);
@@ -111,12 +111,12 @@ public class GT_GUI_MultiblocksHandler extends GUI_MultiblocksHandler<GT_MetaTil
         baseWorld.removeTileEntity(lookingPos.blockX, lookingPos.blockY + 1, lookingPos.blockZ);
     }
 
-    protected void toggleNextTier() {
+    private void toggleNextTier() {
         tierIndex++;
         initializeSceneRenderer(false);
     }
 
-    protected void togglePreviousTier() {
+    private void togglePreviousTier() {
         if(tierIndex > 1){
             tierIndex--;
             initializeSceneRenderer(false);

@@ -35,8 +35,6 @@ public abstract class GUI_MultiblocksHandler<T> {
     protected static ImmediateWorldSceneRenderer renderer;
 
     public static final int SLOT_SIZE = 18;
-    public static final int INGREDIENT_SLOTS_X = 5;
-    public static final int INGREDIENT_SLOTS_Y = 135;
 
     protected static final int recipeLayoutx = 8;
     protected static final int recipeLayouty = 50;
@@ -219,9 +217,6 @@ public abstract class GUI_MultiblocksHandler<T> {
                 Minecraft.getMinecraft().thePlayer);
         }
 
-        // draw ingredients again because it was hidden by worldrenderer
-        drawIngredients();
-
         lastGuiMouseX = guiMouseX;
         lastGuiMouseY = guiMouseY;
 
@@ -255,11 +250,6 @@ public abstract class GUI_MultiblocksHandler<T> {
             buttonsStartPosX + (buttonsEndPosX - buttonsStartPosX - fontRenderer.getStringWidth(layerText)) / 2,
             buttonsStartPosY + ICON_SIZE_Y,
             0x333333);
-    }
-
-    protected void drawIngredients() {
-        for (int i = 0; i < ingredients.size(); i++)
-            GuiContainerManager.drawItem(INGREDIENT_SLOTS_X + i * SLOT_SIZE, INGREDIENT_SLOTS_Y, ingredients.get(i));
     }
 
     protected void initializeSceneRenderer(boolean resetCamera) {

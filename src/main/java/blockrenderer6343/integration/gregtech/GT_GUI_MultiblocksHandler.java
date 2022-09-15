@@ -37,12 +37,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 public class GT_GUI_MultiblocksHandler extends GUI_MultiblocksHandler<GT_MetaTileEntity_MultiBlockBase> {
-
-    public static final int CANDIDATE_SLOTS_X = 5;
-    public static final int CANDIDATE_SLOTS_Y = 20;
 
     protected static int tierIndex = 1;
 
@@ -50,6 +48,8 @@ public class GT_GUI_MultiblocksHandler extends GUI_MultiblocksHandler<GT_MetaTil
     private static final BlockPosition mbPlacePos = new BlockPosition(10,10,10);
 
     private static EntityPlayer fakeMultiblockBuilder;
+
+    protected Consumer<List<ItemStack>> onCandidateChanged;
 
     public GT_GUI_MultiblocksHandler() {
         super();
@@ -64,6 +64,10 @@ public class GT_GUI_MultiblocksHandler extends GUI_MultiblocksHandler<GT_MetaTil
         buttons.put(previousTierButton, this::togglePreviousTier);
         buttons.put(nextTierButton, this::toggleNextTier);
         buttons.put(projectMultiblocksButton, this::projectMultiblocks);
+    }
+
+    public void setOnCandidateChanged(Consumer<List<ItemStack>> callback) {
+        onCandidateChanged = callback;
     }
 
     @Override
@@ -113,15 +117,10 @@ public class GT_GUI_MultiblocksHandler extends GUI_MultiblocksHandler<GT_MetaTil
     }
 
     protected void togglePreviousTier() {
-        tierIndex--;
-        initializeSceneRenderer(false);
-    }
-
-    @Override
-    public void drawMultiblock() {
-        super.drawMultiblock();
-
-        drawCandidates();
+        if(tierIndex > 1){
+            tierIndex--;
+            initializeSceneRenderer(false);
+        }
     }
 
     @Override
@@ -140,11 +139,6 @@ public class GT_GUI_MultiblocksHandler extends GUI_MultiblocksHandler<GT_MetaTil
             buttonsStartPosX + (buttonsEndPosX - buttonsStartPosX - fontRenderer.getStringWidth(tierText)) / 2,
             buttonsStartPosY - 10,
             0x333333);
-    }
-
-    private void drawCandidates(){
-        for (int i = 0; i < candidates.size(); i++)
-            GuiContainerManager.drawItem(CANDIDATE_SLOTS_X, CANDIDATE_SLOTS_Y + i * SLOT_SIZE, candidates.get(i));
     }
 
     @Override
@@ -214,6 +208,10 @@ public class GT_GUI_MultiblocksHandler extends GUI_MultiblocksHandler<GT_MetaTil
                 if(blocksToPlace != null){
                     Predicate<ItemStack> predicate = blocksToPlace.getPredicate();
                     candidates.addAll(CreativeItemSource.instance.takeEverythingMatches(predicate, false, 0).keySet());
+
+                    if (onCandidateChanged != null) {
+                        onCandidateChanged.accept(candidates);
+                    }
                 }
                 return;
             }

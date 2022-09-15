@@ -26,6 +26,13 @@ public class GT_NEI_MultiblocksHandler extends TemplateRecipeHandler {
 
     public static List<GT_MetaTileEntity_MultiBlockBase> multiblocksList = new ArrayList<>();
     private static final GT_GUI_MultiblocksHandler baseHandler = ClientProxy.guiMultiblocksHandler;
+    private final RecipeCacher recipeCacher = new RecipeCacher();
+
+    public static final int CANDIDATE_SLOTS_X = 5;
+    public static final int CANDIDATE_SLOTS_Y = 20;
+
+    public static final int INGREDIENT_SLOTS_X = 5;
+    public static final int INGREDIENT_SLOTS_Y = 135;
 
     public GT_NEI_MultiblocksHandler() {
         super();
@@ -36,14 +43,30 @@ public class GT_NEI_MultiblocksHandler extends TemplateRecipeHandler {
             }
         }
         baseHandler.setOnIngredientChanged(this::setIngredients);
+        baseHandler.setOnCandidateChanged(this::setResults);
     }
 
-    public class recipeCacher extends CachedRecipe {
+    public class RecipeCacher extends CachedRecipe {
         private final List<PositionedStack> positionedIngredients = new ArrayList<>();
+        private final List<PositionedStack> positionedResults = new ArrayList<>();
 
-        public recipeCacher(List<ItemStack> ingredients) {
-            for (int i = 0; i < ingredients.size(); i++)
+        public void setIngredients(List<ItemStack> ingredients) {
+            positionedIngredients.clear();
+            for (int i = 0; i < ingredients.size(); i++){
                 positionedIngredients.add(new PositionedStack(ingredients.get(i), INGREDIENT_SLOTS_X + i * SLOT_SIZE, INGREDIENT_SLOTS_Y));
+            }
+        }
+
+        public void setResults(List<ItemStack> results){
+            positionedResults.clear();
+            for (int i = 0; i < results.size(); i++){
+                positionedResults.add(new PositionedStack(results.get(i), CANDIDATE_SLOTS_X, CANDIDATE_SLOTS_Y + i * SLOT_SIZE));
+            }
+        }
+
+        @Override
+        public List<PositionedStack> getIngredients() {
+            return positionedIngredients;
         }
 
         @Override
@@ -52,8 +75,8 @@ public class GT_NEI_MultiblocksHandler extends TemplateRecipeHandler {
         }
 
         @Override
-        public List<PositionedStack> getIngredients() {
-            return positionedIngredients;
+        public List<PositionedStack> getOtherStacks() {
+            return positionedResults;
         }
     }
 
@@ -97,6 +120,7 @@ public class GT_NEI_MultiblocksHandler extends TemplateRecipeHandler {
     @Override
     public void drawBackground(int recipe) {
         super.drawBackground(recipe);
+        baseHandler.drawMultiblock();
     }
 
     @Override
@@ -113,15 +137,16 @@ public class GT_NEI_MultiblocksHandler extends TemplateRecipeHandler {
         }
     }
 
-    @Override
-    public void drawExtras(int recipe) {
-        super.drawExtras(recipe);
-        baseHandler.drawMultiblock();
-    }
-
     public void setIngredients(List<ItemStack> ingredients) {
         arecipes.clear();
-        arecipes.add(new GT_NEI_MultiblocksHandler.recipeCacher(ingredients));
+        recipeCacher.setIngredients(ingredients);
+        arecipes.add(recipeCacher);
+    }
+
+    public void setResults(List<ItemStack> results) {
+        arecipes.clear();
+        recipeCacher.setResults(results);
+        arecipes.add(recipeCacher);
     }
 
     static {

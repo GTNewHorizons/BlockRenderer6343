@@ -490,33 +490,10 @@ public class GT_GUI_MultiblocksHandler {
             if(structureElement.x == selected.x
             && structureElement.y == selected.y
             && structureElement.z == selected.z){
-                ItemStack newController = renderingController.getStackForm(1).copy();
-
-                fakeMultiblockBuilder = new ClientFakePlayer(
-                    renderer.world, new GameProfile(UUID.fromString("518FDF18-EC2A-4322-832A-58ED1721309B"), "[GregTech]"));
-                renderer.world.unloadEntities(Arrays.asList(fakeMultiblockBuilder));
-
-                newController
-                    .getItem()
-                    .onItemUse(
-                        newController,
-                        fakeMultiblockBuilder,
-                        renderer.world,
-                        0,
-                        0,
-                        0,
-                        0,
-                        0,
-                        0,
-                       0);
-
-                TileEntity tTileEntity = renderer.world.getTileEntity(0, 0, 0);
-                ((ITurnable) tTileEntity).setFrontFacing((byte) 3);
-                IMetaTileEntity mte = ((IGregTechTileEntity) tTileEntity).getMetaTileEntity();
 
                 IStructureElement.BlocksToPlace blocksToPlace = structureElement.element.getBlocksToPlace(
-                    (GT_MetaTileEntity_MultiBlockBase)mte, renderer.world, selected.x - mbPlacePos.x, selected.y - mbPlacePos.y, selected.z - mbPlacePos.z,
-                    mte.getStackForm(tierIndex),
+                    renderingController, renderer.world, selected.x, selected.y, selected.z,
+                    renderingController.getStackForm(tierIndex),
                     AutoPlaceEnvironment.fromLegacy(CreativeItemSource.instance, fakeMultiblockBuilder, iChatComponent -> {}));
                 if(blocksToPlace != null){
                     Predicate<ItemStack> predicate = blocksToPlace.getPredicate();
@@ -538,10 +515,6 @@ public class GT_GUI_MultiblocksHandler {
         bufferBuilder.renderAllFaces = true;
         Block block = renderer.world.getBlock(pos.x, pos.y, pos.z);
         bufferBuilder.renderBlockUsingTexture(block, pos.x, pos.y, pos.z, icon);
-    }
-
-    public static int packColor(int red, int green, int blue, int alpha) {
-        return (red & 0xFF) << 24 | (green & 0xFF) << 16 | (blue & 0xFF) << 8 | (alpha & 0xFF);
     }
 
     public boolean mouseClicked(int button) {

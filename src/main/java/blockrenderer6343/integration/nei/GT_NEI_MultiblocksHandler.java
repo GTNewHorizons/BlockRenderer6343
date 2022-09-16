@@ -35,9 +35,8 @@ public class GT_NEI_MultiblocksHandler extends TemplateRecipeHandler {
 
     public GT_NEI_MultiblocksHandler() {
         super();
-        // Ban Plasma forge since it causes severe performance issue
         for (IMetaTileEntity mte : METATILEENTITIES) {
-            if (mte instanceof GT_MetaTileEntity_MultiBlockBase && !(mte instanceof GT_MetaTileEntity_PlasmaForge)) {
+            if (mte instanceof GT_MetaTileEntity_MultiBlockBase) {
                 multiblocksList.add((GT_MetaTileEntity_MultiBlockBase) (mte));
             }
         }

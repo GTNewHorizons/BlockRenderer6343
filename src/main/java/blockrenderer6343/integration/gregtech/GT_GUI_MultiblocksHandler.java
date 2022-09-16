@@ -39,24 +39,29 @@ import net.minecraft.world.World;
 
 public class GT_GUI_MultiblocksHandler extends GUI_MultiblocksHandler<GT_MetaTileEntity_MultiBlockBase> {
 
+    protected static final int TIER_BUTTON_X = LAYER_BUTTON_X;
+    protected static final int TIER_BUTTON_Y = LAYER_BUTTON_Y - ICON_SIZE_Y - BUTTON_MARGIN;
+    protected static final int PROJECT_BUTTON_X = TIER_BUTTON_X + ICON_SIZE_X;
+    protected static final int PROJECT_BUTTON_Y = 5;
+    private static final BlockPosition MB_PLACE_POS = new BlockPosition(10, 10, 10);
+    
     protected static int tierIndex = 1;
-
-    private List<List<ItemStack>> candidates = new ArrayList<>();
-    private static final BlockPosition mbPlacePos = new BlockPosition(10, 10, 10);
 
     private static EntityPlayer fakeMultiblockBuilder;
 
+    private List<List<ItemStack>> candidates = new ArrayList<>();
+    protected List<PositionedIStructureElement> structureElements = new ArrayList<>();
     protected Consumer<List<List<ItemStack>>> onCandidateChanged;
 
     public GT_GUI_MultiblocksHandler() {
         super();
 
         GuiButton previousTierButton =
-                new GuiButton(0, buttonsStartPosX, buttonsStartPosY, ICON_SIZE_X, ICON_SIZE_Y, "<");
+                new GuiButton(0, TIER_BUTTON_X, TIER_BUTTON_Y, ICON_SIZE_X, ICON_SIZE_Y, "<");
         GuiButton nextTierButton =
-                new GuiButton(0, buttonsEndPosX - ICON_SIZE_X, buttonsStartPosY, ICON_SIZE_X, ICON_SIZE_Y, ">");
+                new GuiButton(0, TIER_BUTTON_X + ICON_SIZE_X , TIER_BUTTON_Y, ICON_SIZE_X, ICON_SIZE_Y, ">");
         GuiButton projectMultiblocksButton =
-                new GuiButton(0, buttonsEndPosX - ICON_SIZE_X, 5, ICON_SIZE_X, ICON_SIZE_Y, "P");
+                new GuiButton(0, PROJECT_BUTTON_X, PROJECT_BUTTON_Y, ICON_SIZE_X, ICON_SIZE_Y, "P");
 
         buttons.put(previousTierButton, this::togglePreviousTier);
         buttons.put(nextTierButton, this::toggleNextTier);
@@ -133,8 +138,8 @@ public class GT_GUI_MultiblocksHandler extends GUI_MultiblocksHandler<GT_MetaTil
         String tierText = "Tier: " + tierIndex;
         fontRenderer.drawString(
                 tierText,
-                buttonsStartPosX + (buttonsEndPosX - buttonsStartPosX - fontRenderer.getStringWidth(tierText)) / 2,
-                buttonsStartPosY - 10,
+                TIER_BUTTON_X + (ICON_SIZE_X * 2 - fontRenderer.getStringWidth(tierText)) / 2,
+                TIER_BUTTON_Y - BUTTON_MARGIN,
                 0x333333);
     }
 
@@ -156,15 +161,15 @@ public class GT_GUI_MultiblocksHandler extends GUI_MultiblocksHandler<GT_MetaTil
                         itemStack,
                         fakeMultiblockBuilder,
                         renderer.world,
-                        mbPlacePos.x,
-                        mbPlacePos.y,
-                        mbPlacePos.z,
+                        MB_PLACE_POS.x,
+                        MB_PLACE_POS.y,
+                        MB_PLACE_POS.z,
                         0,
-                        mbPlacePos.x,
-                        mbPlacePos.y,
-                        mbPlacePos.z);
+                        MB_PLACE_POS.x,
+                        MB_PLACE_POS.y,
+                        MB_PLACE_POS.z);
 
-        TileEntity tTileEntity = renderer.world.getTileEntity(mbPlacePos.x, mbPlacePos.y, mbPlacePos.z);
+        TileEntity tTileEntity = renderer.world.getTileEntity(MB_PLACE_POS.x, MB_PLACE_POS.y, MB_PLACE_POS.z);
         ((ITurnable) tTileEntity).setFrontFacing((byte) 3);
         IMetaTileEntity mte = ((IGregTechTileEntity) tTileEntity).getMetaTileEntity();
 

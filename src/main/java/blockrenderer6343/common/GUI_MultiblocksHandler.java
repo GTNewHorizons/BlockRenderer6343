@@ -2,7 +2,6 @@ package blockrenderer6343.common;
 
 import blockrenderer6343.BlockRenderer6343;
 import blockrenderer6343.api.utils.BlockPosition;
-import blockrenderer6343.api.utils.PositionedIStructureElement;
 import blockrenderer6343.client.renderer.GlStateManager;
 import blockrenderer6343.client.renderer.ImmediateWorldSceneRenderer;
 import blockrenderer6343.client.renderer.WorldSceneRenderer;
@@ -34,10 +33,18 @@ public abstract class GUI_MultiblocksHandler<T> {
 
     public static final int SLOT_SIZE = 18;
 
-    protected static final int recipeLayoutx = 8;
-    protected static final int recipeLayouty = 50;
-    protected static final int recipeWidth = 160;
-    protected static final int sceneHeight = recipeWidth - 10;
+    protected static final int RECIPE_LAYOUT_X = 8;
+    protected static final int RECIPE_LAYOUT_Y = 50;
+    protected static final int RECIPE_WIDTH = 160;
+    protected static final int sceneHeight = RECIPE_WIDTH - 10;
+    protected static final int ICON_SIZE_X = 20;
+    protected static final int ICON_SIZE_Y = 20;
+    protected static final int MOUSE_OFFSET_X = 5;
+    protected static final int MOUSE_OFFSET_Y = 43;
+    protected static final int LAYER_BUTTON_X = 125;
+    protected static final int LAYER_BUTTON_Y = 135;
+    protected static final int BUTTON_MARGIN = 10;
+
     protected static int guiMouseX;
     protected static int guiMouseY;
     protected static int lastGuiMouseX;
@@ -53,19 +60,8 @@ public abstract class GUI_MultiblocksHandler<T> {
     protected static int layerIndex = -1;
 
     protected List<ItemStack> ingredients = new ArrayList<>();
-    protected List<PositionedIStructureElement> structureElements = new ArrayList<>();
-
-    protected static final int ICON_SIZE_X = 20;
-    protected static final int ICON_SIZE_Y = 20;
-    protected static final int mouseOffsetX = 5;
-    protected static final int mouseOffsetY = 43;
-    protected static final int buttonsEndPosX = 165;
-    protected static final int buttonsEndPosY = 155;
-    protected static final int buttonsStartPosX = buttonsEndPosX - ICON_SIZE_X * 2 - 10;
-    protected static final int buttonsStartPosY = buttonsEndPosY - ICON_SIZE_Y * 2 - 10;
-    protected static final Map<GuiButton, Runnable> buttons = new HashMap<>();
-
     protected Consumer<List<ItemStack>> onIngredientChanged;
+    protected static final Map<GuiButton, Runnable> buttons = new HashMap<>();
 
     protected T renderingController;
     protected T lastRenderingController;
@@ -74,9 +70,9 @@ public abstract class GUI_MultiblocksHandler<T> {
         buttons.clear();
 
         GuiButton previousLayerButton =
-                new GuiButton(0, buttonsStartPosX, buttonsEndPosY - ICON_SIZE_Y, ICON_SIZE_X, ICON_SIZE_Y, "<");
+                new GuiButton(0, LAYER_BUTTON_X, LAYER_BUTTON_Y, ICON_SIZE_X, ICON_SIZE_Y, "<");
         GuiButton nextLayerButton = new GuiButton(
-                0, buttonsEndPosX - ICON_SIZE_X, buttonsEndPosY - ICON_SIZE_Y, ICON_SIZE_X, ICON_SIZE_Y, ">");
+                0, LAYER_BUTTON_X + ICON_SIZE_X, LAYER_BUTTON_Y, ICON_SIZE_X, ICON_SIZE_Y, ">");
 
         buttons.put(previousLayerButton, this::togglePreviousLayer);
         buttons.put(nextLayerButton, this::toggleNextLayer);
@@ -164,7 +160,7 @@ public abstract class GUI_MultiblocksHandler<T> {
         int l = (NEIClientUtils.getGuiContainer().height
                         - ((GuiContainerMixin) NEIClientUtils.getGuiContainer()).getYSize())
                 / 2;
-        renderer.render(recipeLayoutx + k, recipeLayouty + l, recipeWidth, sceneHeight, lastGuiMouseX, lastGuiMouseY);
+        renderer.render(RECIPE_LAYOUT_X + k, RECIPE_LAYOUT_Y + l, RECIPE_WIDTH, sceneHeight, lastGuiMouseX, lastGuiMouseY);
         drawMultiblockName();
 
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
@@ -172,10 +168,10 @@ public abstract class GUI_MultiblocksHandler<T> {
         tooltipBlockStack = null;
 
         MovingObjectPosition rayTraceResult = renderer.getLastTraceResult();
-        boolean insideView = guiMouseX >= k + recipeLayoutx
-                && guiMouseY >= l + recipeLayouty
-                && guiMouseX < k + recipeLayoutx + recipeWidth
-                && guiMouseY < l + recipeLayouty + sceneHeight;
+        boolean insideView = guiMouseX >= k + RECIPE_LAYOUT_X
+                && guiMouseY >= l + RECIPE_LAYOUT_Y
+                && guiMouseX < k + RECIPE_LAYOUT_X + RECIPE_WIDTH
+                && guiMouseY < l + RECIPE_LAYOUT_Y + sceneHeight;
         boolean leftClickHeld = Mouse.isButtonDown(0);
         boolean rightClickHeld = Mouse.isButtonDown(1);
         if (insideView) {
@@ -194,7 +190,7 @@ public abstract class GUI_MultiblocksHandler<T> {
 
         // draw buttons
         for (GuiButton button : buttons.keySet()) {
-            button.drawButton(Minecraft.getMinecraft(), guiMouseX - k - mouseOffsetX, guiMouseY - l - mouseOffsetY);
+            button.drawButton(Minecraft.getMinecraft(), guiMouseX - k - MOUSE_OFFSET_X, guiMouseY - l - MOUSE_OFFSET_Y);
         }
         drawButtonsTitle();
 
@@ -223,11 +219,11 @@ public abstract class GUI_MultiblocksHandler<T> {
     private void drawMultiblockName() {
         String localizedName = getMultiblockName();
         FontRenderer fontRenderer = Minecraft.getMinecraft().fontRenderer;
-        List<String> lines = fontRenderer.listFormattedStringToWidth(localizedName, recipeWidth - 10);
+        List<String> lines = fontRenderer.listFormattedStringToWidth(localizedName, RECIPE_WIDTH - 10);
         for (int i = 0; i < lines.size(); i++) {
             fontRenderer.drawString(
                     lines.get(i),
-                    (recipeWidth - fontRenderer.getStringWidth(lines.get(i))) / 2,
+                    (RECIPE_WIDTH - fontRenderer.getStringWidth(lines.get(i))) / 2,
                     fontRenderer.FONT_HEIGHT * i,
                     0x333333);
         }
@@ -240,8 +236,8 @@ public abstract class GUI_MultiblocksHandler<T> {
         String layerText = "Layer: " + (layerIndex == -1 ? "A" : Integer.toString(layerIndex + 1));
         fontRenderer.drawString(
                 layerText,
-                buttonsStartPosX + (buttonsEndPosX - buttonsStartPosX - fontRenderer.getStringWidth(layerText)) / 2,
-                buttonsStartPosY + ICON_SIZE_Y,
+                LAYER_BUTTON_X + (ICON_SIZE_X * 2 - fontRenderer.getStringWidth(layerText)) / 2,
+                LAYER_BUTTON_Y - BUTTON_MARGIN,
                 0x333333);
     }
 
@@ -357,7 +353,7 @@ public abstract class GUI_MultiblocksHandler<T> {
                     / 2;
             if (buttons.getKey()
                     .mousePressed(
-                            Minecraft.getMinecraft(), guiMouseX - k - mouseOffsetX, guiMouseY - l - mouseOffsetY)) {
+                            Minecraft.getMinecraft(), guiMouseX - k - MOUSE_OFFSET_X, guiMouseY - l - MOUSE_OFFSET_Y)) {
                 buttons.getValue().run();
                 selectedBlock = null;
                 return true;

@@ -1,6 +1,7 @@
 package blockrenderer6343.integration.nei;
 
 import static blockrenderer6343.integration.gregtech.GT_GUI_MultiblocksHandler.*;
+import static blockrenderer6343.integration.nei.IMCForNEI.GT_NEI_MB_HANDLER_NAME;
 import static gregtech.api.GregTech_API.METATILEENTITIES;
 import static gregtech.api.enums.GT_Values.RES_PATH_GUI;
 
@@ -11,14 +12,14 @@ import codechicken.nei.PositionedStack;
 import codechicken.nei.guihook.GuiContainerManager;
 import codechicken.nei.guihook.IContainerInputHandler;
 import codechicken.nei.guihook.IContainerTooltipHandler;
-import codechicken.nei.recipe.GuiCraftingRecipe;
-import codechicken.nei.recipe.GuiUsageRecipe;
-import codechicken.nei.recipe.TemplateRecipeHandler;
+import codechicken.nei.recipe.*;
 import gregtech.api.interfaces.metatileentity.IMetaTileEntity;
 import gregtech.api.metatileentity.implementations.GT_MetaTileEntity_MultiBlockBase;
 import gregtech.common.tileentities.machines.multi.GT_MetaTileEntity_PlasmaForge;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.item.ItemStack;
 
@@ -28,11 +29,9 @@ public class GT_NEI_MultiblocksHandler extends TemplateRecipeHandler {
     private static final GT_GUI_MultiblocksHandler baseHandler = ClientProxy.guiMultiblocksHandler;
     private final RecipeCacher recipeCacher = new RecipeCacher();
 
-    public static final int CANDIDATE_SLOTS_X = 5;
+    public static final int CANDIDATE_SLOTS_X = 150;
     public static final int CANDIDATE_SLOTS_Y = 20;
-
-    public static final int INGREDIENT_SLOTS_X = 5;
-    public static final int INGREDIENT_SLOTS_Y = 135;
+    public static final int CANDIDATE_IN_COlUMN = 6;
 
     public GT_NEI_MultiblocksHandler() {
         super();
@@ -52,25 +51,33 @@ public class GT_NEI_MultiblocksHandler extends TemplateRecipeHandler {
 
         public void setIngredients(List<ItemStack> ingredients) {
             positionedIngredients.clear();
-            for (int i = 0; i < ingredients.size(); i++) {
+
+            int rowCount = RecipeCatalysts.getRowCount(RecipeCatalysts.getHeight(), ingredients.size());
+
+            for (int index = 0; index < ingredients.size(); index++) {
+                ItemStack catalyst = ingredients.get(index);
+                int column = index / rowCount;
+                int row = index % rowCount;
                 positionedIngredients.add(new PositionedStack(
-                        ingredients.get(i), INGREDIENT_SLOTS_X + i * SLOT_SIZE, INGREDIENT_SLOTS_Y));
+                    catalyst, -column * GuiRecipeCatalyst.ingredientSize, row * GuiRecipeCatalyst.ingredientSize));
             }
+
+            Map<String, List<PositionedStack>> catalystMap = RecipeCatalysts.getPositionedRecipeCatalystMap();
+            catalystMap.put(GT_NEI_MB_HANDLER_NAME, positionedIngredients);
         }
 
         public void setResults(List<List<ItemStack>> results) {
             positionedResults.clear();
+            int columnCount = results.size() / CANDIDATE_IN_COlUMN + 1;
+            int realCandidateInColumn = results.size() % columnCount == 0 ? results.size() / columnCount : results.size() / columnCount + 1;
             for (int i = 0; i < results.size(); i++) {
                 PositionedStack result =
-                        new PositionedStack(results.get(i), CANDIDATE_SLOTS_X, CANDIDATE_SLOTS_Y + i * SLOT_SIZE);
+                        new PositionedStack(results.get(i),
+                            CANDIDATE_SLOTS_X - (columnCount - 1) * SLOT_SIZE + (i / realCandidateInColumn) * SLOT_SIZE  ,
+                             CANDIDATE_SLOTS_Y + (i % realCandidateInColumn) * SLOT_SIZE);
                 result.generatePermutations();
                 positionedResults.add(result);
             }
-        }
-
-        @Override
-        public List<PositionedStack> getIngredients() {
-            return positionedIngredients;
         }
 
         @Override
@@ -91,7 +98,7 @@ public class GT_NEI_MultiblocksHandler extends TemplateRecipeHandler {
 
     @Override
     public String getOverlayIdentifier() {
-        return "gregtech.nei.multiblockhandler";
+        return GT_NEI_MB_HANDLER_NAME;
     }
 
     @Override

@@ -5,10 +5,12 @@ import net.minecraft.nbt.NBTTagCompound;
 
 public class IMCForNEI {
 
+    public static final String GT_NEI_MB_HANDLER_NAME = "gregtech.nei.multiblockhandler";
+
     public static void IMCSender() {
 
         sendHandler(
-                "gregtech.nei.multiblockhandler",
+            GT_NEI_MB_HANDLER_NAME,
                 "GregTech",
                 "gregtech",
                 "structurelib:item.structurelib.constructableTrigger",

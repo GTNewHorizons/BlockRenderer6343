@@ -41,10 +41,10 @@ public class GT_GUI_MultiblocksHandler extends GUI_MultiblocksHandler<GT_MetaTil
 
     protected static final int TIER_BUTTON_X = LAYER_BUTTON_X;
     protected static final int TIER_BUTTON_Y = LAYER_BUTTON_Y - ICON_SIZE_Y - BUTTON_MARGIN;
-    protected static final int PROJECT_BUTTON_X = TIER_BUTTON_X + ICON_SIZE_X;
-    protected static final int PROJECT_BUTTON_Y = 5;
+    protected static final int PROJECT_BUTTON_X = 145;
+    protected static final int PROJECT_BUTTON_Y = -5;
     private static final BlockPosition MB_PLACE_POS = new BlockPosition(10, 10, 10);
-    
+
     protected static int tierIndex = 1;
 
     private static EntityPlayer fakeMultiblockBuilder;
@@ -202,12 +202,13 @@ public class GT_GUI_MultiblocksHandler extends GUI_MultiblocksHandler<GT_MetaTil
 
     private void scanCandidates() {
         candidates.clear();
-        for (PositionedIStructureElement structureElement : structureElements) {
-            if (structureElement.x == selectedBlock.x
+        if(selectedBlock != null){
+            for (PositionedIStructureElement structureElement : structureElements) {
+                if (structureElement.x == selectedBlock.x
                     && structureElement.y == selectedBlock.y
                     && structureElement.z == selectedBlock.z) {
 
-                IStructureElement.BlocksToPlace blocksToPlace = structureElement.element.getBlocksToPlace(
+                    IStructureElement.BlocksToPlace blocksToPlace = structureElement.element.getBlocksToPlace(
                         renderingController,
                         renderer.world,
                         selectedBlock.x,
@@ -215,45 +216,46 @@ public class GT_GUI_MultiblocksHandler extends GUI_MultiblocksHandler<GT_MetaTil
                         selectedBlock.z,
                         renderingController.getStackForm(tierIndex),
                         AutoPlaceEnvironment.fromLegacy(
-                                CreativeItemSource.instance, fakeMultiblockBuilder, iChatComponent -> {}));
-                if (blocksToPlace != null) {
-                    Predicate<ItemStack> predicate = blocksToPlace.getPredicate();
-                    Set<ItemStack> rawCandidates = CreativeItemSource.instance
+                            CreativeItemSource.instance, fakeMultiblockBuilder, iChatComponent -> {}));
+                    if (blocksToPlace != null) {
+                        Predicate<ItemStack> predicate = blocksToPlace.getPredicate();
+                        Set<ItemStack> rawCandidates = CreativeItemSource.instance
                             .takeEverythingMatches(predicate, false, 0)
                             .keySet();
 
-                    List<List<ItemStack>> stackedCandidates = new ArrayList<>();
-                    Iterator<ItemStack> iterator = rawCandidates.iterator();
-                    while (iterator.hasNext()) {
-                        ItemStack rawCandidate = iterator.next();
-                        boolean added = false;
-                        for (List<ItemStack> stackedCandidate : stackedCandidates) {
-                            if (stackedCandidate
+                        List<List<ItemStack>> stackedCandidates = new ArrayList<>();
+                        Iterator<ItemStack> iterator = rawCandidates.iterator();
+                        while (iterator.hasNext()) {
+                            ItemStack rawCandidate = iterator.next();
+                            boolean added = false;
+                            for (List<ItemStack> stackedCandidate : stackedCandidates) {
+                                if (stackedCandidate
                                     .get(0)
                                     .getTooltip(fakeMultiblockBuilder, false)
                                     .get(1)
                                     .equals(rawCandidate
-                                            .getTooltip(fakeMultiblockBuilder, false)
-                                            .get(1))) {
-                                stackedCandidate.add(rawCandidate);
-                                added = true;
-                                break;
+                                        .getTooltip(fakeMultiblockBuilder, false)
+                                        .get(1))) {
+                                    stackedCandidate.add(rawCandidate);
+                                    added = true;
+                                    break;
+                                }
+                            }
+                            if (!added) {
+                                List<ItemStack> newStackedCandidate = new ArrayList<>();
+                                newStackedCandidate.add(rawCandidate);
+                                stackedCandidates.add(newStackedCandidate);
                             }
                         }
-                        if (!added) {
-                            List<ItemStack> newStackedCandidate = new ArrayList<>();
-                            newStackedCandidate.add(rawCandidate);
-                            stackedCandidates.add(newStackedCandidate);
+
+                        candidates.addAll(stackedCandidates);
+
+                        if (onCandidateChanged != null) {
+                            onCandidateChanged.accept(candidates);
                         }
                     }
-
-                    candidates.addAll(stackedCandidates);
-
-                    if (onCandidateChanged != null) {
-                        onCandidateChanged.accept(candidates);
-                    }
+                    return;
                 }
-                return;
             }
         }
         if (onCandidateChanged != null) {

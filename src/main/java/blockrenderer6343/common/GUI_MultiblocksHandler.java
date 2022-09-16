@@ -41,7 +41,7 @@ public abstract class GUI_MultiblocksHandler<T> {
     protected static final int ICON_SIZE_Y = 20;
     protected static final int MOUSE_OFFSET_X = 5;
     protected static final int MOUSE_OFFSET_Y = 43;
-    protected static final int LAYER_BUTTON_X = 125;
+    protected static final int LAYER_BUTTON_X = 5;
     protected static final int LAYER_BUTTON_Y = 135;
     protected static final int BUTTON_MARGIN = 10;
 
@@ -272,6 +272,7 @@ public abstract class GUI_MultiblocksHandler<T> {
         // c.contains(pos)));
 
         selectedBlock = null;
+        onBlockSelected();
         setNextLayer(layerIndex);
 
         if (resetCamera) {
@@ -356,6 +357,7 @@ public abstract class GUI_MultiblocksHandler<T> {
                             Minecraft.getMinecraft(), guiMouseX - k - MOUSE_OFFSET_X, guiMouseY - l - MOUSE_OFFSET_Y)) {
                 buttons.getValue().run();
                 selectedBlock = null;
+                onBlockSelected();
                 return true;
             }
         }
@@ -363,6 +365,7 @@ public abstract class GUI_MultiblocksHandler<T> {
             if (renderer.getLastTraceResult() == null) {
                 if (selectedBlock != null) {
                     selectedBlock = null;
+                    onBlockSelected();
                     return true;
                 }
                 return false;

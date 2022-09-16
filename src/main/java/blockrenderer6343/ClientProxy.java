@@ -3,7 +3,7 @@ package blockrenderer6343;
 import blockrenderer6343.client.renderer.TooltipsFrameRenderer;
 import blockrenderer6343.integration.gregtech.GT_GUI_MultiblocksHandler;
 import blockrenderer6343.integration.nei.IMCForNEI;
-import blockrenderer6343.integration.nei.NEI_config;
+import blockrenderer6343.integration.nei.NEI_Config;
 import cpw.mods.fml.common.event.*;
 import net.minecraftforge.common.MinecraftForge;
 
@@ -27,7 +27,6 @@ public class ClientProxy extends CommonProxy {
     // postInit "Handle interaction with other mods, complete your setup based on this."
     public void postInit(FMLPostInitializationEvent event) {
         super.postInit(event);
-        new NEI_config().loadConfig();
         MinecraftForge.EVENT_BUS.register(guiMultiblocksHandler);
     }
 

@@ -25,6 +25,8 @@ import gregtech.api.metatileentity.implementations.GT_MetaTileEntity_MultiBlockB
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+
+import gregtech.api.threads.GT_Runnable_MachineBlockUpdate;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiButton;
@@ -138,6 +140,9 @@ public class GT_GUI_MultiblocksHandler extends GUI_MultiblocksHandler<GT_MetaTil
 
     @Override
     protected void placeMultiblock() {
+        if(GT_Runnable_MachineBlockUpdate.isCurrentThreadEnabled())
+            GT_Runnable_MachineBlockUpdate.setCurrentThreadEnabled(false);
+
         fakeMultiblockBuilder = new ClientFakePlayer(
                 renderer.world, new GameProfile(UUID.fromString("518FDF18-EC2A-4322-832A-58ED1721309B"), "[GregTech]"));
         renderer.world.unloadEntities(Arrays.asList(fakeMultiblockBuilder));
@@ -185,6 +190,9 @@ public class GT_GUI_MultiblocksHandler extends GUI_MultiblocksHandler<GT_MetaTil
         }
 
         if (StructureLibAPI.isInstrumentEnabled()) StructureLibAPI.disableInstrument();
+
+        if(!GT_Runnable_MachineBlockUpdate.isCurrentThreadEnabled())
+            GT_Runnable_MachineBlockUpdate.setCurrentThreadEnabled(true);
     }
 
     private void scanCandidates() {

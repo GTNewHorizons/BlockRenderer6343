@@ -5,7 +5,7 @@ import codechicken.nei.api.IConfigureNEI;
 import codechicken.nei.recipe.GuiCraftingRecipe;
 import codechicken.nei.recipe.GuiUsageRecipe;
 
-public class NEI_config implements IConfigureNEI {
+public class NEI_Config implements IConfigureNEI {
 
     public static boolean isAdded = true;
     private static GT_NEI_MultiblocksHandler handler;

@@ -41,9 +41,9 @@ public abstract class GUI_MultiblocksHandler<T> {
     protected static final int ICON_SIZE_Y = 20;
     protected static final int MOUSE_OFFSET_X = 5;
     protected static final int MOUSE_OFFSET_Y = 43;
-    protected static final int LAYER_BUTTON_X = 5;
+    protected static final int LAYER_BUTTON_X = -5;
     protected static final int LAYER_BUTTON_Y = 135;
-    protected static final int BUTTON_MARGIN = 10;
+    protected static final int BUTTON_SPACE_X = 20;
 
     protected static int guiMouseX;
     protected static int guiMouseY;
@@ -69,10 +69,10 @@ public abstract class GUI_MultiblocksHandler<T> {
     public GUI_MultiblocksHandler() {
         buttons.clear();
 
-        GuiButton previousLayerButton =
-                new GuiButton(0, LAYER_BUTTON_X, LAYER_BUTTON_Y, ICON_SIZE_X, ICON_SIZE_Y, "<");
-        GuiButton nextLayerButton = new GuiButton(
-                0, LAYER_BUTTON_X + ICON_SIZE_X, LAYER_BUTTON_Y, ICON_SIZE_X, ICON_SIZE_Y, ">");
+        ClearGuiButton previousLayerButton =
+                new ClearGuiButton(0, LAYER_BUTTON_X, LAYER_BUTTON_Y, ICON_SIZE_X, ICON_SIZE_Y, "<");
+        ClearGuiButton nextLayerButton = new ClearGuiButton(
+                0, LAYER_BUTTON_X + ICON_SIZE_X + BUTTON_SPACE_X, LAYER_BUTTON_Y, ICON_SIZE_X, ICON_SIZE_Y, ">");
 
         buttons.put(previousLayerButton, this::togglePreviousLayer);
         buttons.put(nextLayerButton, this::toggleNextLayer);
@@ -236,8 +236,8 @@ public abstract class GUI_MultiblocksHandler<T> {
         String layerText = "Layer: " + (layerIndex == -1 ? "A" : Integer.toString(layerIndex + 1));
         fontRenderer.drawString(
                 layerText,
-                LAYER_BUTTON_X + (ICON_SIZE_X * 2 - fontRenderer.getStringWidth(layerText)) / 2,
-                LAYER_BUTTON_Y - BUTTON_MARGIN,
+                LAYER_BUTTON_X + ICON_SIZE_X + (BUTTON_SPACE_X - fontRenderer.getStringWidth(layerText)) / 2,
+                LAYER_BUTTON_Y + 5,
                 0x333333);
     }
 
@@ -386,5 +386,38 @@ public abstract class GUI_MultiblocksHandler<T> {
             return tooltipBlockStack.getTooltip(
                     Minecraft.getMinecraft().thePlayer, Minecraft.getMinecraft().gameSettings.advancedItemTooltips);
         else return null;
+    }
+
+    protected class ClearGuiButton extends GuiButton{
+
+        public ClearGuiButton(int p_i1021_1_, int p_i1021_2_, int p_i1021_3_, int p_i1021_4_, int p_i1021_5_, String p_i1021_6_) {
+            super(p_i1021_1_, p_i1021_2_, p_i1021_3_, p_i1021_4_, p_i1021_5_, p_i1021_6_);
+        }
+
+        @Override
+        public void drawButton(Minecraft p_146112_1_, int p_146112_2_, int p_146112_3_)
+        {
+            if (this.visible)
+            {
+                FontRenderer fontrenderer = p_146112_1_.fontRenderer;
+                this.field_146123_n = p_146112_2_ >= this.xPosition && p_146112_3_ >= this.yPosition && p_146112_2_ < this.xPosition + this.width && p_146112_3_ < this.yPosition + this.height;
+                int l = 2105376;
+
+                if (packedFGColour != 0)
+                {
+                    l = packedFGColour;
+                }
+                else if (!this.enabled)
+                {
+                    l = 10526880;
+                }
+                else if (this.field_146123_n)
+                {
+                    l = 16777120;
+                }
+
+                this.drawCenteredString(fontrenderer, this.displayString, this.xPosition + this.width / 2, this.yPosition + (this.height - 8) / 2, l);
+            }
+        }
     }
 }

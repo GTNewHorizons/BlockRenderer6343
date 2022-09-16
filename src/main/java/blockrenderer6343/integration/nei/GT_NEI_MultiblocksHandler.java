@@ -27,11 +27,16 @@ public class GT_NEI_MultiblocksHandler extends TemplateRecipeHandler {
 
     public static List<GT_MetaTileEntity_MultiBlockBase> multiblocksList = new ArrayList<>();
     private static final GT_GUI_MultiblocksHandler baseHandler = ClientProxy.guiMultiblocksHandler;
-    private final RecipeCacher recipeCacher = new RecipeCacher();
 
     public static final int CANDIDATE_SLOTS_X = 150;
     public static final int CANDIDATE_SLOTS_Y = 20;
     public static final int CANDIDATE_IN_COlUMN = 6;
+
+    private List<ItemStack> ingredients = new ArrayList<>();
+    private final List<PositionedStack> positionedIngredients = new ArrayList<>();
+    private int lastRecipeHeight;
+
+    private final RecipeCacher recipeCacher = new RecipeCacher();
 
     public GT_NEI_MultiblocksHandler() {
         super();
@@ -40,30 +45,12 @@ public class GT_NEI_MultiblocksHandler extends TemplateRecipeHandler {
                 multiblocksList.add((GT_MetaTileEntity_MultiBlockBase) (mte));
             }
         }
-        baseHandler.setOnIngredientChanged(this::setIngredients);
+        baseHandler.setOnIngredientChanged(ingredients -> {this.ingredients = ingredients;});
         baseHandler.setOnCandidateChanged(this::setResults);
     }
 
     public class RecipeCacher extends CachedRecipe {
-        private final List<PositionedStack> positionedIngredients = new ArrayList<>();
         private final List<PositionedStack> positionedResults = new ArrayList<>();
-
-        public void setIngredients(List<ItemStack> ingredients) {
-            positionedIngredients.clear();
-
-            int rowCount = RecipeCatalysts.getRowCount(RecipeCatalysts.getHeight(), ingredients.size());
-
-            for (int index = 0; index < ingredients.size(); index++) {
-                ItemStack catalyst = ingredients.get(index);
-                int column = index / rowCount;
-                int row = index % rowCount;
-                positionedIngredients.add(new PositionedStack(
-                    catalyst, -column * GuiRecipeCatalyst.ingredientSize, row * GuiRecipeCatalyst.ingredientSize));
-            }
-
-            Map<String, List<PositionedStack>> catalystMap = RecipeCatalysts.getPositionedRecipeCatalystMap();
-            catalystMap.put(GT_NEI_MB_HANDLER_NAME, positionedIngredients);
-        }
 
         public void setResults(List<List<ItemStack>> results) {
             positionedResults.clear();
@@ -131,6 +118,13 @@ public class GT_NEI_MultiblocksHandler extends TemplateRecipeHandler {
     public void drawBackground(int recipe) {
         super.drawBackground(recipe);
         baseHandler.drawMultiblock();
+
+        if(lastRecipeHeight != RecipeCatalysts.getHeight()){
+            resetPositionedIngredients();
+            Map<String, List<PositionedStack>> catalystMap = RecipeCatalysts.getPositionedRecipeCatalystMap();
+            catalystMap.put(GT_NEI_MB_HANDLER_NAME, positionedIngredients);
+            lastRecipeHeight = RecipeCatalysts.getHeight();
+        }
     }
 
     @Override
@@ -147,10 +141,18 @@ public class GT_NEI_MultiblocksHandler extends TemplateRecipeHandler {
         }
     }
 
-    public void setIngredients(List<ItemStack> ingredients) {
-        arecipes.clear();
-        recipeCacher.setIngredients(ingredients);
-        arecipes.add(recipeCacher);
+    public void resetPositionedIngredients() {
+        positionedIngredients.clear();
+
+        int rowCount = RecipeCatalysts.getRowCount(RecipeCatalysts.getHeight(), ingredients.size());
+
+        for (int index = 0; index < ingredients.size(); index++) {
+            ItemStack catalyst = ingredients.get(index);
+            int column = index / rowCount;
+            int row = index % rowCount;
+            positionedIngredients.add(new PositionedStack(
+                catalyst, -column * GuiRecipeCatalyst.ingredientSize, row * GuiRecipeCatalyst.ingredientSize));
+        }
     }
 
     public void setResults(List<List<ItemStack>> results) {

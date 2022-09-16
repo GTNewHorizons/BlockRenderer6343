@@ -45,7 +45,10 @@ public class GT_NEI_MultiblocksHandler extends TemplateRecipeHandler {
                 multiblocksList.add((GT_MetaTileEntity_MultiBlockBase) (mte));
             }
         }
-        baseHandler.setOnIngredientChanged(ingredients -> {this.ingredients = ingredients;});
+        baseHandler.setOnIngredientChanged(ingredients -> {
+            this.ingredients = ingredients;
+            resetPositionedIngredients();
+        });
         baseHandler.setOnCandidateChanged(this::setResults);
     }
 
@@ -121,8 +124,6 @@ public class GT_NEI_MultiblocksHandler extends TemplateRecipeHandler {
 
         if(lastRecipeHeight != RecipeCatalysts.getHeight()){
             resetPositionedIngredients();
-            Map<String, List<PositionedStack>> catalystMap = RecipeCatalysts.getPositionedRecipeCatalystMap();
-            catalystMap.put(GT_NEI_MB_HANDLER_NAME, positionedIngredients);
             lastRecipeHeight = RecipeCatalysts.getHeight();
         }
     }
@@ -153,6 +154,9 @@ public class GT_NEI_MultiblocksHandler extends TemplateRecipeHandler {
             positionedIngredients.add(new PositionedStack(
                 catalyst, -column * GuiRecipeCatalyst.ingredientSize, row * GuiRecipeCatalyst.ingredientSize));
         }
+
+        Map<String, List<PositionedStack>> catalystMap = RecipeCatalysts.getPositionedRecipeCatalystMap();
+        catalystMap.put(GT_NEI_MB_HANDLER_NAME, positionedIngredients);
     }
 
     public void setResults(List<List<ItemStack>> results) {

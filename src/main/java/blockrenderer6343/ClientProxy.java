@@ -1,11 +1,14 @@
 package blockrenderer6343;
 
 import blockrenderer6343.client.renderer.TooltipsFrameRenderer;
+import blockrenderer6343.integration.gregtech.GT_GUI_MultiblocksHandler;
 import blockrenderer6343.integration.nei.IMCForNEI;
-import blockrenderer6343.integration.nei.NEI_config;
 import cpw.mods.fml.common.event.*;
+import net.minecraftforge.common.MinecraftForge;
 
 public class ClientProxy extends CommonProxy {
+
+    public static GT_GUI_MultiblocksHandler guiMultiblocksHandler = new GT_GUI_MultiblocksHandler();
 
     // preInit "Run before anything else. Read your config, create blocks, items,
     // etc, and register them with the GameRegistry."
@@ -23,7 +26,7 @@ public class ClientProxy extends CommonProxy {
     // postInit "Handle interaction with other mods, complete your setup based on this."
     public void postInit(FMLPostInitializationEvent event) {
         super.postInit(event);
-        new NEI_config().loadConfig();
+        MinecraftForge.EVENT_BUS.register(guiMultiblocksHandler);
     }
 
     public void serverAboutToStart(FMLServerAboutToStartEvent event) {

@@ -42,7 +42,7 @@ public abstract class WorldSceneRenderer {
     // the Blocks which this renderer needs to render
     public final List<BlockPosition> renderedBlocks;
     private Consumer<WorldSceneRenderer> beforeRender;
-    private Consumer<WorldSceneRenderer> afterRender;
+    private Consumer<WorldSceneRenderer> onRender;
     private Consumer<MovingObjectPosition> onLookingAt;
     private int clearColor;
     private MovingObjectPosition lastTraceResult;
@@ -61,8 +61,8 @@ public abstract class WorldSceneRenderer {
         return this;
     }
 
-    public WorldSceneRenderer setAfterWorldRender(Consumer<WorldSceneRenderer> callback) {
-        this.afterRender = callback;
+    public WorldSceneRenderer setOnWorldRender(Consumer<WorldSceneRenderer> callback) {
+        this.onRender = callback;
         return this;
     }
 
@@ -253,6 +253,10 @@ public abstract class WorldSceneRenderer {
                 bufferBuilder.renderStandardBlock(block, pos.x, pos.y, pos.z);
             }
         }
+        if (onRender != null) {
+            onRender.accept(this);
+        }
+
         Tessellator.instance.draw();
         Tessellator.instance.setTranslation(0, 0, 0);
 
@@ -277,10 +281,6 @@ public abstract class WorldSceneRenderer {
         GlStateManager.enableDepth();
         GlStateManager.disableBlend();
         GlStateManager.depthMask(true);
-
-        if (afterRender != null) {
-            afterRender.accept(this);
-        }
     }
 
     public static void setDefaultPassRenderState(int pass) {
@@ -326,7 +326,7 @@ public abstract class WorldSceneRenderer {
     }
 
     /***
-     * For better performance, You'd better do project in setAfterWorldRender(Consumer)
+     * For better performance, You'd better do project in setOnWorldRender(Consumer)
      * @param pos BlockPos
      * @param depth should pass Depth Test
      * @return x, y, z

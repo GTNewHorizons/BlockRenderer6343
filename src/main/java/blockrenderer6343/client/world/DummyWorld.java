@@ -5,10 +5,7 @@ import blockrenderer6343.api.utils.world.DummySaveHandler;
 import javax.annotation.Nonnull;
 import net.minecraft.entity.Entity;
 import net.minecraft.profiler.Profiler;
-import net.minecraft.world.World;
-import net.minecraft.world.WorldProviderSurface;
-import net.minecraft.world.WorldSettings;
-import net.minecraft.world.WorldType;
+import net.minecraft.world.*;
 import net.minecraft.world.chunk.IChunkProvider;
 
 public class DummyWorld extends World {
@@ -52,5 +49,10 @@ public class DummyWorld extends World {
     @Override
     protected boolean chunkExists(int x, int z) {
         return chunkProvider.chunkExists(x, z);
+    }
+
+    @Override
+    public boolean updateLightByType(EnumSkyBlock p_147463_1_, int p_147463_2_, int p_147463_3_, int p_147463_4_) {
+        return true;
     }
 }

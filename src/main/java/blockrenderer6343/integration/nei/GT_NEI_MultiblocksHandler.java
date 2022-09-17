@@ -1,48 +1,71 @@
 package blockrenderer6343.integration.nei;
 
 import static blockrenderer6343.integration.gregtech.GT_GUI_MultiblocksHandler.*;
+import static blockrenderer6343.integration.nei.IMCForNEI.GT_NEI_MB_HANDLER_NAME;
 import static gregtech.api.GregTech_API.METATILEENTITIES;
 import static gregtech.api.enums.GT_Values.RES_PATH_GUI;
 
+import blockrenderer6343.ClientProxy;
 import blockrenderer6343.integration.gregtech.GT_GUI_MultiblocksHandler;
 import codechicken.nei.NEIClientUtils;
 import codechicken.nei.PositionedStack;
 import codechicken.nei.guihook.GuiContainerManager;
 import codechicken.nei.guihook.IContainerInputHandler;
 import codechicken.nei.guihook.IContainerTooltipHandler;
-import codechicken.nei.recipe.GuiCraftingRecipe;
-import codechicken.nei.recipe.GuiUsageRecipe;
-import codechicken.nei.recipe.TemplateRecipeHandler;
+import codechicken.nei.recipe.*;
 import gregtech.api.interfaces.metatileentity.IMetaTileEntity;
 import gregtech.api.metatileentity.implementations.GT_MetaTileEntity_MultiBlockBase;
-import gregtech.common.tileentities.machines.multi.GT_MetaTileEntity_PlasmaForge;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.item.ItemStack;
 
 public class GT_NEI_MultiblocksHandler extends TemplateRecipeHandler {
 
     public static List<GT_MetaTileEntity_MultiBlockBase> multiblocksList = new ArrayList<>();
-    private static final GT_GUI_MultiblocksHandler baseHandler = new GT_GUI_MultiblocksHandler();
+    private static final GT_GUI_MultiblocksHandler baseHandler = ClientProxy.guiMultiblocksHandler;
+
+    public static final int CANDIDATE_SLOTS_X = 150;
+    public static final int CANDIDATE_SLOTS_Y = 20;
+    public static final int CANDIDATE_IN_COlUMN = 6;
+
+    private List<ItemStack> ingredients = new ArrayList<>();
+    private final List<PositionedStack> positionedIngredients = new ArrayList<>();
+    private int lastRecipeHeight;
+
+    private final RecipeCacher recipeCacher = new RecipeCacher();
 
     public GT_NEI_MultiblocksHandler() {
         super();
-        // Ban Plasma forge since it causes severe performance issue
         for (IMetaTileEntity mte : METATILEENTITIES) {
-            if (mte instanceof GT_MetaTileEntity_MultiBlockBase && !(mte instanceof GT_MetaTileEntity_PlasmaForge)) {
+            if (mte instanceof GT_MetaTileEntity_MultiBlockBase) {
                 multiblocksList.add((GT_MetaTileEntity_MultiBlockBase) (mte));
             }
         }
-        baseHandler.setOnIngredientChanged(this::setIngredients);
+        baseHandler.setOnIngredientChanged(ingredients -> {
+            this.ingredients = ingredients;
+            resetPositionedIngredients();
+        });
+        baseHandler.setOnCandidateChanged(this::setResults);
     }
 
-    public class recipeCacher extends CachedRecipe {
-        private final List<PositionedStack> positionedIngredients = new ArrayList<>();
+    public class RecipeCacher extends CachedRecipe {
+        private final List<PositionedStack> positionedResults = new ArrayList<>();
 
-        public recipeCacher(List<ItemStack> ingredients) {
-            for (int i = 0; i < ingredients.size(); i++)
-                positionedIngredients.add(new PositionedStack(ingredients.get(i), SLOTS_X + i * SLOT_SIZE, SLOTS_Y));
+        public void setResults(List<List<ItemStack>> results) {
+            positionedResults.clear();
+            int columnCount = results.size() / CANDIDATE_IN_COlUMN + 1;
+            int realCandidateInColumn =
+                    results.size() % columnCount == 0 ? results.size() / columnCount : results.size() / columnCount + 1;
+            for (int i = 0; i < results.size(); i++) {
+                PositionedStack result = new PositionedStack(
+                        results.get(i),
+                        CANDIDATE_SLOTS_X - (columnCount - 1) * SLOT_SIZE + (i / realCandidateInColumn) * SLOT_SIZE,
+                        CANDIDATE_SLOTS_Y + (i % realCandidateInColumn) * SLOT_SIZE);
+                result.generatePermutations();
+                positionedResults.add(result);
+            }
         }
 
         @Override
@@ -51,8 +74,8 @@ public class GT_NEI_MultiblocksHandler extends TemplateRecipeHandler {
         }
 
         @Override
-        public List<PositionedStack> getIngredients() {
-            return positionedIngredients;
+        public List<PositionedStack> getOtherStacks() {
+            return getCycledIngredients(cycleticks / 20, positionedResults);
         }
     }
 
@@ -63,7 +86,7 @@ public class GT_NEI_MultiblocksHandler extends TemplateRecipeHandler {
 
     @Override
     public String getOverlayIdentifier() {
-        return "gregtech.nei.multiblockhandler";
+        return GT_NEI_MB_HANDLER_NAME;
     }
 
     @Override
@@ -96,6 +119,12 @@ public class GT_NEI_MultiblocksHandler extends TemplateRecipeHandler {
     @Override
     public void drawBackground(int recipe) {
         super.drawBackground(recipe);
+        baseHandler.drawMultiblock();
+
+        if (lastRecipeHeight != RecipeCatalysts.getHeight()) {
+            resetPositionedIngredients();
+            lastRecipeHeight = RecipeCatalysts.getHeight();
+        }
     }
 
     @Override
@@ -106,21 +135,33 @@ public class GT_NEI_MultiblocksHandler extends TemplateRecipeHandler {
     private void tryLoadMultiblocks(ItemStack candidate) {
         for (GT_MetaTileEntity_MultiBlockBase multiblocks : multiblocksList) {
             if (NEIClientUtils.areStacksSameType(((IMetaTileEntity) multiblocks).getStackForm(1), candidate)) {
-                baseHandler.loadMultiblocks(multiblocks);
+                baseHandler.loadMultiblock(multiblocks);
                 return;
             }
         }
     }
 
-    @Override
-    public void drawExtras(int recipe) {
-        super.drawExtras(recipe);
-        baseHandler.drawMultiblock();
+    public void resetPositionedIngredients() {
+        positionedIngredients.clear();
+
+        int rowCount = RecipeCatalysts.getRowCount(RecipeCatalysts.getHeight(), ingredients.size());
+
+        for (int index = 0; index < ingredients.size(); index++) {
+            ItemStack catalyst = ingredients.get(index);
+            int column = index / rowCount;
+            int row = index % rowCount;
+            positionedIngredients.add(new PositionedStack(
+                    catalyst, -column * GuiRecipeCatalyst.ingredientSize, row * GuiRecipeCatalyst.ingredientSize));
+        }
+
+        Map<String, List<PositionedStack>> catalystMap = RecipeCatalysts.getPositionedRecipeCatalystMap();
+        catalystMap.put(GT_NEI_MB_HANDLER_NAME, positionedIngredients);
     }
 
-    public void setIngredients(List<ItemStack> ingredients) {
+    public void setResults(List<List<ItemStack>> results) {
         arecipes.clear();
-        arecipes.add(new GT_NEI_MultiblocksHandler.recipeCacher(ingredients));
+        recipeCacher.setResults(results);
+        arecipes.add(recipeCacher);
     }
 
     static {

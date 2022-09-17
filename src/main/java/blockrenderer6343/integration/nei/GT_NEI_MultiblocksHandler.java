@@ -15,11 +15,9 @@ import codechicken.nei.guihook.IContainerTooltipHandler;
 import codechicken.nei.recipe.*;
 import gregtech.api.interfaces.metatileentity.IMetaTileEntity;
 import gregtech.api.metatileentity.implementations.GT_MetaTileEntity_MultiBlockBase;
-import gregtech.common.tileentities.machines.multi.GT_MetaTileEntity_PlasmaForge;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.item.ItemStack;
 
@@ -58,12 +56,13 @@ public class GT_NEI_MultiblocksHandler extends TemplateRecipeHandler {
         public void setResults(List<List<ItemStack>> results) {
             positionedResults.clear();
             int columnCount = results.size() / CANDIDATE_IN_COlUMN + 1;
-            int realCandidateInColumn = results.size() % columnCount == 0 ? results.size() / columnCount : results.size() / columnCount + 1;
+            int realCandidateInColumn =
+                    results.size() % columnCount == 0 ? results.size() / columnCount : results.size() / columnCount + 1;
             for (int i = 0; i < results.size(); i++) {
-                PositionedStack result =
-                        new PositionedStack(results.get(i),
-                            CANDIDATE_SLOTS_X - (columnCount - 1) * SLOT_SIZE + (i / realCandidateInColumn) * SLOT_SIZE  ,
-                             CANDIDATE_SLOTS_Y + (i % realCandidateInColumn) * SLOT_SIZE);
+                PositionedStack result = new PositionedStack(
+                        results.get(i),
+                        CANDIDATE_SLOTS_X - (columnCount - 1) * SLOT_SIZE + (i / realCandidateInColumn) * SLOT_SIZE,
+                        CANDIDATE_SLOTS_Y + (i % realCandidateInColumn) * SLOT_SIZE);
                 result.generatePermutations();
                 positionedResults.add(result);
             }
@@ -122,7 +121,7 @@ public class GT_NEI_MultiblocksHandler extends TemplateRecipeHandler {
         super.drawBackground(recipe);
         baseHandler.drawMultiblock();
 
-        if(lastRecipeHeight != RecipeCatalysts.getHeight()){
+        if (lastRecipeHeight != RecipeCatalysts.getHeight()) {
             resetPositionedIngredients();
             lastRecipeHeight = RecipeCatalysts.getHeight();
         }
@@ -152,7 +151,7 @@ public class GT_NEI_MultiblocksHandler extends TemplateRecipeHandler {
             int column = index / rowCount;
             int row = index % rowCount;
             positionedIngredients.add(new PositionedStack(
-                catalyst, -column * GuiRecipeCatalyst.ingredientSize, row * GuiRecipeCatalyst.ingredientSize));
+                    catalyst, -column * GuiRecipeCatalyst.ingredientSize, row * GuiRecipeCatalyst.ingredientSize));
         }
 
         Map<String, List<PositionedStack>> catalystMap = RecipeCatalysts.getPositionedRecipeCatalystMap();

@@ -160,7 +160,8 @@ public abstract class GUI_MultiblocksHandler<T> {
         int l = (NEIClientUtils.getGuiContainer().height
                         - ((GuiContainerMixin) NEIClientUtils.getGuiContainer()).getYSize())
                 / 2;
-        renderer.render(RECIPE_LAYOUT_X + k, RECIPE_LAYOUT_Y + l, RECIPE_WIDTH, sceneHeight, lastGuiMouseX, lastGuiMouseY);
+        renderer.render(
+                RECIPE_LAYOUT_X + k, RECIPE_LAYOUT_Y + l, RECIPE_WIDTH, sceneHeight, lastGuiMouseX, lastGuiMouseY);
         drawMultiblockName();
 
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
@@ -388,35 +389,37 @@ public abstract class GUI_MultiblocksHandler<T> {
         else return null;
     }
 
-    protected class ClearGuiButton extends GuiButton{
+    protected class ClearGuiButton extends GuiButton {
 
-        public ClearGuiButton(int p_i1021_1_, int p_i1021_2_, int p_i1021_3_, int p_i1021_4_, int p_i1021_5_, String p_i1021_6_) {
+        public ClearGuiButton(
+                int p_i1021_1_, int p_i1021_2_, int p_i1021_3_, int p_i1021_4_, int p_i1021_5_, String p_i1021_6_) {
             super(p_i1021_1_, p_i1021_2_, p_i1021_3_, p_i1021_4_, p_i1021_5_, p_i1021_6_);
         }
 
         @Override
-        public void drawButton(Minecraft p_146112_1_, int p_146112_2_, int p_146112_3_)
-        {
-            if (this.visible)
-            {
+        public void drawButton(Minecraft p_146112_1_, int p_146112_2_, int p_146112_3_) {
+            if (this.visible) {
                 FontRenderer fontrenderer = p_146112_1_.fontRenderer;
-                this.field_146123_n = p_146112_2_ >= this.xPosition && p_146112_3_ >= this.yPosition && p_146112_2_ < this.xPosition + this.width && p_146112_3_ < this.yPosition + this.height;
+                this.field_146123_n = p_146112_2_ >= this.xPosition
+                        && p_146112_3_ >= this.yPosition
+                        && p_146112_2_ < this.xPosition + this.width
+                        && p_146112_3_ < this.yPosition + this.height;
                 int l = 2105376;
 
-                if (packedFGColour != 0)
-                {
+                if (packedFGColour != 0) {
                     l = packedFGColour;
-                }
-                else if (!this.enabled)
-                {
+                } else if (!this.enabled) {
                     l = 10526880;
-                }
-                else if (this.field_146123_n)
-                {
+                } else if (this.field_146123_n) {
                     l = 16777120;
                 }
 
-                this.drawCenteredString(fontrenderer, this.displayString, this.xPosition + this.width / 2, this.yPosition + (this.height - 8) / 2, l);
+                this.drawCenteredString(
+                        fontrenderer,
+                        this.displayString,
+                        this.xPosition + this.width / 2,
+                        this.yPosition + (this.height - 8) / 2,
+                        l);
             }
         }
     }

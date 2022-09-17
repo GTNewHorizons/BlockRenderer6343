@@ -10,7 +10,7 @@ public class IMCForNEI {
     public static void IMCSender() {
 
         sendHandler(
-            GT_NEI_MB_HANDLER_NAME,
+                GT_NEI_MB_HANDLER_NAME,
                 "GregTech",
                 "gregtech",
                 "structurelib:item.structurelib.constructableTrigger",

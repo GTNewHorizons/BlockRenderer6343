@@ -22,11 +22,10 @@ import gregtech.api.interfaces.metatileentity.IMetaTileEntity;
 import gregtech.api.interfaces.tileentity.IGregTechTileEntity;
 import gregtech.api.interfaces.tileentity.ITurnable;
 import gregtech.api.metatileentity.implementations.GT_MetaTileEntity_MultiBlockBase;
+import gregtech.api.threads.GT_Runnable_MachineBlockUpdate;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
-
-import gregtech.api.threads.GT_Runnable_MachineBlockUpdate;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiButton;
@@ -58,8 +57,8 @@ public class GT_GUI_MultiblocksHandler extends GUI_MultiblocksHandler<GT_MetaTil
 
         ClearGuiButton previousTierButton =
                 new ClearGuiButton(0, TIER_BUTTON_X, TIER_BUTTON_Y, ICON_SIZE_X, ICON_SIZE_Y, "<");
-        ClearGuiButton nextTierButton =
-                new ClearGuiButton(0, TIER_BUTTON_X + ICON_SIZE_X + BUTTON_SPACE_X , TIER_BUTTON_Y, ICON_SIZE_X, ICON_SIZE_Y, ">");
+        ClearGuiButton nextTierButton = new ClearGuiButton(
+                0, TIER_BUTTON_X + ICON_SIZE_X + BUTTON_SPACE_X, TIER_BUTTON_Y, ICON_SIZE_X, ICON_SIZE_Y, ">");
         GuiButton projectMultiblocksButton =
                 new GuiButton(0, PROJECT_BUTTON_X, PROJECT_BUTTON_Y, ICON_SIZE_X, ICON_SIZE_Y, "P");
 
@@ -145,7 +144,7 @@ public class GT_GUI_MultiblocksHandler extends GUI_MultiblocksHandler<GT_MetaTil
 
     @Override
     protected void placeMultiblock() {
-        if(GT_Runnable_MachineBlockUpdate.isCurrentThreadEnabled())
+        if (GT_Runnable_MachineBlockUpdate.isCurrentThreadEnabled())
             GT_Runnable_MachineBlockUpdate.setCurrentThreadEnabled(false);
 
         fakeMultiblockBuilder = new ClientFakePlayer(
@@ -196,32 +195,32 @@ public class GT_GUI_MultiblocksHandler extends GUI_MultiblocksHandler<GT_MetaTil
 
         if (StructureLibAPI.isInstrumentEnabled()) StructureLibAPI.disableInstrument();
 
-        if(!GT_Runnable_MachineBlockUpdate.isCurrentThreadEnabled())
+        if (!GT_Runnable_MachineBlockUpdate.isCurrentThreadEnabled())
             GT_Runnable_MachineBlockUpdate.setCurrentThreadEnabled(true);
     }
 
     private void scanCandidates() {
         candidates.clear();
-        if(selectedBlock != null){
+        if (selectedBlock != null) {
             for (PositionedIStructureElement structureElement : structureElements) {
                 if (structureElement.x == selectedBlock.x
-                    && structureElement.y == selectedBlock.y
-                    && structureElement.z == selectedBlock.z) {
+                        && structureElement.y == selectedBlock.y
+                        && structureElement.z == selectedBlock.z) {
 
                     IStructureElement.BlocksToPlace blocksToPlace = structureElement.element.getBlocksToPlace(
-                        renderingController,
-                        renderer.world,
-                        selectedBlock.x,
-                        selectedBlock.y,
-                        selectedBlock.z,
-                        renderingController.getStackForm(tierIndex),
-                        AutoPlaceEnvironment.fromLegacy(
-                            CreativeItemSource.instance, fakeMultiblockBuilder, iChatComponent -> {}));
+                            renderingController,
+                            renderer.world,
+                            selectedBlock.x,
+                            selectedBlock.y,
+                            selectedBlock.z,
+                            renderingController.getStackForm(tierIndex),
+                            AutoPlaceEnvironment.fromLegacy(
+                                    CreativeItemSource.instance, fakeMultiblockBuilder, iChatComponent -> {}));
                     if (blocksToPlace != null) {
                         Predicate<ItemStack> predicate = blocksToPlace.getPredicate();
                         Set<ItemStack> rawCandidates = CreativeItemSource.instance
-                            .takeEverythingMatches(predicate, false, 0)
-                            .keySet();
+                                .takeEverythingMatches(predicate, false, 0)
+                                .keySet();
 
                         List<List<ItemStack>> stackedCandidates = new ArrayList<>();
                         Iterator<ItemStack> iterator = rawCandidates.iterator();
@@ -230,12 +229,12 @@ public class GT_GUI_MultiblocksHandler extends GUI_MultiblocksHandler<GT_MetaTil
                             boolean added = false;
                             for (List<ItemStack> stackedCandidate : stackedCandidates) {
                                 if (stackedCandidate
-                                    .get(0)
-                                    .getTooltip(fakeMultiblockBuilder, false)
-                                    .get(1)
-                                    .equals(rawCandidate
+                                        .get(0)
                                         .getTooltip(fakeMultiblockBuilder, false)
-                                        .get(1))) {
+                                        .get(1)
+                                        .equals(rawCandidate
+                                                .getTooltip(fakeMultiblockBuilder, false)
+                                                .get(1))) {
                                     stackedCandidate.add(rawCandidate);
                                     added = true;
                                     break;

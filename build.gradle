@@ -358,7 +358,7 @@ task generateAssets {
         if (!mixinConfigFile.exists()) {
             mixinConfigFile.text = """{
   "required": true,
-  "minVersion": "0.8",
+  "minVersion": "0.7.11",
   "package": "${modGroup}.${mixinsPackage}",
   "plugin": "${modGroup}.${mixinPlugin}",
   "refmap": "${mixingConfigRefMap}",

@@ -38,8 +38,9 @@ import net.minecraft.world.World;
 
 public class GT_GUI_MultiblocksHandler extends GUI_MultiblocksHandler<GT_MetaTileEntity_MultiBlockBase> {
 
-    protected static final int TIER_BUTTON_X = LAYER_BUTTON_X;
+    protected static final int TIER_BUTTON_X = LAYER_BUTTON_X + 5;
     protected static final int TIER_BUTTON_Y = LAYER_BUTTON_Y - ICON_SIZE_Y;
+    protected static final int TIER_BUTTON_SPACE_X = 25;
     protected static final int PROJECT_BUTTON_X = 145;
     protected static final int PROJECT_BUTTON_Y = -5;
     private static final BlockPosition MB_PLACE_POS = new BlockPosition(10, 10, 10);
@@ -58,7 +59,7 @@ public class GT_GUI_MultiblocksHandler extends GUI_MultiblocksHandler<GT_MetaTil
         ClearGuiButton previousTierButton =
                 new ClearGuiButton(0, TIER_BUTTON_X, TIER_BUTTON_Y, ICON_SIZE_X, ICON_SIZE_Y, "<");
         ClearGuiButton nextTierButton = new ClearGuiButton(
-                0, TIER_BUTTON_X + ICON_SIZE_X + BUTTON_SPACE_X, TIER_BUTTON_Y, ICON_SIZE_X, ICON_SIZE_Y, ">");
+                0, TIER_BUTTON_X + ICON_SIZE_X + TIER_BUTTON_SPACE_X, TIER_BUTTON_Y, ICON_SIZE_X, ICON_SIZE_Y, ">");
         GuiButton projectMultiblocksButton =
                 new GuiButton(0, PROJECT_BUTTON_X, PROJECT_BUTTON_Y, ICON_SIZE_X, ICON_SIZE_Y, "P");
 
@@ -137,7 +138,7 @@ public class GT_GUI_MultiblocksHandler extends GUI_MultiblocksHandler<GT_MetaTil
         String tierText = "Tier: " + tierIndex;
         fontRenderer.drawString(
                 tierText,
-                TIER_BUTTON_X + ICON_SIZE_X + (BUTTON_SPACE_X - fontRenderer.getStringWidth(tierText)) / 2,
+                TIER_BUTTON_X + ICON_SIZE_X + (TIER_BUTTON_SPACE_X - fontRenderer.getStringWidth(tierText)) / 2,
                 TIER_BUTTON_Y + 5,
                 0x333333);
     }

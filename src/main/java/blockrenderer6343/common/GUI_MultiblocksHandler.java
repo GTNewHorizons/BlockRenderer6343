@@ -43,7 +43,7 @@ public abstract class GUI_MultiblocksHandler<T> {
     protected static final int MOUSE_OFFSET_Y = 43;
     protected static final int LAYER_BUTTON_X = -5;
     protected static final int LAYER_BUTTON_Y = 135;
-    protected static final int BUTTON_SPACE_X = 20;
+    protected static final int LAYER_BUTTON_SPACE_X = 35;
 
     protected static int guiMouseX;
     protected static int guiMouseY;
@@ -72,7 +72,7 @@ public abstract class GUI_MultiblocksHandler<T> {
         ClearGuiButton previousLayerButton =
                 new ClearGuiButton(0, LAYER_BUTTON_X, LAYER_BUTTON_Y, ICON_SIZE_X, ICON_SIZE_Y, "<");
         ClearGuiButton nextLayerButton = new ClearGuiButton(
-                0, LAYER_BUTTON_X + ICON_SIZE_X + BUTTON_SPACE_X, LAYER_BUTTON_Y, ICON_SIZE_X, ICON_SIZE_Y, ">");
+                0, LAYER_BUTTON_X + ICON_SIZE_X + LAYER_BUTTON_SPACE_X, LAYER_BUTTON_Y, ICON_SIZE_X, ICON_SIZE_Y, ">");
 
         buttons.put(previousLayerButton, this::togglePreviousLayer);
         buttons.put(nextLayerButton, this::toggleNextLayer);
@@ -237,7 +237,7 @@ public abstract class GUI_MultiblocksHandler<T> {
         String layerText = "Layer: " + (layerIndex == -1 ? "A" : Integer.toString(layerIndex + 1));
         fontRenderer.drawString(
                 layerText,
-                LAYER_BUTTON_X + ICON_SIZE_X + (BUTTON_SPACE_X - fontRenderer.getStringWidth(layerText)) / 2,
+                LAYER_BUTTON_X + ICON_SIZE_X + (LAYER_BUTTON_SPACE_X - fontRenderer.getStringWidth(layerText)) / 2,
                 LAYER_BUTTON_Y + 5,
                 0x333333);
     }

@@ -7,6 +7,7 @@ import net.minecraft.init.Blocks;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
+import net.minecraft.world.chunk.Chunk;
 import org.lwjgl.util.vector.Vector3f;
 
 public class TrackedDummyWorld extends DummyWorld {
@@ -28,7 +29,60 @@ public class TrackedDummyWorld extends DummyWorld {
         maxPos.x = Math.max(maxPos.x, x);
         maxPos.y = Math.max(maxPos.y, y);
         maxPos.z = Math.max(maxPos.z, z);
-        return super.setBlock(x, y, z, block, meta, flags);
+
+        //copy base method to avoid fastcraft ASM
+        if (x >= -30000000 && z >= -30000000 && x < 30000000 && z < 30000000)
+        {
+            if (y < 0)
+            {
+                return false;
+            }
+            else if (y >= 256)
+            {
+                return false;
+            }
+            else
+            {
+                Chunk chunk = this.getChunkFromChunkCoords(x >> 4, z >> 4);
+                Block block1 = null;
+                net.minecraftforge.common.util.BlockSnapshot blockSnapshot = null;
+
+                if ((flags & 1) != 0)
+                {
+                    block1 = chunk.getBlock(x & 15, y, z & 15);
+                }
+
+                if (this.captureBlockSnapshots && !this.isRemote)
+                {
+                    blockSnapshot = net.minecraftforge.common.util.BlockSnapshot.getBlockSnapshot(this, x, y, z, flags);
+                    this.capturedBlockSnapshots.add(blockSnapshot);
+                }
+
+                boolean flag = chunk.func_150807_a(x & 15, y, z & 15, block, meta);
+
+                if (!flag && blockSnapshot != null)
+                {
+                    this.capturedBlockSnapshots.remove(blockSnapshot);
+                    blockSnapshot = null;
+                }
+
+                this.theProfiler.startSection("checkLight");
+                this.func_147451_t(x, y, z);
+                this.theProfiler.endSection();
+
+                if (flag && blockSnapshot == null) // Don't notify clients or update physics while capturing blockstates
+                {
+                    // Modularize client and physic updates
+                    this.markAndNotifyBlock(x, y, z, chunk, block1, block, flags);
+                }
+
+                return flag;
+            }
+        }
+        else
+        {
+            return false;
+        }
     }
 
     @Override

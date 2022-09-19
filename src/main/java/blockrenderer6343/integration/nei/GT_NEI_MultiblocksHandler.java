@@ -43,11 +43,6 @@ public class GT_NEI_MultiblocksHandler extends TemplateRecipeHandler {
                 multiblocksList.add((GT_MetaTileEntity_MultiBlockBase) (mte));
             }
         }
-        baseHandler.setOnIngredientChanged(ingredients -> {
-            this.ingredients = ingredients;
-            resetPositionedIngredients();
-        });
-        baseHandler.setOnCandidateChanged(this::setResults);
     }
 
     public class RecipeCacher extends CachedRecipe {
@@ -135,6 +130,11 @@ public class GT_NEI_MultiblocksHandler extends TemplateRecipeHandler {
     private void tryLoadMultiblocks(ItemStack candidate) {
         for (GT_MetaTileEntity_MultiBlockBase multiblocks : multiblocksList) {
             if (NEIClientUtils.areStacksSameType(((IMetaTileEntity) multiblocks).getStackForm(1), candidate)) {
+                baseHandler.setOnIngredientChanged(ingredients -> {
+                    this.ingredients = ingredients;
+                    resetPositionedIngredients();
+                });
+                baseHandler.setOnCandidateChanged(this::setResults);
                 baseHandler.loadMultiblock(multiblocks);
                 return;
             }

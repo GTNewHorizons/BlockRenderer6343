@@ -30,38 +30,29 @@ public class TrackedDummyWorld extends DummyWorld {
         maxPos.y = Math.max(maxPos.y, y);
         maxPos.z = Math.max(maxPos.z, z);
 
-        //copy base method to avoid fastcraft ASM
-        if (x >= -30000000 && z >= -30000000 && x < 30000000 && z < 30000000)
-        {
-            if (y < 0)
-            {
+        // copy base method to avoid fastcraft ASM
+        if (x >= -30000000 && z >= -30000000 && x < 30000000 && z < 30000000) {
+            if (y < 0) {
                 return false;
-            }
-            else if (y >= 256)
-            {
+            } else if (y >= 256) {
                 return false;
-            }
-            else
-            {
+            } else {
                 Chunk chunk = this.getChunkFromChunkCoords(x >> 4, z >> 4);
                 Block block1 = null;
                 net.minecraftforge.common.util.BlockSnapshot blockSnapshot = null;
 
-                if ((flags & 1) != 0)
-                {
+                if ((flags & 1) != 0) {
                     block1 = chunk.getBlock(x & 15, y, z & 15);
                 }
 
-                if (this.captureBlockSnapshots && !this.isRemote)
-                {
+                if (this.captureBlockSnapshots && !this.isRemote) {
                     blockSnapshot = net.minecraftforge.common.util.BlockSnapshot.getBlockSnapshot(this, x, y, z, flags);
                     this.capturedBlockSnapshots.add(blockSnapshot);
                 }
 
                 boolean flag = chunk.func_150807_a(x & 15, y, z & 15, block, meta);
 
-                if (!flag && blockSnapshot != null)
-                {
+                if (!flag && blockSnapshot != null) {
                     this.capturedBlockSnapshots.remove(blockSnapshot);
                     blockSnapshot = null;
                 }
@@ -78,9 +69,7 @@ public class TrackedDummyWorld extends DummyWorld {
 
                 return flag;
             }
-        }
-        else
-        {
+        } else {
             return false;
         }
     }

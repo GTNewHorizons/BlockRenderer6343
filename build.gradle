@@ -310,18 +310,18 @@ repositories {
             name 'sponge'
             url 'https://repo.spongepowered.org/repository/maven-public'
         }
-        maven {
-            name = "ic2"
-            url = "https://maven.ic2.player.to/"
-            url = "https://maven2.ic2.player.to/"
-            metadataSources {
-                mavenPom()
-                artifact()
-            }
+    }
+    maven {
+        name = "ic2"
+        url = "https://maven.ic2.player.to/"
+        url = "https://maven2.ic2.player.to/"
+        metadataSources {
+            mavenPom()
+            artifact()
         }
-        maven {
-            url 'https://jitpack.io'
-        }
+    }
+    maven {
+        url 'https://jitpack.io'
     }
 }
 

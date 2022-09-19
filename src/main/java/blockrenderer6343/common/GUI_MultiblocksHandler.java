@@ -6,7 +6,6 @@ import blockrenderer6343.client.renderer.GlStateManager;
 import blockrenderer6343.client.renderer.ImmediateWorldSceneRenderer;
 import blockrenderer6343.client.renderer.WorldSceneRenderer;
 import blockrenderer6343.client.world.TrackedDummyWorld;
-import blockrenderer6343.mixins.GuiContainerMixin;
 import codechicken.lib.gui.GuiDraw;
 import codechicken.lib.math.MathHelper;
 import codechicken.nei.NEIClientUtils;
@@ -155,11 +154,11 @@ public abstract class GUI_MultiblocksHandler<T> {
     public void drawMultiblock() {
         guiMouseX = GuiDraw.getMousePosition().x;
         guiMouseY = GuiDraw.getMousePosition().y;
-        int k = (NEIClientUtils.getGuiContainer().width
-                        - ((GuiContainerMixin) NEIClientUtils.getGuiContainer()).getXSize())
-                / 2;
+        // NEI guiLeft
+        int k = (NEIClientUtils.getGuiContainer().width - 176) / 2;
+        // NEI guiTop
         int l = (NEIClientUtils.getGuiContainer().height
-                        - ((GuiContainerMixin) NEIClientUtils.getGuiContainer()).getYSize())
+                        - Math.min(Math.max(NEIClientUtils.getGuiContainer().height - 68, 166), 370))
                 / 2;
         renderer.render(
                 RECIPE_LAYOUT_X + k, RECIPE_LAYOUT_Y + l, RECIPE_WIDTH, sceneHeight, lastGuiMouseX, lastGuiMouseY);
@@ -279,15 +278,14 @@ public abstract class GUI_MultiblocksHandler<T> {
 
         if (resetCamera) {
             float max = Math.max(Math.max(Math.max(size.x, size.y), size.z), 1);
-            //Compact Series multiblocks compat
-            if(size.x >= 30 || size.y >= 30 || size.z >= 30){
+            // Compact Series multiblocks compat
+            if (size.x >= 30 || size.y >= 30 || size.z >= 30) {
                 zoom = (float) (DEFAULT_RANGE_MULTIPLIER * 4 * Math.sqrt(max));
             }
-            //Mega Series multiblocks compat
-            if(size.x >= 15 && size.y >= 15 && size.z >= 11){
+            // Mega Series multiblocks compat
+            if (size.x >= 15 && size.y >= 15 && size.z >= 11) {
                 zoom = (float) (DEFAULT_RANGE_MULTIPLIER * 2 * Math.sqrt(max));
-            }
-            else{
+            } else {
                 zoom = (float) (DEFAULT_RANGE_MULTIPLIER * Math.sqrt(max));
             }
             rotationYaw = 20.0f;
@@ -358,11 +356,11 @@ public abstract class GUI_MultiblocksHandler<T> {
 
     public boolean mouseClicked(int button) {
         for (Map.Entry<GuiButton, Runnable> buttons : buttons.entrySet()) {
-            int k = (NEIClientUtils.getGuiContainer().width
-                            - ((GuiContainerMixin) NEIClientUtils.getGuiContainer()).getXSize())
-                    / 2;
+            // NEI guiLeft
+            int k = (NEIClientUtils.getGuiContainer().width - 176) / 2;
+            // NEI guiTop
             int l = (NEIClientUtils.getGuiContainer().height
-                            - ((GuiContainerMixin) NEIClientUtils.getGuiContainer()).getYSize())
+                            - Math.min(Math.max(NEIClientUtils.getGuiContainer().height - 68, 166), 370))
                     / 2;
             if (buttons.getKey()
                     .mousePressed(

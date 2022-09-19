@@ -7,6 +7,7 @@ import blockrenderer6343.api.utils.Size;
 import blockrenderer6343.client.utils.ProjectionUtils;
 import blockrenderer6343.client.world.TrackedDummyWorld;
 import codechicken.lib.vec.Vector3;
+import com.github.bartimaeusnek.bartworks.common.blocks.BW_GlasBlocks;
 import gregtech.common.render.GT_Renderer_Block;
 import java.util.ArrayList;
 import java.util.List;
@@ -247,10 +248,19 @@ public abstract class WorldSceneRenderer {
             bufferBuilder.blockAccess = world;
             bufferBuilder.setRenderBounds(0, 0, 0, 1, 1, 1);
             bufferBuilder.renderAllFaces = renderAllFaces;
-            if (world.getTileEntity(pos.x, pos.y, pos.z) != null) {
-                GT_Renderer_Block.INSTANCE.renderWorldBlock(world, pos.x, pos.y, pos.z, block, 0, bufferBuilder);
-            } else {
-                bufferBuilder.renderStandardBlock(block, pos.x, pos.y, pos.z);
+            if (block instanceof BW_GlasBlocks) {
+                // this mod cannot render renderpass = 1 blocks for now
+                bufferBuilder.renderStandardBlockWithColorMultiplier(
+                        block,
+                        pos.x,
+                        pos.y,
+                        pos.z,
+                        ((BW_GlasBlocks) block).getColor(world.getBlockMetadata(pos.x, pos.y, pos.z))[0] / 255f,
+                        ((BW_GlasBlocks) block).getColor(world.getBlockMetadata(pos.x, pos.y, pos.z))[1] / 255f,
+                        ((BW_GlasBlocks) block).getColor(world.getBlockMetadata(pos.x, pos.y, pos.z))[2] / 255f);
+            } else if (!GT_Renderer_Block.INSTANCE.renderWorldBlock(
+                    world, pos.x, pos.y, pos.z, block, block.getRenderType(), bufferBuilder)) {
+                bufferBuilder.renderBlockByRenderType(block, pos.x, pos.y, pos.z);
             }
         }
         if (onRender != null) {

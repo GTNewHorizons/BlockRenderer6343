@@ -44,6 +44,7 @@ public abstract class GUI_MultiblocksHandler<T> {
     protected static final int LAYER_BUTTON_X = -5;
     protected static final int LAYER_BUTTON_Y = 135;
     protected static final int LAYER_BUTTON_SPACE_X = 35;
+    protected static final float DEFAULT_RANGE_MULTIPLIER = 3.5f;
 
     protected static int guiMouseX;
     protected static int guiMouseY;
@@ -278,7 +279,17 @@ public abstract class GUI_MultiblocksHandler<T> {
 
         if (resetCamera) {
             float max = Math.max(Math.max(Math.max(size.x, size.y), size.z), 1);
-            zoom = (float) (3.5 * Math.sqrt(max));
+            //Compact Series multiblocks compat
+            if(size.x >= 30 || size.y >= 30 || size.z >= 30){
+                zoom = (float) (DEFAULT_RANGE_MULTIPLIER * 4 * Math.sqrt(max));
+            }
+            //Mega Series multiblocks compat
+            if(size.x >= 15 && size.y >= 15 && size.z >= 11){
+                zoom = (float) (DEFAULT_RANGE_MULTIPLIER * 2 * Math.sqrt(max));
+            }
+            else{
+                zoom = (float) (DEFAULT_RANGE_MULTIPLIER * Math.sqrt(max));
+            }
             rotationYaw = 20.0f;
             rotationPitch = 50f;
             if (renderer != null) {

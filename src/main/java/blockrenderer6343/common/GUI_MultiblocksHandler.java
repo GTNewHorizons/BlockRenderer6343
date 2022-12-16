@@ -5,6 +5,7 @@ import blockrenderer6343.api.utils.BlockPosition;
 import blockrenderer6343.client.renderer.GlStateManager;
 import blockrenderer6343.client.renderer.ImmediateWorldSceneRenderer;
 import blockrenderer6343.client.renderer.WorldSceneRenderer;
+import blockrenderer6343.client.world.DummyWorld;
 import blockrenderer6343.client.world.TrackedDummyWorld;
 import codechicken.lib.gui.GuiDraw;
 import codechicken.lib.math.MathHelper;
@@ -255,7 +256,7 @@ public abstract class GUI_MultiblocksHandler<T> {
         }
 
         renderer = new ImmediateWorldSceneRenderer(new TrackedDummyWorld());
-        renderer.world.updateEntities();
+        ((DummyWorld) renderer.world).updateEntitiesForNEI();
         renderer.setClearColor(0xC6C6C6);
 
         placeMultiblock();

@@ -28,6 +28,13 @@ public class DummyWorld extends World {
     }
 
     @Override
+    public void updateEntities() {}
+
+    public void updateEntitiesForNEI() {
+        super.updateEntities();
+    }
+
+    @Override
     public void markBlockRangeForRenderUpdate(int x1, int y1, int z1, int x2, int y2, int z2) {}
 
     @Override

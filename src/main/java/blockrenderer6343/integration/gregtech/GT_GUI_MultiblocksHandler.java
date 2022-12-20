@@ -200,6 +200,7 @@ public class GT_GUI_MultiblocksHandler extends GUI_MultiblocksHandler<GT_MetaTil
             GT_Runnable_MachineBlockUpdate.setCurrentThreadEnabled(true);
     }
 
+    @SuppressWarnings("unchecked")
     private void scanCandidates() {
         candidates.clear();
         if (selectedBlock != null) {
@@ -224,18 +225,16 @@ public class GT_GUI_MultiblocksHandler extends GUI_MultiblocksHandler<GT_MetaTil
                                 .keySet();
 
                         List<List<ItemStack>> stackedCandidates = new ArrayList<>();
-                        Iterator<ItemStack> iterator = rawCandidates.iterator();
-                        while (iterator.hasNext()) {
-                            ItemStack rawCandidate = iterator.next();
+                        for (ItemStack rawCandidate : rawCandidates) {
                             boolean added = false;
                             for (List<ItemStack> stackedCandidate : stackedCandidates) {
-                                if (stackedCandidate
-                                        .get(0)
-                                        .getTooltip(fakeMultiblockBuilder, false)
-                                        .get(1)
-                                        .equals(rawCandidate
-                                                .getTooltip(fakeMultiblockBuilder, false)
-                                                .get(1))) {
+                                List<String> firstCandidateTooltip =
+                                        stackedCandidate.get(0).getTooltip(fakeMultiblockBuilder, false);
+                                List<String> rawCandidateTooltip =
+                                        rawCandidate.getTooltip(fakeMultiblockBuilder, false);
+                                if (firstCandidateTooltip.size() > 1
+                                        && rawCandidateTooltip.size() > 1
+                                        && firstCandidateTooltip.get(1).equals(rawCandidateTooltip.get(1))) {
                                     stackedCandidate.add(rawCandidate);
                                     added = true;
                                     break;

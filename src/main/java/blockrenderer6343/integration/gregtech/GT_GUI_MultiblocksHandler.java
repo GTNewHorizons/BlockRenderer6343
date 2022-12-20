@@ -224,9 +224,7 @@ public class GT_GUI_MultiblocksHandler extends GUI_MultiblocksHandler<GT_MetaTil
                                 .keySet();
 
                         List<List<ItemStack>> stackedCandidates = new ArrayList<>();
-                        Iterator<ItemStack> iterator = rawCandidates.iterator();
-                        while (iterator.hasNext()) {
-                            ItemStack rawCandidate = iterator.next();
+                        for (ItemStack rawCandidate : rawCandidates) {
                             boolean added = false;
                             for (List<ItemStack> stackedCandidate : stackedCandidates) {
                                 if (stackedCandidate

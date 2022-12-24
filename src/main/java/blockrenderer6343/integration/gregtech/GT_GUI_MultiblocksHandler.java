@@ -43,7 +43,7 @@ public class GT_GUI_MultiblocksHandler extends GUI_MultiblocksHandler<GT_MetaTil
     protected static final int TIER_BUTTON_SPACE_X = 25;
     protected static final int PROJECT_BUTTON_X = 145;
     protected static final int PROJECT_BUTTON_Y = -5;
-    private static final BlockPosition MB_PLACE_POS = new BlockPosition(10, 10, 10);
+    private static final BlockPosition MB_PLACE_POS = new BlockPosition(0, 64, 0);
 
     protected static int tierIndex = 1;
 

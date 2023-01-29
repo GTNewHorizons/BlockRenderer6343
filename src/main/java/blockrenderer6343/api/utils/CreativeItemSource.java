@@ -1,12 +1,16 @@
 package blockrenderer6343.api.utils;
 
-import codechicken.nei.ItemList;
-import com.gtnewhorizon.structurelib.structure.IItemSource;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Predicate;
+
 import net.minecraft.item.ItemStack;
+
 import org.jetbrains.annotations.NotNull;
+
+import codechicken.nei.ItemList;
+
+import com.gtnewhorizon.structurelib.structure.IItemSource;
 
 public class CreativeItemSource implements IItemSource {
 

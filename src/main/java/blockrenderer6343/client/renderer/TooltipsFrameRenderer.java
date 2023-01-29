@@ -1,14 +1,17 @@
 package blockrenderer6343.client.renderer;
 
+import javax.annotation.Nonnull;
+
+import net.minecraft.client.renderer.OpenGlHelper;
+import net.minecraft.client.renderer.Tessellator;
+
+import org.lwjgl.opengl.GL11;
+
+import squeek.applecore.client.TooltipOverlayHandler;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
-import javax.annotation.Nonnull;
-import net.minecraft.client.renderer.OpenGlHelper;
-import net.minecraft.client.renderer.Tessellator;
-import org.lwjgl.opengl.GL11;
-import squeek.applecore.client.TooltipOverlayHandler;
 
 /**
  * Draw Animated Tooltips Frame
@@ -51,15 +54,8 @@ public class TooltipsFrameRenderer {
     }
 
     // Drawing Tooltips Frame parts
-    public static void drawFrame(
-            int p_73733_1_,
-            int p_73733_2_,
-            int p_73733_3_,
-            int p_73733_4_,
-            int p_73733_5_,
-            int p_73733_6_,
-            float zLevel,
-            AnimationStyle style) {
+    public static void drawFrame(int p_73733_1_, int p_73733_2_, int p_73733_3_, int p_73733_4_, int p_73733_5_,
+            int p_73733_6_, float zLevel, AnimationStyle style) {
         sDraw = true;
 
         float f = (float) (p_73733_5_ >> 24 & 255) / 255.0F;

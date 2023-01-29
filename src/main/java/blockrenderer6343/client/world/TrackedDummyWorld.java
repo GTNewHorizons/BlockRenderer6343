@@ -1,16 +1,20 @@
 package blockrenderer6343.client.world;
 
-import blockrenderer6343.api.utils.BlockPosition;
 import java.util.*;
+
 import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.chunk.Chunk;
+
 import org.lwjgl.util.vector.Vector3f;
 
+import blockrenderer6343.api.utils.BlockPosition;
+
 public class TrackedDummyWorld extends DummyWorld {
+
     public final List<BlockPosition> placedBlocks = new ArrayList<>();
 
     private final Vector3f minPos = new Vector3f(Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE);
@@ -99,13 +103,8 @@ public class TrackedDummyWorld extends DummyWorld {
         return rayTraceBlockswithTargetMap(start, end, targetedBlocks, false, false, false);
     }
 
-    public MovingObjectPosition rayTraceBlockswithTargetMap(
-            Vec3 start,
-            Vec3 end,
-            List<BlockPosition> targetedBlocks,
-            boolean stopOnLiquid,
-            boolean ignoreBlockWithoutBoundingBox,
-            boolean returnLastUncollidableBlock) {
+    public MovingObjectPosition rayTraceBlockswithTargetMap(Vec3 start, Vec3 end, List<BlockPosition> targetedBlocks,
+            boolean stopOnLiquid, boolean ignoreBlockWithoutBoundingBox, boolean returnLastUncollidableBlock) {
         if (!Double.isNaN(start.xCoord) && !Double.isNaN(start.yCoord) && !Double.isNaN(start.zCoord)) {
             if (!Double.isNaN(end.xCoord) && !Double.isNaN(end.yCoord) && !Double.isNaN(end.zCoord)) {
                 int i = MathHelper.floor_double(end.xCoord);
@@ -251,8 +250,8 @@ public class TrackedDummyWorld extends DummyWorld {
                     if (!ignoreBlockWithoutBoundingBox
                             || block1.getCollisionBoundingBoxFromPool(this, l, i1, j1) != null) {
                         if (block1.canCollideCheck(l1, stopOnLiquid)) {
-                            MovingObjectPosition movingobjectposition1 =
-                                    block1.collisionRayTrace(this, l, i1, j1, start, end);
+                            MovingObjectPosition movingobjectposition1 = block1
+                                    .collisionRayTrace(this, l, i1, j1, start, end);
 
                             if (movingobjectposition1 != null
                                     && isBlockTargeted(movingobjectposition1, targetedBlocks)) {
@@ -275,9 +274,9 @@ public class TrackedDummyWorld extends DummyWorld {
 
     private boolean isBlockTargeted(MovingObjectPosition result, List<BlockPosition> targetedBlocks) {
         for (BlockPosition targetedBlock : targetedBlocks) {
-            if (result.blockX == targetedBlock.x
-                    && result.blockY == targetedBlock.y
-                    && result.blockZ == targetedBlock.z) return true;
+            if (result.blockX == targetedBlock.x && result.blockY == targetedBlock.y
+                    && result.blockZ == targetedBlock.z)
+                return true;
         }
         return false;
     }

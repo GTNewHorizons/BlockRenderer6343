@@ -5,6 +5,13 @@ import static blockrenderer6343.integration.nei.IMCForNEI.GT_NEI_MB_HANDLER_NAME
 import static gregtech.api.GregTech_API.METATILEENTITIES;
 import static gregtech.api.enums.GT_Values.RES_PATH_GUI;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import net.minecraft.client.gui.inventory.GuiContainer;
+import net.minecraft.item.ItemStack;
+
 import blockrenderer6343.ClientProxy;
 import blockrenderer6343.integration.gregtech.GT_GUI_MultiblocksHandler;
 import codechicken.nei.NEIClientUtils;
@@ -15,11 +22,6 @@ import codechicken.nei.guihook.IContainerTooltipHandler;
 import codechicken.nei.recipe.*;
 import gregtech.api.interfaces.metatileentity.IMetaTileEntity;
 import gregtech.api.metatileentity.implementations.GT_MetaTileEntity_MultiBlockBase;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import net.minecraft.client.gui.inventory.GuiContainer;
-import net.minecraft.item.ItemStack;
 
 public class GT_NEI_MultiblocksHandler extends TemplateRecipeHandler {
 
@@ -46,13 +48,14 @@ public class GT_NEI_MultiblocksHandler extends TemplateRecipeHandler {
     }
 
     public class RecipeCacher extends CachedRecipe {
+
         private final List<PositionedStack> positionedResults = new ArrayList<>();
 
         public void setResults(List<List<ItemStack>> results) {
             positionedResults.clear();
             int columnCount = results.size() / CANDIDATE_IN_COlUMN + 1;
-            int realCandidateInColumn =
-                    results.size() % columnCount == 0 ? results.size() / columnCount : results.size() / columnCount + 1;
+            int realCandidateInColumn = results.size() % columnCount == 0 ? results.size() / columnCount
+                    : results.size() / columnCount + 1;
             for (int i = 0; i < results.size(); i++) {
                 PositionedStack result = new PositionedStack(
                         results.get(i),
@@ -150,8 +153,11 @@ public class GT_NEI_MultiblocksHandler extends TemplateRecipeHandler {
             ItemStack catalyst = ingredients.get(index);
             int column = index / rowCount;
             int row = index % rowCount;
-            positionedIngredients.add(new PositionedStack(
-                    catalyst, -column * GuiRecipeCatalyst.ingredientSize, row * GuiRecipeCatalyst.ingredientSize));
+            positionedIngredients.add(
+                    new PositionedStack(
+                            catalyst,
+                            -column * GuiRecipeCatalyst.ingredientSize,
+                            row * GuiRecipeCatalyst.ingredientSize));
         }
 
         Map<String, List<PositionedStack>> catalystMap = RecipeCatalysts.getPositionedRecipeCatalystMap();
@@ -173,7 +179,7 @@ public class GT_NEI_MultiblocksHandler extends TemplateRecipeHandler {
 
         public boolean canHandle(GuiContainer gui) {
             return (gui instanceof GuiUsageRecipe
-                            && ((GuiUsageRecipe) gui).getHandler() instanceof GT_NEI_MultiblocksHandler)
+                    && ((GuiUsageRecipe) gui).getHandler() instanceof GT_NEI_MultiblocksHandler)
                     || (gui instanceof GuiCraftingRecipe
                             && ((GuiCraftingRecipe) gui).getHandler() instanceof GT_NEI_MultiblocksHandler);
         }
@@ -203,8 +209,8 @@ public class GT_NEI_MultiblocksHandler extends TemplateRecipeHandler {
         }
 
         @Override
-        public List<String> handleItemTooltip(
-                GuiContainer gui, ItemStack itemstack, int mousex, int mousey, List<String> currenttip) {
+        public List<String> handleItemTooltip(GuiContainer gui, ItemStack itemstack, int mousex, int mousey,
+                List<String> currenttip) {
             return currenttip;
         }
 

@@ -1,17 +1,23 @@
 package blockrenderer6343.client.world;
 
-import blockrenderer6343.api.utils.world.DummyChunkProvider;
-import blockrenderer6343.api.utils.world.DummySaveHandler;
 import javax.annotation.Nonnull;
+
 import net.minecraft.entity.Entity;
 import net.minecraft.profiler.Profiler;
 import net.minecraft.world.*;
 import net.minecraft.world.chunk.IChunkProvider;
 
+import blockrenderer6343.api.utils.world.DummyChunkProvider;
+import blockrenderer6343.api.utils.world.DummySaveHandler;
+
 public class DummyWorld extends World {
 
-    private static final WorldSettings DEFAULT_SETTINGS =
-            new WorldSettings(1L, WorldSettings.GameType.SURVIVAL, true, false, WorldType.DEFAULT);
+    private static final WorldSettings DEFAULT_SETTINGS = new WorldSettings(
+            1L,
+            WorldSettings.GameType.SURVIVAL,
+            true,
+            false,
+            WorldType.DEFAULT);
 
     public static final DummyWorld INSTANCE = new DummyWorld();
 

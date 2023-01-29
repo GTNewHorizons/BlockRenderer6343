@@ -1,7 +1,8 @@
 package blockrenderer6343;
 
-import cpw.mods.fml.common.event.*;
 import net.minecraft.block.Block;
+
+import cpw.mods.fml.common.event.*;
 
 public class CommonProxy {
 

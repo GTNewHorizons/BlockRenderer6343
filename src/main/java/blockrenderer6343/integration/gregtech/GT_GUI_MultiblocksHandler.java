@@ -1,5 +1,19 @@
 package blockrenderer6343.integration.gregtech;
 
+import java.util.*;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
+
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.resources.I18n;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.MovingObjectPosition;
+import net.minecraft.world.World;
+
 import blockrenderer6343.Tags;
 import blockrenderer6343.api.utils.BlockPosition;
 import blockrenderer6343.api.utils.CreativeItemSource;
@@ -7,6 +21,7 @@ import blockrenderer6343.api.utils.PositionedIStructureElement;
 import blockrenderer6343.client.world.ClientFakePlayer;
 import blockrenderer6343.common.GUI_MultiblocksHandler;
 import codechicken.lib.math.MathHelper;
+
 import com.gtnewhorizon.structurelib.StructureEvent;
 import com.gtnewhorizon.structurelib.StructureLibAPI;
 import com.gtnewhorizon.structurelib.alignment.constructable.ConstructableUtility;
@@ -17,24 +32,13 @@ import com.gtnewhorizon.structurelib.structure.AutoPlaceEnvironment;
 import com.gtnewhorizon.structurelib.structure.IStructureElement;
 import com.gtnewhorizon.structurelib.structure.ISurvivalBuildEnvironment;
 import com.mojang.authlib.GameProfile;
+
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import gregtech.api.interfaces.metatileentity.IMetaTileEntity;
 import gregtech.api.interfaces.tileentity.IGregTechTileEntity;
 import gregtech.api.interfaces.tileentity.ITurnable;
 import gregtech.api.metatileentity.implementations.GT_MetaTileEntity_MultiBlockBase;
 import gregtech.api.threads.GT_Runnable_MachineBlockUpdate;
-import java.util.*;
-import java.util.function.Consumer;
-import java.util.function.Predicate;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.client.gui.GuiButton;
-import net.minecraft.client.resources.I18n;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemStack;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.MovingObjectPosition;
-import net.minecraft.world.World;
 
 public class GT_GUI_MultiblocksHandler extends GUI_MultiblocksHandler<GT_MetaTileEntity_MultiBlockBase> {
 
@@ -56,12 +60,27 @@ public class GT_GUI_MultiblocksHandler extends GUI_MultiblocksHandler<GT_MetaTil
     public GT_GUI_MultiblocksHandler() {
         super();
 
-        ClearGuiButton previousTierButton =
-                new ClearGuiButton(0, TIER_BUTTON_X, TIER_BUTTON_Y, ICON_SIZE_X, ICON_SIZE_Y, "<");
+        ClearGuiButton previousTierButton = new ClearGuiButton(
+                0,
+                TIER_BUTTON_X,
+                TIER_BUTTON_Y,
+                ICON_SIZE_X,
+                ICON_SIZE_Y,
+                "<");
         ClearGuiButton nextTierButton = new ClearGuiButton(
-                0, TIER_BUTTON_X + ICON_SIZE_X + TIER_BUTTON_SPACE_X, TIER_BUTTON_Y, ICON_SIZE_X, ICON_SIZE_Y, ">");
-        GuiButton projectMultiblocksButton =
-                new GuiButton(0, PROJECT_BUTTON_X, PROJECT_BUTTON_Y, ICON_SIZE_X, ICON_SIZE_Y, "P");
+                0,
+                TIER_BUTTON_X + ICON_SIZE_X + TIER_BUTTON_SPACE_X,
+                TIER_BUTTON_Y,
+                ICON_SIZE_X,
+                ICON_SIZE_Y,
+                ">");
+        GuiButton projectMultiblocksButton = new GuiButton(
+                0,
+                PROJECT_BUTTON_X,
+                PROJECT_BUTTON_Y,
+                ICON_SIZE_X,
+                ICON_SIZE_Y,
+                "P");
 
         buttons.put(previousTierButton, this::togglePreviousTier);
         buttons.put(nextTierButton, this::toggleNextTier);
@@ -88,19 +107,17 @@ public class GT_GUI_MultiblocksHandler extends GUI_MultiblocksHandler<GT_MetaTil
         int playerDir = MathHelper.floor_double((player.rotationYaw * 4F) / 360F + 0.5D) & 3;
         ItemStack itemStack = renderingController.getStackForm(1);
         if (!baseWorld.isAirBlock(lookingPos.blockX, lookingPos.blockY + 1, lookingPos.blockZ)) return;
-        itemStack
-                .getItem()
-                .onItemUse(
-                        itemStack,
-                        player,
-                        baseWorld,
-                        lookingPos.blockX,
-                        lookingPos.blockY + 1,
-                        lookingPos.blockZ,
-                        0,
-                        lookingPos.blockX,
-                        lookingPos.blockY,
-                        lookingPos.blockZ);
+        itemStack.getItem().onItemUse(
+                itemStack,
+                player,
+                baseWorld,
+                lookingPos.blockX,
+                lookingPos.blockY + 1,
+                lookingPos.blockZ,
+                0,
+                lookingPos.blockX,
+                lookingPos.blockY,
+                lookingPos.blockZ);
         ConstructableUtility.handle(
                 renderingController.getStackForm(tierIndex),
                 player,
@@ -149,25 +166,24 @@ public class GT_GUI_MultiblocksHandler extends GUI_MultiblocksHandler<GT_MetaTil
             GT_Runnable_MachineBlockUpdate.setCurrentThreadEnabled(false);
 
         fakeMultiblockBuilder = new ClientFakePlayer(
-                renderer.world, new GameProfile(UUID.fromString("518FDF18-EC2A-4322-832A-58ED1721309B"), "[GregTech]"));
+                renderer.world,
+                new GameProfile(UUID.fromString("518FDF18-EC2A-4322-832A-58ED1721309B"), "[GregTech]"));
         renderer.world.unloadEntities(Arrays.asList(fakeMultiblockBuilder));
 
         IConstructable constructable = null;
 
         ItemStack itemStack = renderingController.getStackForm(1);
-        itemStack
-                .getItem()
-                .onItemUse(
-                        itemStack,
-                        fakeMultiblockBuilder,
-                        renderer.world,
-                        MB_PLACE_POS.x,
-                        MB_PLACE_POS.y,
-                        MB_PLACE_POS.z,
-                        0,
-                        MB_PLACE_POS.x,
-                        MB_PLACE_POS.y,
-                        MB_PLACE_POS.z);
+        itemStack.getItem().onItemUse(
+                itemStack,
+                fakeMultiblockBuilder,
+                renderer.world,
+                MB_PLACE_POS.x,
+                MB_PLACE_POS.y,
+                MB_PLACE_POS.z,
+                0,
+                MB_PLACE_POS.x,
+                MB_PLACE_POS.y,
+                MB_PLACE_POS.z);
 
         TileEntity tTileEntity = renderer.world.getTileEntity(MB_PLACE_POS.x, MB_PLACE_POS.y, MB_PLACE_POS.z);
         ((ITurnable) tTileEntity).setFrontFacing((byte) 3);
@@ -179,11 +195,10 @@ public class GT_GUI_MultiblocksHandler extends GUI_MultiblocksHandler<GT_MetaTil
         if (mte instanceof ISurvivalConstructable) {
             int result;
             do {
-                result = ((ISurvivalConstructable) mte)
-                        .survivalConstruct(
-                                renderingController.getStackForm(tierIndex),
-                                Integer.MAX_VALUE,
-                                ISurvivalBuildEnvironment.create(CreativeItemSource.instance, fakeMultiblockBuilder));
+                result = ((ISurvivalConstructable) mte).survivalConstruct(
+                        renderingController.getStackForm(tierIndex),
+                        Integer.MAX_VALUE,
+                        ISurvivalBuildEnvironment.create(CreativeItemSource.instance, fakeMultiblockBuilder));
             } while (result > 0);
         } else if (tTileEntity instanceof IConstructableProvider) {
             constructable = ((IConstructableProvider) tTileEntity).getConstructable();
@@ -205,8 +220,7 @@ public class GT_GUI_MultiblocksHandler extends GUI_MultiblocksHandler<GT_MetaTil
         candidates.clear();
         if (selectedBlock != null) {
             for (PositionedIStructureElement structureElement : structureElements) {
-                if (structureElement.x == selectedBlock.x
-                        && structureElement.y == selectedBlock.y
+                if (structureElement.x == selectedBlock.x && structureElement.y == selectedBlock.y
                         && structureElement.z == selectedBlock.z) {
 
                     IStructureElement.BlocksToPlace blocksToPlace = structureElement.element.getBlocksToPlace(
@@ -217,23 +231,23 @@ public class GT_GUI_MultiblocksHandler extends GUI_MultiblocksHandler<GT_MetaTil
                             selectedBlock.z,
                             renderingController.getStackForm(tierIndex),
                             AutoPlaceEnvironment.fromLegacy(
-                                    CreativeItemSource.instance, fakeMultiblockBuilder, iChatComponent -> {}));
+                                    CreativeItemSource.instance,
+                                    fakeMultiblockBuilder,
+                                    iChatComponent -> {}));
                     if (blocksToPlace != null) {
                         Predicate<ItemStack> predicate = blocksToPlace.getPredicate();
                         Set<ItemStack> rawCandidates = CreativeItemSource.instance
-                                .takeEverythingMatches(predicate, false, 0)
-                                .keySet();
+                                .takeEverythingMatches(predicate, false, 0).keySet();
 
                         List<List<ItemStack>> stackedCandidates = new ArrayList<>();
                         for (ItemStack rawCandidate : rawCandidates) {
                             boolean added = false;
                             for (List<ItemStack> stackedCandidate : stackedCandidates) {
-                                List<String> firstCandidateTooltip =
-                                        stackedCandidate.get(0).getTooltip(fakeMultiblockBuilder, false);
-                                List<String> rawCandidateTooltip =
-                                        rawCandidate.getTooltip(fakeMultiblockBuilder, false);
-                                if (firstCandidateTooltip.size() > 1
-                                        && rawCandidateTooltip.size() > 1
+                                List<String> firstCandidateTooltip = stackedCandidate.get(0)
+                                        .getTooltip(fakeMultiblockBuilder, false);
+                                List<String> rawCandidateTooltip = rawCandidate
+                                        .getTooltip(fakeMultiblockBuilder, false);
+                                if (firstCandidateTooltip.size() > 1 && rawCandidateTooltip.size() > 1
                                         && firstCandidateTooltip.get(1).equals(rawCandidateTooltip.get(1))) {
                                     stackedCandidate.add(rawCandidate);
                                     added = true;
@@ -269,8 +283,11 @@ public class GT_GUI_MultiblocksHandler extends GUI_MultiblocksHandler<GT_MetaTil
 
     @SubscribeEvent
     public void OnStructureEvent(StructureEvent.StructureElementVisitedEvent event) {
-        structureElements.add(new PositionedIStructureElement(
-                event.getX(), event.getY(), event.getZ(), (IStructureElement<GT_MetaTileEntity_MultiBlockBase>)
-                        event.getElement()));
+        structureElements.add(
+                new PositionedIStructureElement(
+                        event.getX(),
+                        event.getY(),
+                        event.getZ(),
+                        (IStructureElement<GT_MetaTileEntity_MultiBlockBase>) event.getElement()));
     }
 }

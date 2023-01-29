@@ -1,5 +1,25 @@
 package blockrenderer6343.common;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
+
+import net.minecraft.block.Block;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.renderer.RenderBlocks;
+import net.minecraft.init.Blocks;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.IIcon;
+import net.minecraft.util.MovingObjectPosition;
+
+import org.lwjgl.input.Mouse;
+import org.lwjgl.util.vector.Vector3f;
+
 import blockrenderer6343.BlockRenderer6343;
 import blockrenderer6343.api.utils.BlockPosition;
 import blockrenderer6343.client.renderer.GlStateManager;
@@ -10,25 +30,9 @@ import blockrenderer6343.client.world.TrackedDummyWorld;
 import codechicken.lib.gui.GuiDraw;
 import codechicken.lib.math.MathHelper;
 import codechicken.nei.NEIClientUtils;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
-import net.minecraft.block.Block;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.client.gui.GuiButton;
-import net.minecraft.client.renderer.RenderBlocks;
-import net.minecraft.init.Blocks;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.IIcon;
-import net.minecraft.util.MovingObjectPosition;
-import org.lwjgl.input.Mouse;
-import org.lwjgl.util.vector.Vector3f;
 
 public abstract class GUI_MultiblocksHandler<T> {
+
     protected static ImmediateWorldSceneRenderer renderer;
 
     public static final int SLOT_SIZE = 18;
@@ -70,10 +74,20 @@ public abstract class GUI_MultiblocksHandler<T> {
     public GUI_MultiblocksHandler() {
         buttons.clear();
 
-        ClearGuiButton previousLayerButton =
-                new ClearGuiButton(0, LAYER_BUTTON_X, LAYER_BUTTON_Y, ICON_SIZE_X, ICON_SIZE_Y, "<");
+        ClearGuiButton previousLayerButton = new ClearGuiButton(
+                0,
+                LAYER_BUTTON_X,
+                LAYER_BUTTON_Y,
+                ICON_SIZE_X,
+                ICON_SIZE_Y,
+                "<");
         ClearGuiButton nextLayerButton = new ClearGuiButton(
-                0, LAYER_BUTTON_X + ICON_SIZE_X + LAYER_BUTTON_SPACE_X, LAYER_BUTTON_Y, ICON_SIZE_X, ICON_SIZE_Y, ">");
+                0,
+                LAYER_BUTTON_X + ICON_SIZE_X + LAYER_BUTTON_SPACE_X,
+                LAYER_BUTTON_Y,
+                ICON_SIZE_X,
+                ICON_SIZE_Y,
+                ">");
 
         buttons.put(previousLayerButton, this::togglePreviousLayer);
         buttons.put(nextLayerButton, this::toggleNextLayer);
@@ -134,8 +148,7 @@ public abstract class GUI_MultiblocksHandler<T> {
                 renderBlocks = world.placedBlocks;
                 renderer.setRenderAllFaces(false);
             } else {
-                renderBlocks = world.placedBlocks.stream()
-                        .filter(pos -> pos.y - minY == newLayer)
+                renderBlocks = world.placedBlocks.stream().filter(pos -> pos.y - minY == newLayer)
                         .collect(Collectors.toList());
                 renderer.setRenderAllFaces(true);
             }
@@ -159,10 +172,14 @@ public abstract class GUI_MultiblocksHandler<T> {
         int k = (NEIClientUtils.getGuiContainer().width - 176) / 2;
         // NEI guiTop
         int l = (NEIClientUtils.getGuiContainer().height
-                        - Math.min(Math.max(NEIClientUtils.getGuiContainer().height - 68, 166), 370))
-                / 2;
+                - Math.min(Math.max(NEIClientUtils.getGuiContainer().height - 68, 166), 370)) / 2;
         renderer.render(
-                RECIPE_LAYOUT_X + k, RECIPE_LAYOUT_Y + l, RECIPE_WIDTH, sceneHeight, lastGuiMouseX, lastGuiMouseY);
+                RECIPE_LAYOUT_X + k,
+                RECIPE_LAYOUT_Y + l,
+                RECIPE_WIDTH,
+                sceneHeight,
+                lastGuiMouseX,
+                lastGuiMouseY);
         drawMultiblockName();
 
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
@@ -170,8 +187,7 @@ public abstract class GUI_MultiblocksHandler<T> {
         tooltipBlockStack = null;
 
         MovingObjectPosition rayTraceResult = renderer.getLastTraceResult();
-        boolean insideView = guiMouseX >= k + RECIPE_LAYOUT_X
-                && guiMouseY >= l + RECIPE_LAYOUT_Y
+        boolean insideView = guiMouseX >= k + RECIPE_LAYOUT_X && guiMouseY >= l + RECIPE_LAYOUT_Y
                 && guiMouseX < k + RECIPE_LAYOUT_X + RECIPE_WIDTH
                 && guiMouseY < l + RECIPE_LAYOUT_Y + sceneHeight;
         boolean leftClickHeld = Mouse.isButtonDown(0);
@@ -196,8 +212,7 @@ public abstract class GUI_MultiblocksHandler<T> {
         }
         drawButtonsTitle();
 
-        if (!(leftClickHeld || rightClickHeld)
-                && rayTraceResult != null
+        if (!(leftClickHeld || rightClickHeld) && rayTraceResult != null
                 && !renderer.world.isAirBlock(rayTraceResult.blockX, rayTraceResult.blockY, rayTraceResult.blockZ)) {
             Block block = renderer.world.getBlock(rayTraceResult.blockX, rayTraceResult.blockY, rayTraceResult.blockZ);
             tooltipBlockStack = block.getPickBlock(
@@ -212,10 +227,10 @@ public abstract class GUI_MultiblocksHandler<T> {
         lastGuiMouseX = guiMouseX;
         lastGuiMouseY = guiMouseY;
 
-        //        don't activate these
-        //        GlStateManager.disableRescaleNormal();
-        //        GlStateManager.disableLighting();
-        //        RenderHelper.disableStandardItemLighting();
+        // don't activate these
+        // GlStateManager.disableRescaleNormal();
+        // GlStateManager.disableLighting();
+        // RenderHelper.disableStandardItemLighting();
     }
 
     private void drawMultiblockName() {
@@ -270,7 +285,7 @@ public abstract class GUI_MultiblocksHandler<T> {
         renderer.setOnLookingAt(ray -> {});
 
         renderer.setOnWorldRender(this::onRendererRender);
-        //        world.setRenderFilter(pos -> worldSceneRenderer.renderedBlocksMap.keySet().stream().anyMatch(c ->
+        // world.setRenderFilter(pos -> worldSceneRenderer.renderedBlocksMap.keySet().stream().anyMatch(c ->
         // c.contains(pos)));
 
         selectedBlock = null;
@@ -302,8 +317,7 @@ public abstract class GUI_MultiblocksHandler<T> {
     protected abstract void placeMultiblock();
 
     public void onRendererRender(WorldSceneRenderer renderer) {
-        BlockPosition look = renderer.getLastTraceResult() == null
-                ? null
+        BlockPosition look = renderer.getLastTraceResult() == null ? null
                 : new BlockPosition(
                         renderer.getLastTraceResult().blockX,
                         renderer.getLastTraceResult().blockY,
@@ -322,8 +336,8 @@ public abstract class GUI_MultiblocksHandler<T> {
             Block block = renderer.world.getBlock(renderedBlock.x, renderedBlock.y, renderedBlock.z);
             if (block.equals(Blocks.air)) continue;
             int meta = renderer.world.getBlockMetadata(renderedBlock.x, renderedBlock.y, renderedBlock.z);
-            ArrayList<ItemStack> itemstacks =
-                    block.getDrops(renderer.world, renderedBlock.x, renderedBlock.y, renderedBlock.z, meta, 0);
+            ArrayList<ItemStack> itemstacks = block
+                    .getDrops(renderer.world, renderedBlock.x, renderedBlock.y, renderedBlock.z, meta, 0);
             if (itemstacks.size() == 0) { // glass
                 itemstacks.add(new ItemStack(block));
             }
@@ -361,11 +375,11 @@ public abstract class GUI_MultiblocksHandler<T> {
             int k = (NEIClientUtils.getGuiContainer().width - 176) / 2;
             // NEI guiTop
             int l = (NEIClientUtils.getGuiContainer().height
-                            - Math.min(Math.max(NEIClientUtils.getGuiContainer().height - 68, 166), 370))
-                    / 2;
-            if (buttons.getKey()
-                    .mousePressed(
-                            Minecraft.getMinecraft(), guiMouseX - k - MOUSE_OFFSET_X, guiMouseY - l - MOUSE_OFFSET_Y)) {
+                    - Math.min(Math.max(NEIClientUtils.getGuiContainer().height - 68, 166), 370)) / 2;
+            if (buttons.getKey().mousePressed(
+                    Minecraft.getMinecraft(),
+                    guiMouseX - k - MOUSE_OFFSET_X,
+                    guiMouseY - l - MOUSE_OFFSET_Y)) {
                 buttons.getValue().run();
                 selectedBlock = null;
                 onBlockSelected();
@@ -393,16 +407,16 @@ public abstract class GUI_MultiblocksHandler<T> {
     protected abstract void onBlockSelected();
 
     public List<String> handleTooltip() {
-        if (tooltipBlockStack != null)
-            return tooltipBlockStack.getTooltip(
-                    Minecraft.getMinecraft().thePlayer, Minecraft.getMinecraft().gameSettings.advancedItemTooltips);
+        if (tooltipBlockStack != null) return tooltipBlockStack.getTooltip(
+                Minecraft.getMinecraft().thePlayer,
+                Minecraft.getMinecraft().gameSettings.advancedItemTooltips);
         else return null;
     }
 
     protected class ClearGuiButton extends GuiButton {
 
-        public ClearGuiButton(
-                int p_i1021_1_, int p_i1021_2_, int p_i1021_3_, int p_i1021_4_, int p_i1021_5_, String p_i1021_6_) {
+        public ClearGuiButton(int p_i1021_1_, int p_i1021_2_, int p_i1021_3_, int p_i1021_4_, int p_i1021_5_,
+                String p_i1021_6_) {
             super(p_i1021_1_, p_i1021_2_, p_i1021_3_, p_i1021_4_, p_i1021_5_, p_i1021_6_);
         }
 
@@ -410,8 +424,7 @@ public abstract class GUI_MultiblocksHandler<T> {
         public void drawButton(Minecraft p_146112_1_, int p_146112_2_, int p_146112_3_) {
             if (this.visible) {
                 FontRenderer fontrenderer = p_146112_1_.fontRenderer;
-                this.field_146123_n = p_146112_2_ >= this.xPosition
-                        && p_146112_3_ >= this.yPosition
+                this.field_146123_n = p_146112_2_ >= this.xPosition && p_146112_3_ >= this.yPosition
                         && p_146112_2_ < this.xPosition + this.width
                         && p_146112_3_ < this.yPosition + this.height;
                 int l = 2105376;

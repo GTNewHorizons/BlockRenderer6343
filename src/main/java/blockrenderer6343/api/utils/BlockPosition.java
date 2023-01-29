@@ -1,6 +1,7 @@
 package blockrenderer6343.api.utils;
 
 public class BlockPosition {
+
     public int x;
     public int y;
     public int z;

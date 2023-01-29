@@ -1,7 +1,8 @@
 package blockrenderer6343.integration.nei;
 
-import cpw.mods.fml.common.event.FMLInterModComms;
 import net.minecraft.nbt.NBTTagCompound;
+
+import cpw.mods.fml.common.event.FMLInterModComms;
 
 public class IMCForNEI {
 
@@ -20,15 +21,8 @@ public class IMCForNEI {
                 6);
     }
 
-    private static void sendHandler(
-            String aName,
-            String modName,
-            String modID,
-            String aBlock,
-            int width,
-            int height,
-            int maxrecipesperpage,
-            int yshift) {
+    private static void sendHandler(String aName, String modName, String modID, String aBlock, int width, int height,
+            int maxrecipesperpage, int yshift) {
         NBTTagCompound aNBT = new NBTTagCompound();
         aNBT.setString("handler", aName);
         aNBT.setString("modName", modName);

@@ -49,9 +49,6 @@ public class Position {
 
     @Override
     public String toString() {
-        return com.google.common.base.Objects.toStringHelper(this)
-                .add("x", x)
-                .add("y", y)
-                .toString();
+        return com.google.common.base.Objects.toStringHelper(this).add("x", x).add("y", y).toString();
     }
 }

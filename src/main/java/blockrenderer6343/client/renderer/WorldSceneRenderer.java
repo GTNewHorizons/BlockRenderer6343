@@ -1,17 +1,9 @@
 package blockrenderer6343.client.renderer;
 
-import blockrenderer6343.api.utils.BlockPosition;
-import blockrenderer6343.api.utils.Position;
-import blockrenderer6343.api.utils.PositionedRect;
-import blockrenderer6343.api.utils.Size;
-import blockrenderer6343.client.utils.ProjectionUtils;
-import blockrenderer6343.client.world.TrackedDummyWorld;
-import codechicken.lib.vec.Vector3;
-import com.github.bartimaeusnek.bartworks.common.blocks.BW_GlasBlocks;
-import gregtech.common.render.GT_Renderer_Block;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
+
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderBlocks;
@@ -25,9 +17,21 @@ import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraftforge.client.ForgeHooksClient;
+
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.glu.GLU;
 import org.lwjgl.util.vector.Vector3f;
+
+import blockrenderer6343.api.utils.BlockPosition;
+import blockrenderer6343.api.utils.Position;
+import blockrenderer6343.api.utils.PositionedRect;
+import blockrenderer6343.api.utils.Size;
+import blockrenderer6343.client.utils.ProjectionUtils;
+import blockrenderer6343.client.world.TrackedDummyWorld;
+import codechicken.lib.vec.Vector3;
+
+import com.github.bartimaeusnek.bartworks.common.blocks.BW_GlasBlocks;
+import gregtech.common.render.GT_Renderer_Block;
 
 /**
  * Created with IntelliJ IDEA.
@@ -92,10 +96,9 @@ public abstract class WorldSceneRenderer {
     }
 
     /**
-     * Renders scene on given coordinates with given width and height, and RGB background color
-     * Note that this will ignore any transformations applied currently to projection/view matrix,
-     * so specified coordinates are scaled MC gui coordinates.
-     * It will return matrices of projection and view in previous state after rendering
+     * Renders scene on given coordinates with given width and height, and RGB background color Note that this will
+     * ignore any transformations applied currently to projection/view matrix, so specified coordinates are scaled MC
+     * gui coordinates. It will return matrices of projection and view in previous state after rendering
      */
     public void render(int x, int y, int width, int height, int mouseX, int mouseY) {
         PositionedRect positionedRect = getPositionedRect(x, y, width, height);
@@ -110,8 +113,7 @@ public abstract class WorldSceneRenderer {
 
         // check lookingAt
         this.lastTraceResult = null;
-        if (onLookingAt != null
-                && mouseX > positionedRect.position.x
+        if (onLookingAt != null && mouseX > positionedRect.position.x
                 && mouseX < positionedRect.position.x + positionedRect.size.width
                 && mouseY > positionedRect.position.y
                 && mouseY < positionedRect.position.y + positionedRect.size.height) {
@@ -258,10 +260,10 @@ public abstract class WorldSceneRenderer {
                         ((BW_GlasBlocks) block).getColor(world.getBlockMetadata(pos.x, pos.y, pos.z))[0] / 255f,
                         ((BW_GlasBlocks) block).getColor(world.getBlockMetadata(pos.x, pos.y, pos.z))[1] / 255f,
                         ((BW_GlasBlocks) block).getColor(world.getBlockMetadata(pos.x, pos.y, pos.z))[2] / 255f);
-            } else if (!GT_Renderer_Block.INSTANCE.renderWorldBlock(
-                    world, pos.x, pos.y, pos.z, block, block.getRenderType(), bufferBuilder)) {
-                bufferBuilder.renderBlockByRenderType(block, pos.x, pos.y, pos.z);
-            }
+            } else if (!GT_Renderer_Block.INSTANCE
+                    .renderWorldBlock(world, pos.x, pos.y, pos.z, block, block.getRenderType(), bufferBuilder)) {
+                        bufferBuilder.renderBlockByRenderType(block, pos.x, pos.y, pos.z);
+                    }
         }
         if (onRender != null) {
             onRender.accept(this);
@@ -310,12 +312,15 @@ public abstract class WorldSceneRenderer {
         Vec3 startPos = Vec3.createVectorHelper(this.eyePos.x, this.eyePos.y, this.eyePos.z);
         hitPos.scale(2); // Double view range to ensure pos can be seen.
         Vec3 endPos = Vec3.createVectorHelper(
-                (hitPos.x - startPos.xCoord), (hitPos.y - startPos.yCoord), (hitPos.z - startPos.zCoord));
+                (hitPos.x - startPos.xCoord),
+                (hitPos.y - startPos.yCoord),
+                (hitPos.z - startPos.zCoord));
         return ((TrackedDummyWorld) this.world).rayTraceBlockswithTargetMap(startPos, endPos, renderedBlocks);
     }
 
     /***
      * For better performance, You'd better handle the event setOnLookingAt(Consumer) or getLastTraceResult()
+     * 
      * @param mouseX xPos in Texture
      * @param mouseY yPos in Texture
      * @return RayTraceResult Hit
@@ -337,7 +342,8 @@ public abstract class WorldSceneRenderer {
 
     /***
      * For better performance, You'd better do project in setOnWorldRender(Consumer)
-     * @param pos BlockPos
+     * 
+     * @param pos   BlockPos
      * @param depth should pass Depth Test
      * @return x, y, z
      */

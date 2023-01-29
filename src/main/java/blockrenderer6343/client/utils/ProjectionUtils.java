@@ -1,26 +1,28 @@
 package blockrenderer6343.client.utils;
 
-import blockrenderer6343.api.utils.BlockPosition;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
+
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.glu.GLU;
 import org.lwjgl.util.vector.Vector3f;
 
+import blockrenderer6343.api.utils.BlockPosition;
+
 public class ProjectionUtils {
 
-    private static final FloatBuffer MODELVIEW_MATRIX_BUFFER =
-            ByteBuffer.allocateDirect(16 * 4).order(ByteOrder.nativeOrder()).asFloatBuffer();
-    private static final FloatBuffer PROJECTION_MATRIX_BUFFER =
-            ByteBuffer.allocateDirect(16 * 4).order(ByteOrder.nativeOrder()).asFloatBuffer();
-    private static final IntBuffer VIEWPORT_BUFFER =
-            ByteBuffer.allocateDirect(16 * 4).order(ByteOrder.nativeOrder()).asIntBuffer();
-    protected static final FloatBuffer PIXEL_DEPTH_BUFFER =
-            ByteBuffer.allocateDirect(4).order(ByteOrder.nativeOrder()).asFloatBuffer();
-    protected static final FloatBuffer OBJECT_POS_BUFFER =
-            ByteBuffer.allocateDirect(3 * 4).order(ByteOrder.nativeOrder()).asFloatBuffer();
+    private static final FloatBuffer MODELVIEW_MATRIX_BUFFER = ByteBuffer.allocateDirect(16 * 4)
+            .order(ByteOrder.nativeOrder()).asFloatBuffer();
+    private static final FloatBuffer PROJECTION_MATRIX_BUFFER = ByteBuffer.allocateDirect(16 * 4)
+            .order(ByteOrder.nativeOrder()).asFloatBuffer();
+    private static final IntBuffer VIEWPORT_BUFFER = ByteBuffer.allocateDirect(16 * 4).order(ByteOrder.nativeOrder())
+            .asIntBuffer();
+    protected static final FloatBuffer PIXEL_DEPTH_BUFFER = ByteBuffer.allocateDirect(4).order(ByteOrder.nativeOrder())
+            .asFloatBuffer();
+    protected static final FloatBuffer OBJECT_POS_BUFFER = ByteBuffer.allocateDirect(3 * 4)
+            .order(ByteOrder.nativeOrder()).asFloatBuffer();
 
     public static Vector3f project(BlockPosition pos) {
         // read current rendering parameters

@@ -3,6 +3,7 @@ package blockrenderer6343.api.utils;
 import java.util.Objects;
 
 public class PositionedRect {
+
     public final Position position;
     public final Size size;
 
@@ -29,15 +30,13 @@ public class PositionedRect {
     }
 
     public boolean intersects(Position other) {
-        return position.x <= other.x
-                && position.y <= other.y
+        return position.x <= other.x && position.y <= other.y
                 && position.x + size.width >= other.x
                 && position.y + size.height >= other.y;
     }
 
     public boolean intersects(PositionedRect other) {
-        return intersects(other.position)
-                || intersects(other.position.add(other.size))
+        return intersects(other.position) || intersects(other.position.add(other.size))
                 || intersects(other.position.add(new Size(other.size.width, 0)))
                 || intersects(other.position.add(new Size(0, other.size.height)));
     }
@@ -57,9 +56,7 @@ public class PositionedRect {
 
     @Override
     public String toString() {
-        return com.google.common.base.Objects.toStringHelper(this)
-                .add("position", position)
-                .add("size", size)
+        return com.google.common.base.Objects.toStringHelper(this).add("position", position).add("size", size)
                 .toString();
     }
 }

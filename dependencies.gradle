@@ -8,7 +8,7 @@ dependencies {
     compileOnly("com.github.GTNewHorizons:AppleCore:3.2.10:dev")
     compile ("com.github.GTNewHorizons:NotEnoughItems:2.3.48-GTNH:dev")
 
-    compile("com.github.GTNewHorizons:GT5-Unofficial:5.09.43.11:dev")
+    compile("com.github.GTNewHorizons:GT5-Unofficial:5.09.43.10:dev")
     compile("com.github.GTNewHorizons:GTplusplus:1.9.3:dev")
     compile('com.github.GTNewHorizons:StructureLib:1.2.7:dev')
     compile("com.github.GTNewHorizons:bartworks:0.7.2:dev")

@@ -1,6 +1,7 @@
 package blockrenderer6343.api.utils;
 
 import com.gtnewhorizon.structurelib.structure.IStructureElement;
+
 import gregtech.api.metatileentity.implementations.GT_MetaTileEntity_MultiBlockBase;
 
 public class PositionedIStructureElement {

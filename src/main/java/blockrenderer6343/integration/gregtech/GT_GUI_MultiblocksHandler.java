@@ -38,6 +38,7 @@ import gregtech.api.interfaces.tileentity.IGregTechTileEntity;
 import gregtech.api.interfaces.tileentity.ITurnable;
 import gregtech.api.metatileentity.implementations.GT_MetaTileEntity_MultiBlockBase;
 import gregtech.api.threads.GT_Runnable_MachineBlockUpdate;
+import net.minecraftforge.common.util.ForgeDirection;
 
 public class GT_GUI_MultiblocksHandler extends GUI_MultiblocksHandler<GT_MetaTileEntity_MultiBlockBase> {
 
@@ -185,7 +186,7 @@ public class GT_GUI_MultiblocksHandler extends GUI_MultiblocksHandler<GT_MetaTil
                 MB_PLACE_POS.z);
 
         TileEntity tTileEntity = renderer.world.getTileEntity(MB_PLACE_POS.x, MB_PLACE_POS.y, MB_PLACE_POS.z);
-        ((ITurnable) tTileEntity).setFrontFacing((byte) 3);
+        ((ITurnable) tTileEntity).setFrontFacing(ForgeDirection.getOrientation((byte) 3));
         IMetaTileEntity mte = ((IGregTechTileEntity) tTileEntity).getMetaTileEntity();
 
         if (!StructureLibAPI.isInstrumentEnabled()) StructureLibAPI.enableInstrument(Tags.MODID);

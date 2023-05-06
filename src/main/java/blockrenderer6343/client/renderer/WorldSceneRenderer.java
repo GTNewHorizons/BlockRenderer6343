@@ -22,6 +22,8 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.glu.GLU;
 import org.lwjgl.util.vector.Vector3f;
 
+import com.github.bartimaeusnek.bartworks.common.blocks.BW_GlasBlocks;
+
 import blockrenderer6343.api.utils.BlockPosition;
 import blockrenderer6343.api.utils.Position;
 import blockrenderer6343.api.utils.PositionedRect;
@@ -29,8 +31,6 @@ import blockrenderer6343.api.utils.Size;
 import blockrenderer6343.client.utils.ProjectionUtils;
 import blockrenderer6343.client.world.TrackedDummyWorld;
 import codechicken.lib.vec.Vector3;
-
-import com.github.bartimaeusnek.bartworks.common.blocks.BW_GlasBlocks;
 import gregtech.common.render.GT_Renderer_Block;
 
 /**

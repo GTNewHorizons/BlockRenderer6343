@@ -1,15 +1,13 @@
 // Add your dependencies here
 
 dependencies {
-    compile 'org.jetbrains:annotations:23.0.0'
+    api 'org.jetbrains:annotations:23.0.0'
 
-    compile("com.github.GTNewHorizons:CodeChickenLib:1.1.5.3:dev")
-    compile('com.github.GTNewHorizons:CodeChickenCore:1.1.3:dev')
-    compileOnly("com.github.GTNewHorizons:AppleCore:3.2.3:dev")
-    compile ("com.github.GTNewHorizons:NotEnoughItems:2.3.1-GTNH:dev")
+    compileOnly("com.github.GTNewHorizons:AppleCore:3.2.10:dev")
+    api ("com.github.GTNewHorizons:NotEnoughItems:2.3.48-GTNH:dev")
 
-    compile("com.github.GTNewHorizons:GT5-Unofficial:5.09.41.172:dev")
-    compile("com.github.GTNewHorizons:GTplusplus:1.7.157:dev")
-    compile('com.github.GTNewHorizons:StructureLib:1.2.0-beta.2:dev')
-    compile("com.github.GTNewHorizons:bartworks:0.5.125:dev")
+    api("com.github.GTNewHorizons:GT5-Unofficial:5.09.43.10:dev")
+    api("com.github.GTNewHorizons:GTplusplus:1.9.3:dev")
+    api('com.github.GTNewHorizons:StructureLib:1.2.7:dev')
+    api("com.github.GTNewHorizons:bartworks:0.7.2:dev")
 }

@@ -8,9 +8,9 @@ import net.minecraft.item.ItemStack;
 
 import org.jetbrains.annotations.NotNull;
 
-import codechicken.nei.ItemList;
-
 import com.gtnewhorizon.structurelib.structure.IItemSource;
+
+import codechicken.nei.ItemList;
 
 public class CreativeItemSource implements IItemSource {
 

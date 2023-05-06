@@ -7,11 +7,11 @@ import net.minecraft.client.renderer.Tessellator;
 
 import org.lwjgl.opengl.GL11;
 
-import squeek.applecore.client.TooltipOverlayHandler;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
+import squeek.applecore.client.TooltipOverlayHandler;
 
 /**
  * Draw Animated Tooltips Frame

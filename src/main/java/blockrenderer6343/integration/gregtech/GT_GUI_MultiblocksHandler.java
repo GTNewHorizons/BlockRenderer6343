@@ -13,14 +13,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.world.World;
-
-import blockrenderer6343.Tags;
-import blockrenderer6343.api.utils.BlockPosition;
-import blockrenderer6343.api.utils.CreativeItemSource;
-import blockrenderer6343.api.utils.PositionedIStructureElement;
-import blockrenderer6343.client.world.ClientFakePlayer;
-import blockrenderer6343.common.GUI_MultiblocksHandler;
-import codechicken.lib.math.MathHelper;
+import net.minecraftforge.common.util.ForgeDirection;
 
 import com.gtnewhorizon.structurelib.StructureEvent;
 import com.gtnewhorizon.structurelib.StructureLibAPI;
@@ -33,6 +26,13 @@ import com.gtnewhorizon.structurelib.structure.IStructureElement;
 import com.gtnewhorizon.structurelib.structure.ISurvivalBuildEnvironment;
 import com.mojang.authlib.GameProfile;
 
+import blockrenderer6343.Tags;
+import blockrenderer6343.api.utils.BlockPosition;
+import blockrenderer6343.api.utils.CreativeItemSource;
+import blockrenderer6343.api.utils.PositionedIStructureElement;
+import blockrenderer6343.client.world.ClientFakePlayer;
+import blockrenderer6343.common.GUI_MultiblocksHandler;
+import codechicken.lib.math.MathHelper;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import gregtech.api.interfaces.metatileentity.IMetaTileEntity;
 import gregtech.api.interfaces.tileentity.IGregTechTileEntity;
@@ -186,7 +186,7 @@ public class GT_GUI_MultiblocksHandler extends GUI_MultiblocksHandler<GT_MetaTil
                 MB_PLACE_POS.z);
 
         TileEntity tTileEntity = renderer.world.getTileEntity(MB_PLACE_POS.x, MB_PLACE_POS.y, MB_PLACE_POS.z);
-        ((ITurnable) tTileEntity).setFrontFacing((byte) 3);
+        ((ITurnable) tTileEntity).setFrontFacing(ForgeDirection.SOUTH);
         IMetaTileEntity mte = ((IGregTechTileEntity) tTileEntity).getMetaTileEntity();
 
         if (!StructureLibAPI.isInstrumentEnabled()) StructureLibAPI.enableInstrument(Tags.MODID);

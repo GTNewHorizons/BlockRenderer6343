@@ -12,6 +12,8 @@ import net.minecraft.world.chunk.Chunk;
 import org.lwjgl.util.vector.Vector3f;
 
 import blockrenderer6343.api.utils.BlockPosition;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 
 public class TrackedDummyWorld extends DummyWorld {
 
@@ -81,6 +83,15 @@ public class TrackedDummyWorld extends DummyWorld {
     @Override
     public Block getBlock(int x, int y, int z) {
         return super.getBlock(x, y, z);
+    }
+
+    /**
+     * Enable fullbright rendering
+     */
+    @SideOnly(Side.CLIENT)
+    @Override
+    public int getLightBrightnessForSkyBlocks(int p_72802_1_, int p_72802_2_, int p_72802_3_, int p_72802_4_) {
+        return 15 << 20 | 15 << 4;
     }
 
     public Vector3f getSize() {

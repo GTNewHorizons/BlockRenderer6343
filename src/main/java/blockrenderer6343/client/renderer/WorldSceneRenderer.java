@@ -18,7 +18,9 @@ import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraftforge.client.ForgeHooksClient;
 
-import org.lwjgl.opengl.GL11;
+import static org.lwjgl.opengl.GL11.*;
+
+import org.lwjgl.opengl.GL12;
 import org.lwjgl.util.glu.GLU;
 import org.lwjgl.util.vector.Vector3f;
 
@@ -166,29 +168,29 @@ public abstract class WorldSceneRenderer {
         int height = positionedRect.getSize().height;
 
         Minecraft mc = Minecraft.getMinecraft();
-        GlStateManager.pushAttrib();
+        glPushAttrib(GL_ALL_ATTRIB_BITS);
         mc.entityRenderer.disableLightmap(0);
-        GlStateManager.disableLighting();
-        GlStateManager.enableDepth();
-        GlStateManager.enableBlend();
+        glDisable(GL_LIGHTING);
+        glEnable(GL_DEPTH_TEST);
+        glEnable(GL_BLEND);
 
         // setup viewport and clear GL buffers
-        GlStateManager.viewport(x, y, width, height);
+        glViewport(x, y, width, height);
 
         clearView(x, y, width, height);
 
         // setup projection matrix to perspective
-        GlStateManager.matrixMode(GL11.GL_PROJECTION);
-        GlStateManager.pushMatrix();
-        GlStateManager.loadIdentity();
+        glMatrixMode(GL_PROJECTION);
+        glPushMatrix();
+        glLoadIdentity();
 
         float aspectRatio = width / (height * 1.0f);
         GLU.gluPerspective(60.0f, aspectRatio, 0.1f, 10000.0f);
 
         // setup modelview matrix
-        GlStateManager.matrixMode(GL11.GL_MODELVIEW);
-        GlStateManager.pushMatrix();
-        GlStateManager.loadIdentity();
+        glMatrixMode(GL_MODELVIEW);
+        glPushMatrix();
+        glLoadIdentity();
         GLU.gluLookAt(eyePos.x, eyePos.y, eyePos.z, lookAt.x, lookAt.y, lookAt.z, worldUp.x, worldUp.y, worldUp.z);
     }
 
@@ -196,32 +198,29 @@ public abstract class WorldSceneRenderer {
         int i = (colorValue & 16711680) >> 16;
         int j = (colorValue & 65280) >> 8;
         int k = (colorValue & 255);
-        GL11.glClearColor(i / 255.0f, j / 255.0f, k / 255.0f, opacity / 255.0f);
+        glClearColor(i / 255.0f, j / 255.0f, k / 255.0f, opacity / 255.0f);
     }
 
     protected void clearView(int x, int y, int width, int height) {
         setGlClearColorFromInt(clearColor, clearColor >> 24);
-        GlStateManager.clear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     }
 
     public static void resetCamera() {
         // reset viewport
         Minecraft minecraft = Minecraft.getMinecraft();
-        GlStateManager.viewport(0, 0, minecraft.displayWidth, minecraft.displayHeight);
+        glViewport(0, 0, minecraft.displayWidth, minecraft.displayHeight);
 
         // reset projection matrix
-        GlStateManager.matrixMode(GL11.GL_PROJECTION);
-        GlStateManager.popMatrix();
+        glMatrixMode(GL_PROJECTION);
+        glPopMatrix();
 
         // reset modelview matrix
-        GlStateManager.matrixMode(GL11.GL_MODELVIEW);
-        GlStateManager.popMatrix();
-
-        GlStateManager.disableBlend();
-        GlStateManager.disableDepth();
+        glMatrixMode(GL_MODELVIEW);
+        glPopMatrix();
 
         // reset attributes
-        GlStateManager.popAttrib();
+        glPopAttrib();
     }
 
     protected void drawWorld() {
@@ -230,14 +229,14 @@ public abstract class WorldSceneRenderer {
         }
 
         Minecraft mc = Minecraft.getMinecraft();
-        GlStateManager.enableCull();
-        GlStateManager.enableRescaleNormal();
+        glEnable(GL_CULL_FACE);
+        glEnable(GL12.GL_RESCALE_NORMAL);
         RenderHelper.disableStandardItemLighting();
         mc.entityRenderer.disableLightmap(0);
         mc.renderEngine.bindTexture(TextureMap.locationBlocksTexture);
-        GlStateManager.disableLighting();
-        GlStateManager.enableTexture2D();
-        GlStateManager.enableAlpha();
+        glDisable(GL_LIGHTING);
+        glEnable(GL_TEXTURE_2D);
+        glEnable(GL_ALPHA_TEST);
 
         Tessellator.instance.startDrawingQuads();
         Tessellator.instance.setBrightness(15 << 20 | 15 << 4);
@@ -273,7 +272,7 @@ public abstract class WorldSceneRenderer {
         Tessellator.instance.setTranslation(0, 0, 0);
 
         RenderHelper.enableStandardItemLighting();
-        GlStateManager.enableLighting();
+        glEnable(GL_LIGHTING);
 
         // render TESR
         for (int pass = 0; pass < 2; pass++) {
@@ -290,21 +289,21 @@ public abstract class WorldSceneRenderer {
             });
         }
         ForgeHooksClient.setRenderPass(-1);
-        GlStateManager.enableDepth();
-        GlStateManager.disableBlend();
-        GlStateManager.depthMask(true);
+        glEnable(GL_DEPTH_TEST);
+        glDisable(GL_BLEND);
+        glDepthMask(true);
     }
 
     public static void setDefaultPassRenderState(int pass) {
-        GlStateManager.color(1, 1, 1, 1);
+        glColor4f(1, 1, 1, 1);
         if (pass == 0) { // SOLID
-            GlStateManager.enableDepth();
-            GlStateManager.disableBlend();
-            GlStateManager.depthMask(true);
+            glEnable(GL_DEPTH_TEST);
+            glDisable(GL_BLEND);
+            glDepthMask(true);
         } else { // TRANSLUCENT
-            GlStateManager.enableBlend();
-            GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-            GlStateManager.depthMask(false);
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            glDepthMask(false);
         }
     }
 
@@ -320,14 +319,14 @@ public abstract class WorldSceneRenderer {
 
     /***
      * For better performance, You'd better handle the event setOnLookingAt(Consumer) or getLastTraceResult()
-     * 
+     *
      * @param mouseX xPos in Texture
      * @param mouseY yPos in Texture
      * @return RayTraceResult Hit
      */
     protected MovingObjectPosition screenPos2BlockPosFace(int mouseX, int mouseY, int x, int y, int width, int height) {
         // render a frame
-        GlStateManager.enableDepth();
+        glEnable(GL_DEPTH_TEST);
         setupCamera(getPositionedRect(x, y, width, height));
 
         drawWorld();
@@ -342,14 +341,14 @@ public abstract class WorldSceneRenderer {
 
     /***
      * For better performance, You'd better do project in setOnWorldRender(Consumer)
-     * 
+     *
      * @param pos   BlockPos
      * @param depth should pass Depth Test
      * @return x, y, z
      */
     protected Vector3f blockPos2ScreenPos(BlockPosition pos, boolean depth, int x, int y, int width, int height) {
         // render a frame
-        GlStateManager.enableDepth();
+        glEnable(GL_DEPTH_TEST);
         setupCamera(getPositionedRect(x, y, width, height));
 
         drawWorld();

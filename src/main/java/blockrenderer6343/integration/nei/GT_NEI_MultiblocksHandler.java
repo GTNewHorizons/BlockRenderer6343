@@ -3,7 +3,7 @@ package blockrenderer6343.integration.nei;
 import static blockrenderer6343.integration.gregtech.GT_GUI_MultiblocksHandler.*;
 import static blockrenderer6343.integration.nei.IMCForNEI.GT_NEI_MB_HANDLER_NAME;
 import static gregtech.api.GregTech_API.METATILEENTITIES;
-import static gregtech.api.enums.GT_Values.RES_PATH_GUI;
+import static gregtech.api.enums.Mods.GregTech;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -106,7 +106,7 @@ public class GT_NEI_MultiblocksHandler extends TemplateRecipeHandler {
 
     @Override
     public String getGuiTexture() {
-        return RES_PATH_GUI + "void.png";
+        return GregTech.getResourcePath("textures", "gui/void.png");
     }
 
     @Override

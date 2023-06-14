@@ -1,7 +1,10 @@
 package blockrenderer6343.client.renderer;
 
-import java.util.ArrayList;
-import java.util.List;
+import static org.lwjgl.opengl.GL11.*;
+
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.function.Consumer;
 
 import net.minecraft.block.Block;
@@ -17,8 +20,6 @@ import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraftforge.client.ForgeHooksClient;
-
-import static org.lwjgl.opengl.GL11.*;
 
 import org.lwjgl.opengl.GL12;
 import org.lwjgl.util.glu.GLU;
@@ -47,7 +48,7 @@ public abstract class WorldSceneRenderer {
     // you have to place blocks in the world before use
     public final World world;
     // the Blocks which this renderer needs to render
-    public final List<BlockPosition> renderedBlocks;
+    public final Set<BlockPosition> renderedBlocks = new HashSet<>();
     private Consumer<WorldSceneRenderer> beforeRender;
     private Consumer<WorldSceneRenderer> onRender;
     private Consumer<MovingObjectPosition> onLookingAt;
@@ -60,7 +61,6 @@ public abstract class WorldSceneRenderer {
 
     public WorldSceneRenderer(World world) {
         this.world = world;
-        renderedBlocks = new ArrayList<>();
     }
 
     public WorldSceneRenderer setBeforeWorldRender(Consumer<WorldSceneRenderer> callback) {
@@ -73,7 +73,7 @@ public abstract class WorldSceneRenderer {
         return this;
     }
 
-    public WorldSceneRenderer addRenderedBlocks(List<BlockPosition> blocks) {
+    public WorldSceneRenderer addRenderedBlocks(Collection<BlockPosition> blocks) {
         if (blocks != null) {
             this.renderedBlocks.addAll(blocks);
         }
@@ -169,6 +169,7 @@ public abstract class WorldSceneRenderer {
 
         Minecraft mc = Minecraft.getMinecraft();
         glPushAttrib(GL_ALL_ATTRIB_BITS);
+        glPushClientAttrib(GL_ALL_CLIENT_ATTRIB_BITS);
         mc.entityRenderer.disableLightmap(0);
         glDisable(GL_LIGHTING);
         glEnable(GL_DEPTH_TEST);
@@ -211,15 +212,18 @@ public abstract class WorldSceneRenderer {
         Minecraft minecraft = Minecraft.getMinecraft();
         glViewport(0, 0, minecraft.displayWidth, minecraft.displayHeight);
 
-        // reset projection matrix
-        glMatrixMode(GL_PROJECTION);
-        glPopMatrix();
-
         // reset modelview matrix
         glMatrixMode(GL_MODELVIEW);
         glPopMatrix();
 
+        // reset projection matrix
+        glMatrixMode(GL_PROJECTION);
+        glPopMatrix();
+
+        glMatrixMode(GL_MODELVIEW);
+
         // reset attributes
+        glPopClientAttrib();
         glPopAttrib();
     }
 

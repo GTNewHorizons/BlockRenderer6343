@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -143,13 +144,13 @@ public abstract class GUI_MultiblocksHandler<T> {
             resetCenter();
             renderer.renderedBlocks.clear();
             int minY = (int) world.getMinPos().getY();
-            List<BlockPosition> renderBlocks;
+            Set<BlockPosition> renderBlocks;
             if (newLayer == -1) {
                 renderBlocks = world.placedBlocks;
                 renderer.setRenderAllFaces(false);
             } else {
                 renderBlocks = world.placedBlocks.stream().filter(pos -> pos.y - minY == newLayer)
-                        .collect(Collectors.toList());
+                        .collect(Collectors.toSet());
                 renderer.setRenderAllFaces(true);
             }
             renderer.addRenderedBlocks(renderBlocks);

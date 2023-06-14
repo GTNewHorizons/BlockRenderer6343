@@ -53,7 +53,7 @@ public class GT_GUI_MultiblocksHandler extends GUI_MultiblocksHandler<GT_MetaTil
 
     private static EntityPlayer fakeMultiblockBuilder;
 
-    private List<List<ItemStack>> candidates = new ArrayList<>();
+    private final List<List<ItemStack>> candidates = new ArrayList<>();
     protected List<PositionedIStructureElement> structureElements = new ArrayList<>();
     protected Consumer<List<List<ItemStack>>> onCandidateChanged;
 
@@ -215,7 +215,6 @@ public class GT_GUI_MultiblocksHandler extends GUI_MultiblocksHandler<GT_MetaTil
             GT_Runnable_MachineBlockUpdate.setCurrentThreadEnabled(true);
     }
 
-    @SuppressWarnings("unchecked")
     private void scanCandidates() {
         candidates.clear();
         if (selectedBlock != null) {

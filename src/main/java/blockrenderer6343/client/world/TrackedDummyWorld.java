@@ -12,10 +12,12 @@ import net.minecraft.world.chunk.Chunk;
 import org.lwjgl.util.vector.Vector3f;
 
 import blockrenderer6343.api.utils.BlockPosition;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 
 public class TrackedDummyWorld extends DummyWorld {
 
-    public final List<BlockPosition> placedBlocks = new ArrayList<>();
+    public final Set<BlockPosition> placedBlocks = new HashSet<>();
 
     private final Vector3f minPos = new Vector3f(Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE);
     private final Vector3f maxPos = new Vector3f(Integer.MIN_VALUE, Integer.MIN_VALUE, Integer.MIN_VALUE);
@@ -83,6 +85,15 @@ public class TrackedDummyWorld extends DummyWorld {
         return super.getBlock(x, y, z);
     }
 
+    /**
+     * Enable fullbright rendering
+     */
+    @SideOnly(Side.CLIENT)
+    @Override
+    public int getLightBrightnessForSkyBlocks(int p_72802_1_, int p_72802_2_, int p_72802_3_, int p_72802_4_) {
+        return 15 << 20 | 15 << 4;
+    }
+
     public Vector3f getSize() {
         Vector3f result = new Vector3f();
         result.x = maxPos.x - minPos.x + 1;
@@ -99,11 +110,11 @@ public class TrackedDummyWorld extends DummyWorld {
         return maxPos;
     }
 
-    public MovingObjectPosition rayTraceBlockswithTargetMap(Vec3 start, Vec3 end, List<BlockPosition> targetedBlocks) {
+    public MovingObjectPosition rayTraceBlockswithTargetMap(Vec3 start, Vec3 end, Set<BlockPosition> targetedBlocks) {
         return rayTraceBlockswithTargetMap(start, end, targetedBlocks, false, false, false);
     }
 
-    public MovingObjectPosition rayTraceBlockswithTargetMap(Vec3 start, Vec3 end, List<BlockPosition> targetedBlocks,
+    public MovingObjectPosition rayTraceBlockswithTargetMap(Vec3 start, Vec3 end, Set<BlockPosition> targetedBlocks,
             boolean stopOnLiquid, boolean ignoreBlockWithoutBoundingBox, boolean returnLastUncollidableBlock) {
         if (!Double.isNaN(start.xCoord) && !Double.isNaN(start.yCoord) && !Double.isNaN(start.zCoord)) {
             if (!Double.isNaN(end.xCoord) && !Double.isNaN(end.yCoord) && !Double.isNaN(end.zCoord)) {
@@ -272,12 +283,7 @@ public class TrackedDummyWorld extends DummyWorld {
         }
     }
 
-    private boolean isBlockTargeted(MovingObjectPosition result, List<BlockPosition> targetedBlocks) {
-        for (BlockPosition targetedBlock : targetedBlocks) {
-            if (result.blockX == targetedBlock.x && result.blockY == targetedBlock.y
-                    && result.blockZ == targetedBlock.z)
-                return true;
-        }
-        return false;
+    private boolean isBlockTargeted(MovingObjectPosition result, Set<BlockPosition> targetedBlocks) {
+        return targetedBlocks.contains(new BlockPosition(result.blockX, result.blockY, result.blockZ));
     }
 }

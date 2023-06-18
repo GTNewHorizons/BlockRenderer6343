@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -18,11 +19,11 @@ import net.minecraft.util.IIcon;
 import net.minecraft.util.MovingObjectPosition;
 
 import org.lwjgl.input.Mouse;
+import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.vector.Vector3f;
 
 import blockrenderer6343.BlockRenderer6343;
 import blockrenderer6343.api.utils.BlockPosition;
-import blockrenderer6343.client.renderer.GlStateManager;
 import blockrenderer6343.client.renderer.ImmediateWorldSceneRenderer;
 import blockrenderer6343.client.renderer.WorldSceneRenderer;
 import blockrenderer6343.client.world.DummyWorld;
@@ -143,13 +144,13 @@ public abstract class GUI_MultiblocksHandler<T> {
             resetCenter();
             renderer.renderedBlocks.clear();
             int minY = (int) world.getMinPos().getY();
-            List<BlockPosition> renderBlocks;
+            Set<BlockPosition> renderBlocks;
             if (newLayer == -1) {
                 renderBlocks = world.placedBlocks;
                 renderer.setRenderAllFaces(false);
             } else {
                 renderBlocks = world.placedBlocks.stream().filter(pos -> pos.y - minY == newLayer)
-                        .collect(Collectors.toList());
+                        .collect(Collectors.toSet());
                 renderer.setRenderAllFaces(true);
             }
             renderer.addRenderedBlocks(renderBlocks);
@@ -182,7 +183,7 @@ public abstract class GUI_MultiblocksHandler<T> {
                 lastGuiMouseY);
         drawMultiblockName();
 
-        GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+        GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
 
         tooltipBlockStack = null;
 

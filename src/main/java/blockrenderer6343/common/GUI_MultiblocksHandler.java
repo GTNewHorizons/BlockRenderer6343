@@ -70,6 +70,7 @@ public abstract class GUI_MultiblocksHandler<T> {
     protected static final Map<GuiButton, Runnable> buttons = new HashMap<>();
 
     protected T renderingController;
+    protected ItemStack stackForm;
     protected T lastRenderingController;
 
     public GUI_MultiblocksHandler() {
@@ -94,8 +95,9 @@ public abstract class GUI_MultiblocksHandler<T> {
         buttons.put(nextLayerButton, this::toggleNextLayer);
     }
 
-    public void loadMultiblock(T multiblock) {
+    public void loadMultiblock(T multiblock, ItemStack stackForm) {
         renderingController = multiblock;
+        this.stackForm = stackForm;
         if (lastRenderingController != renderingController) {
             loadNewMultiblock();
         } else {

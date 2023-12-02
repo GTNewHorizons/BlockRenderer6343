@@ -1,6 +1,6 @@
 package blockrenderer6343.integration.nei;
 
-import static blockrenderer6343.integration.gregtech.GT_GUI_MultiblocksHandler.*;
+import static blockrenderer6343.integration.gregtech.GT_GUI_MultiblocksHandler.SLOT_SIZE;
 import static blockrenderer6343.integration.nei.IMCForNEI.GT_NEI_MB_HANDLER_NAME;
 import static gregtech.api.GregTech_API.METATILEENTITIES;
 import static gregtech.api.enums.Mods.GregTech;
@@ -21,7 +21,11 @@ import codechicken.nei.PositionedStack;
 import codechicken.nei.guihook.GuiContainerManager;
 import codechicken.nei.guihook.IContainerInputHandler;
 import codechicken.nei.guihook.IContainerTooltipHandler;
-import codechicken.nei.recipe.*;
+import codechicken.nei.recipe.GuiCraftingRecipe;
+import codechicken.nei.recipe.GuiRecipeCatalyst;
+import codechicken.nei.recipe.GuiUsageRecipe;
+import codechicken.nei.recipe.RecipeCatalysts;
+import codechicken.nei.recipe.TemplateRecipeHandler;
 import gregtech.api.interfaces.metatileentity.IMetaTileEntity;
 
 public class GT_NEI_MultiblocksHandler extends TemplateRecipeHandler {

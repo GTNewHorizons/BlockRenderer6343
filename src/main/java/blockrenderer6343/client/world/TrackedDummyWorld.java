@@ -1,6 +1,7 @@
 package blockrenderer6343.client.world;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.Set;
 
 import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;

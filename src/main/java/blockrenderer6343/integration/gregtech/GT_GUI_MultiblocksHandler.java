@@ -1,6 +1,10 @@
 package blockrenderer6343.integration.gregtech;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -14,6 +18,8 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
+
+import org.jetbrains.annotations.NotNull;
 
 import com.gtnewhorizon.structurelib.StructureEvent;
 import com.gtnewhorizon.structurelib.StructureLibAPI;
@@ -37,10 +43,9 @@ import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import gregtech.api.interfaces.metatileentity.IMetaTileEntity;
 import gregtech.api.interfaces.tileentity.IGregTechTileEntity;
 import gregtech.api.interfaces.tileentity.ITurnable;
-import gregtech.api.metatileentity.implementations.GT_MetaTileEntity_MultiBlockBase;
 import gregtech.api.threads.GT_Runnable_MachineBlockUpdate;
 
-public class GT_GUI_MultiblocksHandler extends GUI_MultiblocksHandler<GT_MetaTileEntity_MultiBlockBase> {
+public class GT_GUI_MultiblocksHandler extends GUI_MultiblocksHandler<ISurvivalConstructable> {
 
     protected static final int TIER_BUTTON_X = LAYER_BUTTON_X + 5;
     protected static final int TIER_BUTTON_Y = LAYER_BUTTON_Y - ICON_SIZE_Y;
@@ -48,6 +53,7 @@ public class GT_GUI_MultiblocksHandler extends GUI_MultiblocksHandler<GT_MetaTil
     protected static final int PROJECT_BUTTON_X = 145;
     protected static final int PROJECT_BUTTON_Y = -5;
     private static final BlockPosition MB_PLACE_POS = new BlockPosition(0, 64, 0);
+    public static final int MAX_PLACE_ROUNDS = 2000;
 
     protected static int tierIndex = 1;
 
@@ -105,7 +111,7 @@ public class GT_GUI_MultiblocksHandler extends GUI_MultiblocksHandler<GT_MetaTil
         MovingObjectPosition lookingPos = player.rayTrace(10, 1);
         if (lookingPos.typeOfHit == MovingObjectPosition.MovingObjectType.MISS) return;
         int playerDir = MathHelper.floor_double((player.rotationYaw * 4F) / 360F + 0.5D) & 3;
-        ItemStack itemStack = renderingController.getStackForm(1);
+        ItemStack itemStack = stackForm;
         if (!baseWorld.isAirBlock(lookingPos.blockX, lookingPos.blockY + 1, lookingPos.blockZ)) return;
         itemStack.getItem().onItemUse(
                 itemStack,
@@ -119,7 +125,7 @@ public class GT_GUI_MultiblocksHandler extends GUI_MultiblocksHandler<GT_MetaTil
                 lookingPos.blockY,
                 lookingPos.blockZ);
         ConstructableUtility.handle(
-                renderingController.getStackForm(tierIndex),
+                getTriggerStack(),
                 player,
                 baseWorld,
                 lookingPos.blockX,
@@ -128,6 +134,11 @@ public class GT_GUI_MultiblocksHandler extends GUI_MultiblocksHandler<GT_MetaTil
                 playerDir);
         baseWorld.setBlockToAir(lookingPos.blockX, lookingPos.blockY + 1, lookingPos.blockZ);
         baseWorld.removeTileEntity(lookingPos.blockX, lookingPos.blockY + 1, lookingPos.blockZ);
+    }
+
+    @NotNull
+    private static ItemStack getTriggerStack() {
+        return new ItemStack(StructureLibAPI.getDefaultHologramItem(), tierIndex);
     }
 
     private void toggleNextTier() {
@@ -144,7 +155,7 @@ public class GT_GUI_MultiblocksHandler extends GUI_MultiblocksHandler<GT_MetaTil
 
     @Override
     protected String getMultiblockName() {
-        return I18n.format(renderingController.getStackForm(1).getDisplayName());
+        return I18n.format(stackForm.getDisplayName());
     }
 
     @Override
@@ -172,9 +183,9 @@ public class GT_GUI_MultiblocksHandler extends GUI_MultiblocksHandler<GT_MetaTil
 
         IConstructable constructable = null;
 
-        ItemStack itemStack = renderingController.getStackForm(1);
-        itemStack.getItem().onItemUse(
-                itemStack,
+        int oStackSize = stackForm.stackSize;
+        stackForm.getItem().onItemUse(
+                stackForm,
                 fakeMultiblockBuilder,
                 renderer.world,
                 MB_PLACE_POS.x,
@@ -184,6 +195,7 @@ public class GT_GUI_MultiblocksHandler extends GUI_MultiblocksHandler<GT_MetaTil
                 MB_PLACE_POS.x,
                 MB_PLACE_POS.y,
                 MB_PLACE_POS.z);
+        stackForm.stackSize = oStackSize;
 
         TileEntity tTileEntity = renderer.world.getTileEntity(MB_PLACE_POS.x, MB_PLACE_POS.y, MB_PLACE_POS.z);
         ((ITurnable) tTileEntity).setFrontFacing(ForgeDirection.SOUTH);
@@ -193,20 +205,21 @@ public class GT_GUI_MultiblocksHandler extends GUI_MultiblocksHandler<GT_MetaTil
         structureElements.clear();
 
         if (mte instanceof ISurvivalConstructable) {
-            int result;
+            int result, iterations = 0;
             do {
                 result = ((ISurvivalConstructable) mte).survivalConstruct(
-                        renderingController.getStackForm(tierIndex),
+                        getTriggerStack(),
                         Integer.MAX_VALUE,
                         ISurvivalBuildEnvironment.create(CreativeItemSource.instance, fakeMultiblockBuilder));
-            } while (result > 0);
+                iterations++;
+            } while (result > 0 && iterations < MAX_PLACE_ROUNDS);
         } else if (tTileEntity instanceof IConstructableProvider) {
             constructable = ((IConstructableProvider) tTileEntity).getConstructable();
         } else if (tTileEntity instanceof IConstructable) {
             constructable = (IConstructable) tTileEntity;
         }
         if (constructable != null) {
-            constructable.construct(renderingController.getStackForm(tierIndex), false);
+            constructable.construct(getTriggerStack(), false);
         }
 
         if (StructureLibAPI.isInstrumentEnabled()) StructureLibAPI.disableInstrument();
@@ -228,7 +241,7 @@ public class GT_GUI_MultiblocksHandler extends GUI_MultiblocksHandler<GT_MetaTil
                             selectedBlock.x,
                             selectedBlock.y,
                             selectedBlock.z,
-                            renderingController.getStackForm(tierIndex),
+                            getTriggerStack(),
                             AutoPlaceEnvironment.fromLegacy(
                                     CreativeItemSource.instance,
                                     fakeMultiblockBuilder,
@@ -287,6 +300,6 @@ public class GT_GUI_MultiblocksHandler extends GUI_MultiblocksHandler<GT_MetaTil
                         event.getX(),
                         event.getY(),
                         event.getZ(),
-                        (IStructureElement<GT_MetaTileEntity_MultiBlockBase>) event.getElement()));
+                        (IStructureElement<ISurvivalConstructable>) event.getElement()));
     }
 }

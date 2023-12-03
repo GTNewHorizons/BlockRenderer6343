@@ -12,7 +12,7 @@ import cpw.mods.fml.relauncher.SideOnly;
 
 /**
  * Created with IntelliJ IDEA.
- * 
+ *
  * @Author: KilaBash, backported by Quarri6343
  * @Date: 2021/8/24
  * @Description: Real-time rendering renderer. If you need to render scene as a texture, use the FBO

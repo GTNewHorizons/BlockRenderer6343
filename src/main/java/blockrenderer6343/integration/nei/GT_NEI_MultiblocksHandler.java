@@ -1,6 +1,6 @@
 package blockrenderer6343.integration.nei;
 
-import static blockrenderer6343.integration.gregtech.GT_GUI_MultiblocksHandler.*;
+import static blockrenderer6343.integration.gregtech.GT_GUI_MultiblocksHandler.SLOT_SIZE;
 import static blockrenderer6343.integration.nei.IMCForNEI.GT_NEI_MB_HANDLER_NAME;
 import static gregtech.api.GregTech_API.METATILEENTITIES;
 import static gregtech.api.enums.Mods.GregTech;
@@ -12,6 +12,8 @@ import java.util.Map;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.item.ItemStack;
 
+import com.gtnewhorizon.structurelib.alignment.constructable.ISurvivalConstructable;
+
 import blockrenderer6343.ClientProxy;
 import blockrenderer6343.integration.gregtech.GT_GUI_MultiblocksHandler;
 import codechicken.nei.NEIClientUtils;
@@ -19,13 +21,16 @@ import codechicken.nei.PositionedStack;
 import codechicken.nei.guihook.GuiContainerManager;
 import codechicken.nei.guihook.IContainerInputHandler;
 import codechicken.nei.guihook.IContainerTooltipHandler;
-import codechicken.nei.recipe.*;
+import codechicken.nei.recipe.GuiCraftingRecipe;
+import codechicken.nei.recipe.GuiRecipeCatalyst;
+import codechicken.nei.recipe.GuiUsageRecipe;
+import codechicken.nei.recipe.RecipeCatalysts;
+import codechicken.nei.recipe.TemplateRecipeHandler;
 import gregtech.api.interfaces.metatileentity.IMetaTileEntity;
-import gregtech.api.metatileentity.implementations.GT_MetaTileEntity_MultiBlockBase;
 
 public class GT_NEI_MultiblocksHandler extends TemplateRecipeHandler {
 
-    public static List<GT_MetaTileEntity_MultiBlockBase> multiblocksList = new ArrayList<>();
+    public static List<ISurvivalConstructable> multiblocksList = new ArrayList<>();
     private static final GT_GUI_MultiblocksHandler baseHandler = ClientProxy.guiMultiblocksHandler;
 
     public static final int CANDIDATE_SLOTS_X = 150;
@@ -41,8 +46,8 @@ public class GT_NEI_MultiblocksHandler extends TemplateRecipeHandler {
     public GT_NEI_MultiblocksHandler() {
         super();
         for (IMetaTileEntity mte : METATILEENTITIES) {
-            if (mte instanceof GT_MetaTileEntity_MultiBlockBase) {
-                multiblocksList.add((GT_MetaTileEntity_MultiBlockBase) (mte));
+            if (mte instanceof ISurvivalConstructable) {
+                multiblocksList.add((ISurvivalConstructable) mte);
             }
         }
     }
@@ -131,14 +136,15 @@ public class GT_NEI_MultiblocksHandler extends TemplateRecipeHandler {
     }
 
     private void tryLoadMultiblocks(ItemStack candidate) {
-        for (GT_MetaTileEntity_MultiBlockBase multiblocks : multiblocksList) {
-            if (NEIClientUtils.areStacksSameType(((IMetaTileEntity) multiblocks).getStackForm(1), candidate)) {
+        for (ISurvivalConstructable multiblock : multiblocksList) {
+            ItemStack stackForm = ((IMetaTileEntity) multiblock).getStackForm(1);
+            if (NEIClientUtils.areStacksSameType(stackForm, candidate)) {
                 baseHandler.setOnIngredientChanged(ingredients -> {
                     this.ingredients = ingredients;
                     resetPositionedIngredients();
                 });
                 baseHandler.setOnCandidateChanged(this::setResults);
-                baseHandler.loadMultiblock(multiblocks);
+                baseHandler.loadMultiblock(multiblock, stackForm);
                 return;
             }
         }

@@ -12,7 +12,7 @@ import java.util.Map;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.item.ItemStack;
 
-import com.gtnewhorizon.structurelib.alignment.constructable.ISurvivalConstructable;
+import com.gtnewhorizon.structurelib.alignment.constructable.IConstructable;
 
 import blockrenderer6343.ClientProxy;
 import blockrenderer6343.integration.gregtech.GT_GUI_MultiblocksHandler;
@@ -30,7 +30,7 @@ import gregtech.api.interfaces.metatileentity.IMetaTileEntity;
 
 public class GT_NEI_MultiblocksHandler extends TemplateRecipeHandler {
 
-    public static List<ISurvivalConstructable> multiblocksList = new ArrayList<>();
+    public static List<IConstructable> multiblocksList = new ArrayList<>();
     private static final GT_GUI_MultiblocksHandler baseHandler = ClientProxy.guiMultiblocksHandler;
 
     public static final int CANDIDATE_SLOTS_X = 150;
@@ -46,8 +46,8 @@ public class GT_NEI_MultiblocksHandler extends TemplateRecipeHandler {
     public GT_NEI_MultiblocksHandler() {
         super();
         for (IMetaTileEntity mte : METATILEENTITIES) {
-            if (mte instanceof ISurvivalConstructable) {
-                multiblocksList.add((ISurvivalConstructable) mte);
+            if (mte instanceof IConstructable) {
+                multiblocksList.add((IConstructable) mte);
             }
         }
     }
@@ -136,7 +136,7 @@ public class GT_NEI_MultiblocksHandler extends TemplateRecipeHandler {
     }
 
     private void tryLoadMultiblocks(ItemStack candidate) {
-        for (ISurvivalConstructable multiblock : multiblocksList) {
+        for (IConstructable multiblock : multiblocksList) {
             ItemStack stackForm = ((IMetaTileEntity) multiblock).getStackForm(1);
             if (NEIClientUtils.areStacksSameType(stackForm, candidate)) {
                 baseHandler.setOnIngredientChanged(ingredients -> {

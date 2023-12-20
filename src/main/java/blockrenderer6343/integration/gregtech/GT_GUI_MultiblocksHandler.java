@@ -45,7 +45,7 @@ import gregtech.api.interfaces.tileentity.IGregTechTileEntity;
 import gregtech.api.interfaces.tileentity.ITurnable;
 import gregtech.api.threads.GT_Runnable_MachineBlockUpdate;
 
-public class GT_GUI_MultiblocksHandler extends GUI_MultiblocksHandler<ISurvivalConstructable> {
+public class GT_GUI_MultiblocksHandler extends GUI_MultiblocksHandler<IConstructable> {
 
     protected static final int TIER_BUTTON_X = LAYER_BUTTON_X + 5;
     protected static final int TIER_BUTTON_Y = LAYER_BUTTON_Y - ICON_SIZE_Y;
@@ -300,6 +300,6 @@ public class GT_GUI_MultiblocksHandler extends GUI_MultiblocksHandler<ISurvivalC
                         event.getX(),
                         event.getY(),
                         event.getZ(),
-                        (IStructureElement<ISurvivalConstructable>) event.getElement()));
+                        (IStructureElement<IConstructable>) event.getElement()));
     }
 }

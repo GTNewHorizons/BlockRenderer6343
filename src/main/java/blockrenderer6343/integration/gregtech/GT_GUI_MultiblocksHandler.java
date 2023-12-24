@@ -111,7 +111,7 @@ public class GT_GUI_MultiblocksHandler extends GUI_MultiblocksHandler<IConstruct
         MovingObjectPosition lookingPos = player.rayTrace(10, 1);
         if (lookingPos.typeOfHit == MovingObjectPosition.MovingObjectType.MISS) return;
         int playerDir = MathHelper.floor_double((player.rotationYaw * 4F) / 360F + 0.5D) & 3;
-        ItemStack itemStack = stackForm;
+        ItemStack itemStack = stackForm.copy();
         if (!baseWorld.isAirBlock(lookingPos.blockX, lookingPos.blockY + 1, lookingPos.blockZ)) return;
         itemStack.getItem().onItemUse(
                 itemStack,

@@ -32,7 +32,7 @@ import com.gtnewhorizon.structurelib.structure.IStructureElement;
 import com.gtnewhorizon.structurelib.structure.ISurvivalBuildEnvironment;
 import com.mojang.authlib.GameProfile;
 
-import blockrenderer6343.Tags;
+import blockrenderer6343.BlockRenderer6343;
 import blockrenderer6343.api.utils.BlockPosition;
 import blockrenderer6343.api.utils.CreativeItemSource;
 import blockrenderer6343.api.utils.PositionedIStructureElement;
@@ -201,7 +201,7 @@ public class GT_GUI_MultiblocksHandler extends GUI_MultiblocksHandler<IConstruct
         ((ITurnable) tTileEntity).setFrontFacing(ForgeDirection.SOUTH);
         IMetaTileEntity mte = ((IGregTechTileEntity) tTileEntity).getMetaTileEntity();
 
-        if (!StructureLibAPI.isInstrumentEnabled()) StructureLibAPI.enableInstrument(Tags.MODID);
+        if (!StructureLibAPI.isInstrumentEnabled()) StructureLibAPI.enableInstrument(BlockRenderer6343.MOD_ID);
         structureElements.clear();
 
         if (mte instanceof ISurvivalConstructable) {

@@ -15,16 +15,18 @@ import cpw.mods.fml.common.event.FMLServerStoppedEvent;
 import cpw.mods.fml.common.event.FMLServerStoppingEvent;
 
 @Mod(
-        modid = Tags.MODID,
+        modid = BlockRenderer6343.MOD_ID,
         version = Tags.VERSION,
-        name = Tags.MODNAME,
+        name = BlockRenderer6343.MOD_NAME,
         acceptedMinecraftVersions = "[1.7.10]",
         dependencies = " required-after:CodeChickenLib;" + " required-after:NotEnoughItems;")
 public class BlockRenderer6343 {
 
-    public static Logger LOG = LogManager.getLogger(Tags.MODID);
+    public static final String MOD_ID = "blockrenderer6343";
+    public static final String MOD_NAME = "BlockRenderer6343";
+    public static Logger LOG = LogManager.getLogger(MOD_ID);
 
-    @SidedProxy(clientSide = Tags.GROUPNAME + ".ClientProxy", serverSide = Tags.GROUPNAME + ".CommonProxy")
+    @SidedProxy(clientSide = MOD_ID + ".ClientProxy", serverSide = MOD_ID + ".CommonProxy")
     public static CommonProxy proxy;
 
     @Mod.EventHandler

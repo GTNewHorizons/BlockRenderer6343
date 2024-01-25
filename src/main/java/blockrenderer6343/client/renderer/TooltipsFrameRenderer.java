@@ -8,9 +8,9 @@ import net.minecraft.client.renderer.Tessellator;
 import org.lwjgl.opengl.GL11;
 
 import cpw.mods.fml.common.FMLCommonHandler;
-import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
+import gregtech.api.enums.Mods;
 import squeek.applecore.client.TooltipOverlayHandler;
 
 /**
@@ -105,7 +105,7 @@ public class TooltipsFrameRenderer {
 
     // call this when the frame drawing is finished
     public static void setAppleCoretooltip(int j2, int k2, int k, int i1) {
-        if (Loader.isModLoaded("AppleCore")) {
+        if (Mods.AppleCore.isModLoaded()) {
             TooltipOverlayHandler.toolTipX = j2;
             TooltipOverlayHandler.toolTipY = k2;
             TooltipOverlayHandler.toolTipW = k;

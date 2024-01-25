@@ -1,5 +1,6 @@
 package blockrenderer6343.integration.nei;
 
+import blockrenderer6343.BlockRenderer6343;
 import blockrenderer6343.Tags;
 import codechicken.nei.api.IConfigureNEI;
 import codechicken.nei.recipe.GuiCraftingRecipe;
@@ -21,7 +22,7 @@ public class NEI_Config implements IConfigureNEI {
 
     @Override
     public String getName() {
-        return Tags.MODID + " NEI Plugin";
+        return BlockRenderer6343.MOD_ID + " NEI Plugin";
     }
 
     @Override

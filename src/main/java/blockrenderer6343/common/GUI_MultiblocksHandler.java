@@ -26,6 +26,7 @@ import blockrenderer6343.BlockRenderer6343;
 import blockrenderer6343.api.utils.BlockPosition;
 import blockrenderer6343.client.renderer.ImmediateWorldSceneRenderer;
 import blockrenderer6343.client.renderer.WorldSceneRenderer;
+import blockrenderer6343.client.utils.GuiText;
 import blockrenderer6343.client.world.DummyWorld;
 import blockrenderer6343.client.world.TrackedDummyWorld;
 import codechicken.lib.gui.GuiDraw;
@@ -43,12 +44,11 @@ public abstract class GUI_MultiblocksHandler<T> {
     protected static final int RECIPE_WIDTH = 160;
     protected static final int sceneHeight = RECIPE_WIDTH - 10;
     protected static final int ICON_SIZE_X = 20;
-    protected static final int ICON_SIZE_Y = 20;
+    protected static final int ICON_SIZE_Y = 12;
     protected static final int MOUSE_OFFSET_X = 5;
     protected static final int MOUSE_OFFSET_Y = 43;
     protected static final int LAYER_BUTTON_X = -5;
     protected static final int LAYER_BUTTON_Y = 135;
-    protected static final int LAYER_BUTTON_SPACE_X = 35;
     protected static final float DEFAULT_RANGE_MULTIPLIER = 3.5f;
 
     protected static int guiMouseX;
@@ -65,6 +65,17 @@ public abstract class GUI_MultiblocksHandler<T> {
 
     protected static int layerIndex = -1;
 
+    protected static int guiColorBg;
+    protected static int guiColorFont;
+    protected static int buttonColorEnabled;
+    protected static int buttonColorDisabled;
+    protected static int buttonColorHovered;
+
+    protected static String guiTextLayer;
+    protected static String guiLayerButtonTitle;
+    protected static int initialLayerButtonTitleWidth;
+    protected ClearGuiButton previousLayerButton, nextLayerButton;
+
     protected List<ItemStack> ingredients = new ArrayList<>();
     protected Consumer<List<ItemStack>> onIngredientChanged;
     protected static final Map<GuiButton, Runnable> buttons = new HashMap<>();
@@ -76,16 +87,10 @@ public abstract class GUI_MultiblocksHandler<T> {
     public GUI_MultiblocksHandler() {
         buttons.clear();
 
-        ClearGuiButton previousLayerButton = new ClearGuiButton(
+        previousLayerButton = new ClearGuiButton(0, LAYER_BUTTON_X, LAYER_BUTTON_Y, ICON_SIZE_X, ICON_SIZE_Y, "<");
+        nextLayerButton = new ClearGuiButton(
                 0,
-                LAYER_BUTTON_X,
-                LAYER_BUTTON_Y,
-                ICON_SIZE_X,
-                ICON_SIZE_Y,
-                "<");
-        ClearGuiButton nextLayerButton = new ClearGuiButton(
-                0,
-                LAYER_BUTTON_X + ICON_SIZE_X + LAYER_BUTTON_SPACE_X,
+                LAYER_BUTTON_X + ICON_SIZE_X,
                 LAYER_BUTTON_Y,
                 ICON_SIZE_X,
                 ICON_SIZE_Y,
@@ -95,7 +100,28 @@ public abstract class GUI_MultiblocksHandler<T> {
         buttons.put(nextLayerButton, this::toggleNextLayer);
     }
 
+    protected void setLocalizationAndColor() {
+        guiTextLayer = GuiText.Layer.getLocal();
+        guiColorBg = GuiText.BgColor.getColor();
+        guiColorFont = GuiText.FontColor.getColor();
+        buttonColorEnabled = GuiText.ButtonEnabledColor.getColor();
+        buttonColorDisabled = GuiText.ButtonDisabledColor.getColor();
+        buttonColorHovered = GuiText.ButtonHoveredColor.getColor();
+
+        previousLayerButton.setColors(buttonColorEnabled, buttonColorDisabled, buttonColorHovered);
+        nextLayerButton.setColors(buttonColorEnabled, buttonColorDisabled, buttonColorHovered);
+
+        guiLayerButtonTitle = getLayerButtonTitle();
+
+        FontRenderer fontRenderer = Minecraft.getMinecraft().fontRenderer;
+        initialLayerButtonTitleWidth = fontRenderer.getStringWidth(guiLayerButtonTitle);
+        nextLayerButton.xPosition = LAYER_BUTTON_X + ICON_SIZE_X
+                + initialLayerButtonTitleWidth
+                - fontRenderer.getStringWidth("<") / 2;
+    }
+
     public void loadMultiblock(T multiblock, ItemStack stackForm) {
+        setLocalizationAndColor();
         renderingController = multiblock;
         this.stackForm = stackForm;
         if (lastRenderingController != renderingController) {
@@ -157,6 +183,7 @@ public abstract class GUI_MultiblocksHandler<T> {
             }
             renderer.addRenderedBlocks(renderBlocks);
             scanIngredients();
+            guiLayerButtonTitle = getLayerButtonTitle();
         }
     }
 
@@ -245,20 +272,24 @@ public abstract class GUI_MultiblocksHandler<T> {
                     lines.get(i),
                     (RECIPE_WIDTH - fontRenderer.getStringWidth(lines.get(i))) / 2,
                     fontRenderer.FONT_HEIGHT * i,
-                    0x333333);
+                    guiColorFont);
         }
     }
 
     protected abstract String getMultiblockName();
 
+    protected String getLayerButtonTitle() {
+        return guiTextLayer + ": " + (layerIndex == -1 ? "A" : Integer.toString(layerIndex + 1));
+    }
+
     protected void drawButtonsTitle() {
         FontRenderer fontRenderer = Minecraft.getMinecraft().fontRenderer;
-        String layerText = "Layer: " + (layerIndex == -1 ? "A" : Integer.toString(layerIndex + 1));
         fontRenderer.drawString(
-                layerText,
-                LAYER_BUTTON_X + ICON_SIZE_X + (LAYER_BUTTON_SPACE_X - fontRenderer.getStringWidth(layerText)) / 2,
-                LAYER_BUTTON_Y + 5,
-                0x333333);
+                guiLayerButtonTitle,
+                LAYER_BUTTON_X + ICON_SIZE_X
+                        + (initialLayerButtonTitleWidth - fontRenderer.getStringWidth(guiLayerButtonTitle)) / 2,
+                LAYER_BUTTON_Y + 2,
+                guiColorFont);
     }
 
     protected void initializeSceneRenderer(boolean resetCamera) {
@@ -275,7 +306,7 @@ public abstract class GUI_MultiblocksHandler<T> {
 
         renderer = new ImmediateWorldSceneRenderer(new TrackedDummyWorld());
         ((DummyWorld) renderer.world).updateEntitiesForNEI();
-        renderer.setClearColor(0xC6C6C6);
+        renderer.setClearColor(guiColorBg);
 
         placeMultiblock();
 
@@ -418,9 +449,19 @@ public abstract class GUI_MultiblocksHandler<T> {
 
     protected class ClearGuiButton extends GuiButton {
 
+        private int colorEnabled;
+        private int colorDisabled;
+        private int colorHovered;
+
         public ClearGuiButton(int p_i1021_1_, int p_i1021_2_, int p_i1021_3_, int p_i1021_4_, int p_i1021_5_,
                 String p_i1021_6_) {
             super(p_i1021_1_, p_i1021_2_, p_i1021_3_, p_i1021_4_, p_i1021_5_, p_i1021_6_);
+        }
+
+        public void setColors(int clrEnabled, int clrDisabled, int clrHovered) {
+            colorEnabled = clrEnabled;
+            colorDisabled = clrDisabled;
+            colorHovered = clrHovered;
         }
 
         @Override
@@ -430,14 +471,14 @@ public abstract class GUI_MultiblocksHandler<T> {
                 this.field_146123_n = p_146112_2_ >= this.xPosition && p_146112_3_ >= this.yPosition
                         && p_146112_2_ < this.xPosition + this.width
                         && p_146112_3_ < this.yPosition + this.height;
-                int l = 2105376;
+                int l = colorEnabled;
 
                 if (packedFGColour != 0) {
                     l = packedFGColour;
                 } else if (!this.enabled) {
-                    l = 10526880;
+                    l = colorDisabled;
                 } else if (this.field_146123_n) {
-                    l = 16777120;
+                    l = colorHovered;
                 }
 
                 this.drawCenteredString(

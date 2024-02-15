@@ -205,7 +205,7 @@ public abstract class GUI_MultiblocksHandler<T> {
             } else if (rightClickHeld) {
                 int mouseDeltaY = guiMouseY - lastGuiMouseY;
                 if (Math.abs(mouseDeltaY) > 1) {
-                    zoom = (float) MathHelper.clip(zoom + (mouseDeltaY > 0 ? 0.5 : -0.5), 3, 999);
+                    zoom = (float) MathHelper.clip(zoom + (mouseDeltaY > 0 ? 0.15 : -0.15), 3, 999);
                 }
             }
             if (middleClickHeld) {

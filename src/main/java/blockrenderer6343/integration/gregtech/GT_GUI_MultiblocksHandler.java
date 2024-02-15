@@ -8,12 +8,19 @@ import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
+import appeng.core.sync.network.NetworkHandler;
+import codechicken.nei.recipe.GuiRecipe;
+import com.github.vfyjxf.nee.network.NEENetworkHandler;
+import com.github.vfyjxf.nee.network.packet.PacketNEIPatternRecipe;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.world.World;
@@ -52,6 +59,8 @@ public class GT_GUI_MultiblocksHandler extends GUI_MultiblocksHandler<IConstruct
     protected static final int TIER_BUTTON_SPACE_X = 25;
     protected static final int PROJECT_BUTTON_X = 145;
     protected static final int PROJECT_BUTTON_Y = -5;
+    protected static final int OVERLAY_BUTTON_X = 145 - ICON_SIZE_X - 5;
+    protected static final int OVERLAY_BUTTON_Y = -5;
     private static final BlockPosition MB_PLACE_POS = new BlockPosition(0, 64, 0);
     public static final int MAX_PLACE_ROUNDS = 2000;
 
@@ -87,11 +96,20 @@ public class GT_GUI_MultiblocksHandler extends GUI_MultiblocksHandler<IConstruct
                 ICON_SIZE_X,
                 ICON_SIZE_Y,
                 "P");
+        GuiButton overlayMultiblocksButton = new GuiButton(
+            0,
+            OVERLAY_BUTTON_X,
+            OVERLAY_BUTTON_Y,
+            ICON_SIZE_X,
+            ICON_SIZE_Y,
+            "?");
 
         buttons.put(previousTierButton, this::togglePreviousTier);
         buttons.put(nextTierButton, this::toggleNextTier);
         buttons.put(projectMultiblocksButton, this::projectMultiblocks);
+        buttons.put(overlayMultiblocksButton, this::neiOverlay);
     }
+
 
     public void setOnCandidateChanged(Consumer<List<List<ItemStack>>> callback) {
         onCandidateChanged = callback;
@@ -134,6 +152,26 @@ public class GT_GUI_MultiblocksHandler extends GUI_MultiblocksHandler<IConstruct
                 playerDir);
         baseWorld.setBlockToAir(lookingPos.blockX, lookingPos.blockY + 1, lookingPos.blockZ);
         baseWorld.removeTileEntity(lookingPos.blockX, lookingPos.blockY + 1, lookingPos.blockZ);
+    }
+
+
+    private void neiOverlay()
+    {
+        var recipeInputs = new NBTTagCompound();
+        var currentScreen = (GuiRecipe) Minecraft.getMinecraft().currentScreen;
+        Minecraft.getMinecraft().displayGuiScreen(currentScreen.firstGui);
+        var inputIndex = 0;
+        for (ItemStack itemStack : ingredients)
+        {
+            if (itemStack != null)
+            {
+                NBTTagCompound itemStackNBT = new NBTTagCompound();
+                itemStack.writeToNBT(itemStackNBT);
+                itemStackNBT.setInteger("Count", itemStack.stackSize);
+                recipeInputs.setTag("#" + inputIndex++, itemStackNBT);
+            }
+        }
+        NEENetworkHandler.getInstance().sendToServer(new PacketNEIPatternRecipe(recipeInputs, new NBTTagCompound()));
     }
 
     @NotNull

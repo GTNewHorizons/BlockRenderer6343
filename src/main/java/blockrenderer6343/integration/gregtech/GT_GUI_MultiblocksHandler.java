@@ -8,9 +8,6 @@ import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-import codechicken.nei.recipe.GuiRecipe;
-import com.github.vfyjxf.nee.network.NEENetworkHandler;
-import com.github.vfyjxf.nee.network.packet.PacketNEIPatternRecipe;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiButton;
@@ -25,6 +22,8 @@ import net.minecraftforge.common.util.ForgeDirection;
 
 import org.jetbrains.annotations.NotNull;
 
+import com.github.vfyjxf.nee.network.NEENetworkHandler;
+import com.github.vfyjxf.nee.network.packet.PacketNEIPatternRecipe;
 import com.gtnewhorizon.structurelib.StructureEvent;
 import com.gtnewhorizon.structurelib.StructureLibAPI;
 import com.gtnewhorizon.structurelib.alignment.constructable.ConstructableUtility;
@@ -43,6 +42,7 @@ import blockrenderer6343.api.utils.PositionedIStructureElement;
 import blockrenderer6343.client.world.ClientFakePlayer;
 import blockrenderer6343.common.GUI_MultiblocksHandler;
 import codechicken.lib.math.MathHelper;
+import codechicken.nei.recipe.GuiRecipe;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import gregtech.api.interfaces.metatileentity.IMetaTileEntity;
 import gregtech.api.interfaces.tileentity.IGregTechTileEntity;
@@ -94,19 +94,18 @@ public class GT_GUI_MultiblocksHandler extends GUI_MultiblocksHandler<IConstruct
                 ICON_SIZE_Y,
                 "P");
         GuiButton overlayMultiblocksButton = new GuiButton(
-            0,
-            OVERLAY_BUTTON_X,
-            OVERLAY_BUTTON_Y,
-            ICON_SIZE_X,
-            ICON_SIZE_Y,
-            "?");
+                0,
+                OVERLAY_BUTTON_X,
+                OVERLAY_BUTTON_Y,
+                ICON_SIZE_X,
+                ICON_SIZE_Y,
+                "?");
 
         buttons.put(previousTierButton, this::togglePreviousTier);
         buttons.put(nextTierButton, this::toggleNextTier);
         buttons.put(projectMultiblocksButton, this::projectMultiblocks);
         buttons.put(overlayMultiblocksButton, this::neiOverlay);
     }
-
 
     public void setOnCandidateChanged(Consumer<List<List<ItemStack>>> callback) {
         onCandidateChanged = callback;
@@ -151,17 +150,13 @@ public class GT_GUI_MultiblocksHandler extends GUI_MultiblocksHandler<IConstruct
         baseWorld.removeTileEntity(lookingPos.blockX, lookingPos.blockY + 1, lookingPos.blockZ);
     }
 
-
-    private void neiOverlay()
-    {
+    private void neiOverlay() {
         var recipeInputs = new NBTTagCompound();
         var currentScreen = (GuiRecipe) Minecraft.getMinecraft().currentScreen;
         Minecraft.getMinecraft().displayGuiScreen(currentScreen.firstGui);
         var inputIndex = 0;
-        for (ItemStack itemStack : ingredients)
-        {
-            if (itemStack != null)
-            {
+        for (ItemStack itemStack : ingredients) {
+            if (itemStack != null) {
                 NBTTagCompound itemStackNBT = new NBTTagCompound();
                 itemStack.writeToNBT(itemStackNBT);
                 itemStackNBT.setInteger("Count", itemStack.stackSize);

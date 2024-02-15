@@ -346,6 +346,7 @@ public abstract class GUI_MultiblocksHandler<T> {
     protected abstract void placeMultiblock();
 
     private int scrolled = 0;
+
     public void handleMouseScrollUp(int scrolled) {
         this.scrolled = scrolled;
     }

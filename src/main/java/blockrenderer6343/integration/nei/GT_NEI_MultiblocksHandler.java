@@ -240,7 +240,7 @@ public class GT_NEI_MultiblocksHandler extends TemplateRecipeHandler {
         }
 
         @Override
-        public void onMouseScrolled(GuiContainer gui, int mousex, int mousey, int scrolled) {}
+        public void onMouseScrolled(GuiContainer gui, int mousex, int mousey, int scrolled) { baseHandler.handleMouseScrollUp(scrolled); }
 
         @Override
         public void onMouseDragged(GuiContainer gui, int amousex, int amousey, int button, long heldTime) {}

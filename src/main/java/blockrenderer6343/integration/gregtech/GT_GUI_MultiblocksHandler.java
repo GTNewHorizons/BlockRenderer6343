@@ -154,11 +154,9 @@ public class GT_GUI_MultiblocksHandler extends GUI_MultiblocksHandler<IConstruct
         NBTTagCompound recipeInputs = new NBTTagCompound();
         GuiRecipe currentScreen = (GuiRecipe) Minecraft.getMinecraft().currentScreen;
         Minecraft.getMinecraft().displayGuiScreen(currentScreen.firstGui);
-        for (int i = 0; i < ingredients.size(); i++)
-        {
+        for (int i = 0; i < ingredients.size(); i++) {
             ItemStack itemStack = ingredients.get(i);
-            if (itemStack != null)
-            {
+            if (itemStack != null) {
                 NBTTagCompound itemStackNBT = new NBTTagCompound();
                 itemStack.writeToNBT(itemStackNBT);
                 itemStackNBT.setInteger("Count", itemStack.stackSize);

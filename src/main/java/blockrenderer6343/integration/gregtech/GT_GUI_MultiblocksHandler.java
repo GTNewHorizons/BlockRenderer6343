@@ -151,16 +151,18 @@ public class GT_GUI_MultiblocksHandler extends GUI_MultiblocksHandler<IConstruct
     }
 
     private void neiOverlay() {
-        var recipeInputs = new NBTTagCompound();
-        var currentScreen = (GuiRecipe) Minecraft.getMinecraft().currentScreen;
+        NBTTagCompound recipeInputs = new NBTTagCompound();
+        GuiRecipe currentScreen = (GuiRecipe) Minecraft.getMinecraft().currentScreen;
         Minecraft.getMinecraft().displayGuiScreen(currentScreen.firstGui);
-        var inputIndex = 0;
-        for (ItemStack itemStack : ingredients) {
-            if (itemStack != null) {
+        for (int i = 0; i < ingredients.size(); i++)
+        {
+            ItemStack itemStack = ingredients.get(i);
+            if (itemStack != null)
+            {
                 NBTTagCompound itemStackNBT = new NBTTagCompound();
                 itemStack.writeToNBT(itemStackNBT);
                 itemStackNBT.setInteger("Count", itemStack.stackSize);
-                recipeInputs.setTag("#" + inputIndex++, itemStackNBT);
+                recipeInputs.setTag("#" + i, itemStackNBT);
             }
         }
         NEENetworkHandler.getInstance().sendToServer(new PacketNEIPatternRecipe(recipeInputs, new NBTTagCompound()));

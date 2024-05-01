@@ -7,6 +7,7 @@ import cpw.mods.fml.common.event.FMLInterModComms;
 public class IMCForNEI {
 
     public static final String GT_NEI_MB_HANDLER_NAME = "gregtech.nei.multiblockhandler";
+    public static final String STRUCTURE_LIB_HANDLER = "blockrenderer6343.nei.structurelib";
 
     public static void IMCSender() {
 
@@ -14,6 +15,15 @@ public class IMCForNEI {
                 GT_NEI_MB_HANDLER_NAME,
                 "GregTech",
                 "gregtech",
+                "structurelib:item.structurelib.constructableTrigger",
+                168,
+                192,
+                1,
+                6);
+        sendHandler(
+                STRUCTURE_LIB_HANDLER,
+                "StructureLib",
+                "structurelib",
                 "structurelib:item.structurelib.constructableTrigger",
                 168,
                 192,

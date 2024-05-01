@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import net.minecraft.block.Block;
@@ -13,25 +14,43 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.renderer.RenderBlocks;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.IIcon;
 import net.minecraft.util.MovingObjectPosition;
+import net.minecraft.util.StatCollector;
+import net.minecraft.world.World;
 
+import org.jetbrains.annotations.NotNull;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.vector.Vector3f;
 
+import com.github.vfyjxf.nee.network.NEENetworkHandler;
+import com.github.vfyjxf.nee.network.packet.PacketNEIPatternRecipe;
+import com.gtnewhorizon.structurelib.StructureLibAPI;
+import com.gtnewhorizon.structurelib.alignment.constructable.ConstructableUtility;
+import com.gtnewhorizon.structurelib.alignment.constructable.IConstructable;
+import com.gtnewhorizon.structurelib.structure.AutoPlaceEnvironment;
+import com.gtnewhorizon.structurelib.structure.IStructureElement;
+
 import blockrenderer6343.BlockRenderer6343;
 import blockrenderer6343.api.utils.BlockPosition;
+import blockrenderer6343.api.utils.CreativeItemSource;
+import blockrenderer6343.api.utils.PositionedIStructureElement;
 import blockrenderer6343.client.renderer.ImmediateWorldSceneRenderer;
 import blockrenderer6343.client.renderer.WorldSceneRenderer;
 import blockrenderer6343.client.utils.GuiText;
+import blockrenderer6343.client.utils.TooltipButton;
 import blockrenderer6343.client.world.DummyWorld;
 import blockrenderer6343.client.world.TrackedDummyWorld;
 import codechicken.lib.gui.GuiDraw;
 import codechicken.lib.math.MathHelper;
 import codechicken.nei.NEIClientUtils;
+import codechicken.nei.recipe.GuiRecipe;
 
 public abstract class GUI_MultiblocksHandler<T> {
 
@@ -48,8 +67,14 @@ public abstract class GUI_MultiblocksHandler<T> {
     protected static final int MOUSE_OFFSET_X = 5;
     protected static final int MOUSE_OFFSET_Y = 43;
     protected static final int LAYER_BUTTON_X = -5;
-    protected static final int LAYER_BUTTON_Y = 135;
+    protected static final int UNDER_PREVIEW_Y = 135;
+    protected static final int TIER_BUTTON_X = LAYER_BUTTON_X;
+    protected static final int TIER_BUTTON_Y = UNDER_PREVIEW_Y - ICON_SIZE_Y;
+    protected static final int PROJECT_BUTTON_X = 145;
+    protected static final int OVERLAY_BUTTON_X = 145 - ICON_SIZE_X - 5;
     protected static final float DEFAULT_RANGE_MULTIPLIER = 3.5f;
+    public static final int MAX_PLACE_ROUNDS = 2000;
+    public static final BlockPosition MB_PLACE_POS = new BlockPosition(0, 64, 0);
 
     protected static int guiMouseX;
     protected static int guiMouseY;
@@ -64,7 +89,6 @@ public abstract class GUI_MultiblocksHandler<T> {
     protected static BlockPosition selectedBlock;
 
     protected static int layerIndex = -1;
-
     protected static int guiColorBg;
     protected static int guiColorFont;
     protected static int buttonColorEnabled;
@@ -73,32 +97,77 @@ public abstract class GUI_MultiblocksHandler<T> {
 
     protected static String guiTextLayer;
     protected static String guiLayerButtonTitle;
+    protected static String guiTextTier;
+    protected static String guiTierButtonTitle;
+    protected static int initialTierButtonTitleWidth;
     protected static int initialLayerButtonTitleWidth;
     protected ClearGuiButton previousLayerButton, nextLayerButton;
 
     protected List<ItemStack> ingredients = new ArrayList<>();
     protected Consumer<List<ItemStack>> onIngredientChanged;
-    protected static final Map<GuiButton, Runnable> buttons = new HashMap<>();
+    protected final Map<GuiButton, Runnable> buttons = new HashMap<>();
 
     protected T renderingController;
     protected ItemStack stackForm;
     protected T lastRenderingController;
 
-    public GUI_MultiblocksHandler() {
-        buttons.clear();
+    protected final List<List<ItemStack>> candidates = new ArrayList<>();
+    public static List<PositionedIStructureElement> structureElements = new ArrayList<>();
+    protected Consumer<List<List<ItemStack>>> onCandidateChanged;
+    protected static int tierIndex = 1;
+    protected static EntityPlayer fakeMultiblockBuilder;
 
-        previousLayerButton = new ClearGuiButton(0, LAYER_BUTTON_X, LAYER_BUTTON_Y, ICON_SIZE_X, ICON_SIZE_Y, "<");
+    protected int scrolled = 0;
+
+    protected ClearGuiButton previousTierButton, nextTierButton;
+
+    public GUI_MultiblocksHandler() {
+        previousLayerButton = new ClearGuiButton(0, LAYER_BUTTON_X, UNDER_PREVIEW_Y, ICON_SIZE_X, ICON_SIZE_Y, "<");
         nextLayerButton = new ClearGuiButton(
                 0,
                 LAYER_BUTTON_X + ICON_SIZE_X,
-                LAYER_BUTTON_Y,
+                UNDER_PREVIEW_Y,
                 ICON_SIZE_X,
                 ICON_SIZE_Y,
                 ">");
 
         buttons.put(previousLayerButton, this::togglePreviousLayer);
         buttons.put(nextLayerButton, this::toggleNextLayer);
+
+        previousTierButton = new ClearGuiButton(0, TIER_BUTTON_X, TIER_BUTTON_Y, ICON_SIZE_X, ICON_SIZE_Y, "<");
+        nextTierButton = new ClearGuiButton(
+                0,
+                TIER_BUTTON_X + ICON_SIZE_X,
+                TIER_BUTTON_Y,
+                ICON_SIZE_X,
+                ICON_SIZE_Y,
+                ">");
+        TooltipButton projectMultiblocksButton = new TooltipButton(
+                0,
+                PROJECT_BUTTON_X,
+                UNDER_PREVIEW_Y,
+                ICON_SIZE_X,
+                ICON_SIZE_Y,
+                "P",
+                StatCollector.translateToLocal("blockrenderer6343.multiblock.project"));
+        TooltipButton overlayMultiblocksButton = new TooltipButton(
+                0,
+                OVERLAY_BUTTON_X,
+                UNDER_PREVIEW_Y,
+                ICON_SIZE_X,
+                ICON_SIZE_Y,
+                "?",
+                StatCollector.translateToLocal("blockrenderer6343.multiblock.overlay"));
+
+        buttons.put(previousTierButton, this::togglePreviousTier);
+        buttons.put(nextTierButton, this::toggleNextTier);
+        buttons.put(projectMultiblocksButton, this::projectMultiblocks);
+        buttons.put(overlayMultiblocksButton, this::neiOverlay);
     }
+
+    protected abstract String getMultiblockName();
+
+    protected abstract void placeMultiblock();
 
     protected void setLocalizationAndColor() {
         guiTextLayer = GuiText.Layer.getLocal();
@@ -118,21 +187,35 @@ public abstract class GUI_MultiblocksHandler<T> {
         nextLayerButton.xPosition = LAYER_BUTTON_X + ICON_SIZE_X
                 + initialLayerButtonTitleWidth
                 - fontRenderer.getStringWidth("<") / 2;
+
+        guiTextTier = GuiText.Tier.getLocal();
+        previousTierButton.setColors(buttonColorEnabled, buttonColorDisabled, buttonColorHovered);
+        nextTierButton.setColors(buttonColorEnabled, buttonColorDisabled, buttonColorHovered);
+
+        guiTierButtonTitle = getTierButtonTitle();
+
+        initialTierButtonTitleWidth = fontRenderer.getStringWidth(guiTierButtonTitle);
+        nextTierButton.xPosition = TIER_BUTTON_X + ICON_SIZE_X
+                + initialTierButtonTitleWidth
+                - fontRenderer.getStringWidth("<") / 2;
     }
 
     public void loadMultiblock(T multiblock, ItemStack stackForm) {
         setLocalizationAndColor();
         renderingController = multiblock;
         this.stackForm = stackForm;
+        if (stackForm.stackSize == 0) stackForm.stackSize = 1;
         if (lastRenderingController != renderingController) {
             loadNewMultiblock();
         } else {
             loadPreviousMultiblockAgain();
         }
+        guiTierButtonTitle = getTierButtonTitle();
     }
 
     protected void loadNewMultiblock() {
         layerIndex = -1;
+        tierIndex = 1;
         initializeSceneRenderer(true);
         lastRenderingController = renderingController;
     }
@@ -302,8 +385,6 @@ public abstract class GUI_MultiblocksHandler<T> {
         }
     }
 
-    protected abstract String getMultiblockName();
-
     protected String getLayerButtonTitle() {
         return guiTextLayer + ": " + (layerIndex == -1 ? "A" : Integer.toString(layerIndex + 1));
     }
@@ -314,7 +395,13 @@ public abstract class GUI_MultiblocksHandler<T> {
                 guiLayerButtonTitle,
                 LAYER_BUTTON_X + ICON_SIZE_X
                         + (initialLayerButtonTitleWidth - fontRenderer.getStringWidth(guiLayerButtonTitle)) / 2,
-                LAYER_BUTTON_Y + 2,
+                UNDER_PREVIEW_Y + 2,
+                guiColorFont);
+        fontRenderer.drawString(
+                guiTierButtonTitle,
+                TIER_BUTTON_X + ICON_SIZE_X
+                        + (initialTierButtonTitleWidth - fontRenderer.getStringWidth(guiTierButtonTitle)) / 2,
+                TIER_BUTTON_Y + 2,
                 guiColorFont);
     }
 
@@ -345,8 +432,6 @@ public abstract class GUI_MultiblocksHandler<T> {
         renderer.setOnLookingAt(ray -> {});
 
         renderer.setOnWorldRender(this::onRendererRender);
-        // world.setRenderFilter(pos -> worldSceneRenderer.renderedBlocksMap.keySet().stream().anyMatch(c ->
-        // c.contains(pos)));
 
         selectedBlock = null;
         onBlockSelected();
@@ -374,12 +459,26 @@ public abstract class GUI_MultiblocksHandler<T> {
         }
     }
 
-    protected abstract void placeMultiblock();
-
-    private int scrolled = 0;
-
     public void handleMouseScrollUp(int scrolled) {
         this.scrolled = scrolled;
+    }
+
+    protected void toggleNextTier() {
+        tierIndex++;
+        guiTierButtonTitle = getTierButtonTitle();
+        initializeSceneRenderer(false);
+    }
+
+    protected void togglePreviousTier() {
+        if (tierIndex > 1) {
+            tierIndex--;
+            guiTierButtonTitle = getTierButtonTitle();
+            initializeSceneRenderer(false);
+        }
+    }
+
+    protected String getTierButtonTitle() {
+        return guiTextTier + ": " + tierIndex;
     }
 
     public void onRendererRender(WorldSceneRenderer renderer) {
@@ -396,16 +495,70 @@ public abstract class GUI_MultiblocksHandler<T> {
         renderBlockOverLay(selectedBlock, Blocks.stained_glass.getIcon(0, 14));
     }
 
+    protected void projectMultiblocks() {
+        EntityPlayer player = Minecraft.getMinecraft().thePlayer;
+        World baseWorld = Minecraft.getMinecraft().theWorld;
+        MovingObjectPosition lookingPos = player.rayTrace(10, 1);
+        if (lookingPos.typeOfHit == MovingObjectPosition.MovingObjectType.MISS) return;
+        int playerDir = MathHelper.floor_double((player.rotationYaw * 4F) / 360F + 0.5D) & 3;
+        ItemStack itemStack = stackForm.copy();
+
+        if (!baseWorld.isAirBlock(lookingPos.blockX, lookingPos.blockY + 1, lookingPos.blockZ)) {
+            player.addChatMessage(new ChatComponentText(StatCollector.translateToLocal("blockrenderer6343.no_space")));
+            return;
+        }
+
+        itemStack.getItem().onItemUse(
+                itemStack,
+                player,
+                baseWorld,
+                lookingPos.blockX,
+                lookingPos.blockY + 1,
+                lookingPos.blockZ,
+                0,
+                lookingPos.blockX,
+                lookingPos.blockY,
+                lookingPos.blockZ);
+        ConstructableUtility.handle(
+                getTriggerStack(),
+                player,
+                baseWorld,
+                lookingPos.blockX,
+                lookingPos.blockY + 1,
+                lookingPos.blockZ,
+                playerDir);
+        baseWorld.setBlockToAir(lookingPos.blockX, lookingPos.blockY + 1, lookingPos.blockZ);
+        baseWorld.removeTileEntity(lookingPos.blockX, lookingPos.blockY + 1, lookingPos.blockZ);
+    }
+
+    protected void neiOverlay() {
+        NBTTagCompound recipeInputs = new NBTTagCompound();
+        GuiRecipe<?> currentScreen = (GuiRecipe<?>) Minecraft.getMinecraft().currentScreen;
+        Minecraft.getMinecraft().displayGuiScreen(currentScreen.firstGui);
+        for (int i = 0; i < ingredients.size(); i++) {
+            ItemStack itemStack = ingredients.get(i);
+            if (itemStack != null) {
+                NBTTagCompound itemStackNBT = new NBTTagCompound();
+                itemStack.writeToNBT(itemStackNBT);
+                itemStackNBT.setInteger("Count", itemStack.stackSize);
+                recipeInputs.setTag("#" + i, itemStackNBT);
+            }
+        }
+        NEENetworkHandler.getInstance().sendToServer(new PacketNEIPatternRecipe(recipeInputs, new NBTTagCompound()));
+    }
+
     private void scanIngredients() {
         List<ItemStack> ingredients = new ArrayList<>();
         for (BlockPosition renderedBlock : renderer.renderedBlocks) {
             Block block = renderer.world.getBlock(renderedBlock.x, renderedBlock.y, renderedBlock.z);
             if (block.equals(Blocks.air)) continue;
             int meta = renderer.world.getBlockMetadata(renderedBlock.x, renderedBlock.y, renderedBlock.z);
-            ArrayList<ItemStack> itemstacks = block
-                    .getDrops(renderer.world, renderedBlock.x, renderedBlock.y, renderedBlock.z, meta, 0);
-            if (itemstacks.size() == 0) { // glass
+            int qty = block.quantityDropped(renderer.world.rand);
+            ArrayList<ItemStack> itemstacks = new ArrayList<>();
+            if (qty != 1) {
                 itemstacks.add(new ItemStack(block));
+            } else {
+                itemstacks = block.getDrops(renderer.world, renderedBlock.x, renderedBlock.y, renderedBlock.z, meta, 0);
             }
             boolean added = false;
             for (ItemStack ingredient : ingredients) {
@@ -470,16 +623,90 @@ public abstract class GUI_MultiblocksHandler<T> {
         return false;
     }
 
-    protected abstract void onBlockSelected();
-
-    public List<String> handleTooltip() {
-        if (tooltipBlockStack != null) return tooltipBlockStack.getTooltip(
-                Minecraft.getMinecraft().thePlayer,
-                Minecraft.getMinecraft().gameSettings.advancedItemTooltips);
-        else return null;
+    @NotNull
+    protected static ItemStack getTriggerStack() {
+        return new ItemStack(StructureLibAPI.getDefaultHologramItem(), tierIndex);
     }
 
-    protected class ClearGuiButton extends GuiButton {
+    protected void scanCandidates() {
+        candidates.clear();
+        if (selectedBlock != null) {
+            for (PositionedIStructureElement structureElement : structureElements) {
+                if (structureElement.x == selectedBlock.x && structureElement.y == selectedBlock.y
+                        && structureElement.z == selectedBlock.z) {
+
+                    IStructureElement.BlocksToPlace blocksToPlace = structureElement.element.getBlocksToPlace(
+                            (IConstructable) renderingController,
+                            renderer.world,
+                            selectedBlock.x,
+                            selectedBlock.y,
+                            selectedBlock.z,
+                            getTriggerStack(),
+                            AutoPlaceEnvironment.fromLegacy(
+                                    CreativeItemSource.instance,
+                                    fakeMultiblockBuilder,
+                                    iChatComponent -> {}));
+                    if (blocksToPlace != null) {
+                        Predicate<ItemStack> predicate = blocksToPlace.getPredicate();
+                        Set<ItemStack> rawCandidates = CreativeItemSource.instance
+                                .takeEverythingMatches(predicate, false, 0).keySet();
+
+                        List<List<ItemStack>> stackedCandidates = new ArrayList<>();
+                        for (ItemStack rawCandidate : rawCandidates) {
+                            boolean added = false;
+                            for (List<ItemStack> stackedCandidate : stackedCandidates) {
+                                List<String> firstCandidateTooltip = stackedCandidate.get(0)
+                                        .getTooltip(fakeMultiblockBuilder, false);
+                                List<String> rawCandidateTooltip = rawCandidate
+                                        .getTooltip(fakeMultiblockBuilder, false);
+                                if (firstCandidateTooltip.size() > 1 && rawCandidateTooltip.size() > 1
+                                        && firstCandidateTooltip.get(1).equals(rawCandidateTooltip.get(1))) {
+                                    stackedCandidate.add(rawCandidate);
+                                    added = true;
+                                    break;
+                                }
+                            }
+                            if (!added) {
+                                List<ItemStack> newStackedCandidate = new ArrayList<>();
+                                newStackedCandidate.add(rawCandidate);
+                                stackedCandidates.add(newStackedCandidate);
+                            }
+                        }
+
+                        candidates.addAll(stackedCandidates);
+
+                        if (onCandidateChanged != null) {
+                            onCandidateChanged.accept(candidates);
+                        }
+                    }
+                    return;
+                }
+            }
+        }
+        if (onCandidateChanged != null) {
+            onCandidateChanged.accept(candidates);
+        }
+    }
+
+    protected void onBlockSelected() {
+        scanCandidates();
+    };
+
+    public void setOnCandidateChanged(Consumer<List<List<ItemStack>>> callback) {
+        onCandidateChanged = callback;
+    }
+
+    public List<String> handleTooltip() {
+        if (tooltipBlockStack != null) {
+            return tooltipBlockStack.getTooltip(
+                    Minecraft.getMinecraft().thePlayer,
+                    Minecraft.getMinecraft().gameSettings.advancedItemTooltips);
+        } else {
+            return null;
+        }
+    }
+
+    protected static class ClearGuiButton extends GuiButton {
 
         private int colorEnabled;
         private int colorDisabled;

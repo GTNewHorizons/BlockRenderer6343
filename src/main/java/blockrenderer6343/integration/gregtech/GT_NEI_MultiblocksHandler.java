@@ -6,11 +6,11 @@ import static gregtech.api.GregTech_API.METATILEENTITIES;
 import java.util.ArrayList;
 import java.util.List;
 
-import blockrenderer6343.integration.nei.MultiblockHandler;
 import net.minecraft.item.ItemStack;
 
 import com.gtnewhorizon.structurelib.alignment.constructable.IConstructable;
 
+import blockrenderer6343.integration.nei.MultiblockHandler;
 import codechicken.nei.NEIClientUtils;
 import codechicken.nei.recipe.TemplateRecipeHandler;
 import gregtech.api.interfaces.metatileentity.IMetaTileEntity;

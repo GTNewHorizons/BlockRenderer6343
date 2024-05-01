@@ -54,8 +54,8 @@ public class TooltipsFrameRenderer {
     }
 
     // Drawing Tooltips Frame parts
-    public static void drawFrame(int left, int top, int right, int bottom, int startColor,
-            int endColor, float zLevel, AnimationStyle style) {
+    public static void drawFrame(int left, int top, int right, int bottom, int startColor, int endColor, float zLevel,
+            AnimationStyle style) {
         sDraw = true;
 
         float f = (float) (startColor >> 24 & 255) / 255.0F;
@@ -75,8 +75,7 @@ public class TooltipsFrameRenderer {
         tessellator.startDrawingQuads();
         tessellator.setColorRGBA_F(f1, f2, f3, f + 100 / 255.0f);
         tessellator.addVertex(
-                style == AnimationStyle.Horizontal
-                        ? (double) left + ((double) right - (double) left) * alpha
+                style == AnimationStyle.Horizontal ? (double) left + ((double) right - (double) left) * alpha
                         : (double) right,
                 (double) top,
                 (double) zLevel);
@@ -84,16 +83,13 @@ public class TooltipsFrameRenderer {
         tessellator.setColorRGBA_F(f5, f6, f7, f4 + 100 / 255.0f);
         tessellator.addVertex(
                 (double) left,
-                style == AnimationStyle.Vertical
-                        ? (double) top + ((double) bottom - (double) top) * alpha
+                style == AnimationStyle.Vertical ? (double) top + ((double) bottom - (double) top) * alpha
                         : (double) bottom,
                 (double) zLevel);
         tessellator.addVertex(
-                style == AnimationStyle.Horizontal
-                        ? (double) left + ((double) right - (double) left) * alpha
+                style == AnimationStyle.Horizontal ? (double) left + ((double) right - (double) left) * alpha
                         : (double) right,
-                style == AnimationStyle.Vertical
-                        ? (double) top + ((double) bottom - (double) top) * alpha
+                style == AnimationStyle.Vertical ? (double) top + ((double) bottom - (double) top) * alpha
                         : (double) bottom,
                 (double) zLevel);
         tessellator.draw();

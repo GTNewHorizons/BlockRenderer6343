@@ -5,7 +5,7 @@ import com.gtnewhorizon.structurelib.alignment.constructable.IConstructable;
 import com.gtnewhorizon.structurelib.structure.IStructureElement;
 
 import blockrenderer6343.api.utils.PositionedIStructureElement;
-import blockrenderer6343.common.GUI_MultiblocksHandler;
+import blockrenderer6343.integration.nei.GUI_MultiblocksHandler;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 
 public class EventHandler {

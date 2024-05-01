@@ -10,7 +10,6 @@ import net.minecraft.tileentity.TileEntity;
 import com.gtnewhorizon.structurelib.alignment.constructable.IMultiblockInfoContainer;
 
 import blockrenderer6343.client.world.DummyWorld;
-import blockrenderer6343.common.GUI_MultiblocksHandler;
 import blockrenderer6343.integration.nei.MultiblockHandler;
 import codechicken.nei.recipe.TemplateRecipeHandler;
 

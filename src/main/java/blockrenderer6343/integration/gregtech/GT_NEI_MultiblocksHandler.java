@@ -1,4 +1,4 @@
-package blockrenderer6343.integration.nei;
+package blockrenderer6343.integration.gregtech;
 
 import static blockrenderer6343.integration.nei.IMCForNEI.GT_NEI_MB_HANDLER_NAME;
 import static gregtech.api.GregTech_API.METATILEENTITIES;
@@ -6,12 +6,11 @@ import static gregtech.api.GregTech_API.METATILEENTITIES;
 import java.util.ArrayList;
 import java.util.List;
 
+import blockrenderer6343.integration.nei.MultiblockHandler;
 import net.minecraft.item.ItemStack;
 
 import com.gtnewhorizon.structurelib.alignment.constructable.IConstructable;
 
-import blockrenderer6343.common.GUI_MultiblocksHandler;
-import blockrenderer6343.integration.gregtech.GT_GUI_MultiblocksHandler;
 import codechicken.nei.NEIClientUtils;
 import codechicken.nei.recipe.TemplateRecipeHandler;
 import gregtech.api.interfaces.metatileentity.IMetaTileEntity;

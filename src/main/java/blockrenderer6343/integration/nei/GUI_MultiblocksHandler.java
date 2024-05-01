@@ -1,4 +1,4 @@
-package blockrenderer6343.common;
+package blockrenderer6343.integration.nei;
 
 import java.util.ArrayList;
 import java.util.HashMap;

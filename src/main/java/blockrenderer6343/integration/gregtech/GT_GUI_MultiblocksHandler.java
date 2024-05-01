@@ -18,7 +18,7 @@ import com.mojang.authlib.GameProfile;
 import blockrenderer6343.BlockRenderer6343;
 import blockrenderer6343.api.utils.CreativeItemSource;
 import blockrenderer6343.client.world.ClientFakePlayer;
-import blockrenderer6343.common.GUI_MultiblocksHandler;
+import blockrenderer6343.integration.nei.GUI_MultiblocksHandler;
 import gregtech.api.interfaces.metatileentity.IMetaTileEntity;
 import gregtech.api.interfaces.tileentity.IGregTechTileEntity;
 import gregtech.api.interfaces.tileentity.ITurnable;

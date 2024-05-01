@@ -1,6 +1,6 @@
 package blockrenderer6343.integration.nei;
 
-import static blockrenderer6343.common.GUI_MultiblocksHandler.SLOT_SIZE;
+import static blockrenderer6343.integration.nei.GUI_MultiblocksHandler.SLOT_SIZE;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,7 +9,6 @@ import java.util.Map;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.StatCollector;
 
-import blockrenderer6343.common.GUI_MultiblocksHandler;
 import codechicken.nei.PositionedStack;
 import codechicken.nei.recipe.GuiRecipeCatalyst;
 import codechicken.nei.recipe.RecipeCatalysts;

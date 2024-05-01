@@ -2,6 +2,7 @@ package blockrenderer6343.integration.nei;
 
 import blockrenderer6343.BlockRenderer6343;
 import blockrenderer6343.Tags;
+import blockrenderer6343.integration.gregtech.GT_NEI_MultiblocksHandler;
 import blockrenderer6343.integration.structurelib.StructureCompatNEIHandler;
 import codechicken.nei.api.IConfigureNEI;
 import codechicken.nei.recipe.GuiCraftingRecipe;

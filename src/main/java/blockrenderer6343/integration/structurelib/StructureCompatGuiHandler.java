@@ -22,7 +22,7 @@ import blockrenderer6343.BlockRenderer6343;
 import blockrenderer6343.api.utils.CreativeItemSource;
 import blockrenderer6343.client.world.ClientFakePlayer;
 import blockrenderer6343.client.world.TrackedDummyWorld;
-import blockrenderer6343.common.GUI_MultiblocksHandler;
+import blockrenderer6343.integration.nei.GUI_MultiblocksHandler;
 
 public class StructureCompatGuiHandler extends GUI_MultiblocksHandler<IConstructable> {
 

@@ -54,18 +54,18 @@ public class TooltipsFrameRenderer {
     }
 
     // Drawing Tooltips Frame parts
-    public static void drawFrame(int p_73733_1_, int p_73733_2_, int p_73733_3_, int p_73733_4_, int p_73733_5_,
-            int p_73733_6_, float zLevel, AnimationStyle style) {
+    public static void drawFrame(int left, int top, int right, int bottom, int startColor,
+            int endColor, float zLevel, AnimationStyle style) {
         sDraw = true;
 
-        float f = (float) (p_73733_5_ >> 24 & 255) / 255.0F;
-        float f1 = (float) (p_73733_5_ >> 16 & 255) / 255.0F;
-        float f2 = (float) (p_73733_5_ >> 8 & 255) / 255.0F;
-        float f3 = (float) (p_73733_5_ & 255) / 255.0F;
-        float f4 = (float) (p_73733_6_ >> 24 & 255) / 255.0F;
-        float f5 = (float) (p_73733_6_ >> 16 & 255) / 255.0F;
-        float f6 = (float) (p_73733_6_ >> 8 & 255) / 255.0F;
-        float f7 = (float) (p_73733_6_ & 255) / 255.0F;
+        float f = (float) (startColor >> 24 & 255) / 255.0F;
+        float f1 = (float) (startColor >> 16 & 255) / 255.0F;
+        float f2 = (float) (startColor >> 8 & 255) / 255.0F;
+        float f3 = (float) (startColor & 255) / 255.0F;
+        float f4 = (float) (endColor >> 24 & 255) / 255.0F;
+        float f5 = (float) (endColor >> 16 & 255) / 255.0F;
+        float f6 = (float) (endColor >> 8 & 255) / 255.0F;
+        float f7 = (float) (endColor & 255) / 255.0F;
         GL11.glDisable(GL11.GL_TEXTURE_2D);
         GL11.glEnable(GL11.GL_BLEND);
         GL11.glDisable(GL11.GL_ALPHA_TEST);
@@ -76,25 +76,25 @@ public class TooltipsFrameRenderer {
         tessellator.setColorRGBA_F(f1, f2, f3, f + 100 / 255.0f);
         tessellator.addVertex(
                 style == AnimationStyle.Horizontal
-                        ? (double) p_73733_1_ + ((double) p_73733_3_ - (double) p_73733_1_) * alpha
-                        : (double) p_73733_3_,
-                (double) p_73733_2_,
+                        ? (double) left + ((double) right - (double) left) * alpha
+                        : (double) right,
+                (double) top,
                 (double) zLevel);
-        tessellator.addVertex((double) p_73733_1_, (double) p_73733_2_, (double) zLevel);
+        tessellator.addVertex((double) left, (double) top, (double) zLevel);
         tessellator.setColorRGBA_F(f5, f6, f7, f4 + 100 / 255.0f);
         tessellator.addVertex(
-                (double) p_73733_1_,
+                (double) left,
                 style == AnimationStyle.Vertical
-                        ? (double) p_73733_2_ + ((double) p_73733_4_ - (double) p_73733_2_) * alpha
-                        : (double) p_73733_4_,
+                        ? (double) top + ((double) bottom - (double) top) * alpha
+                        : (double) bottom,
                 (double) zLevel);
         tessellator.addVertex(
                 style == AnimationStyle.Horizontal
-                        ? (double) p_73733_1_ + ((double) p_73733_3_ - (double) p_73733_1_) * alpha
-                        : (double) p_73733_3_,
+                        ? (double) left + ((double) right - (double) left) * alpha
+                        : (double) right,
                 style == AnimationStyle.Vertical
-                        ? (double) p_73733_2_ + ((double) p_73733_4_ - (double) p_73733_2_) * alpha
-                        : (double) p_73733_4_,
+                        ? (double) top + ((double) bottom - (double) top) * alpha
+                        : (double) bottom,
                 (double) zLevel);
         tessellator.draw();
         GL11.glShadeModel(GL11.GL_FLAT);

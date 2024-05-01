@@ -712,9 +712,9 @@ public abstract class GUI_MultiblocksHandler<T> {
         private int colorDisabled;
         private int colorHovered;
 
-        public ClearGuiButton(int p_i1021_1_, int p_i1021_2_, int p_i1021_3_, int p_i1021_4_, int p_i1021_5_,
+        public ClearGuiButton(int stateName, int id, int p_i1021_3_, int p_i1021_4_, int p_i1021_5_,
                 String p_i1021_6_) {
-            super(p_i1021_1_, p_i1021_2_, p_i1021_3_, p_i1021_4_, p_i1021_5_, p_i1021_6_);
+            super(stateName, id, p_i1021_3_, p_i1021_4_, p_i1021_5_, p_i1021_6_);
         }
 
         public void setColors(int clrEnabled, int clrDisabled, int clrHovered) {
@@ -724,12 +724,12 @@ public abstract class GUI_MultiblocksHandler<T> {
         }
 
         @Override
-        public void drawButton(Minecraft p_146112_1_, int p_146112_2_, int p_146112_3_) {
+        public void drawButton(Minecraft mc, int mouseX, int mouseY) {
             if (this.visible) {
-                FontRenderer fontrenderer = p_146112_1_.fontRenderer;
-                this.field_146123_n = p_146112_2_ >= this.xPosition && p_146112_3_ >= this.yPosition
-                        && p_146112_2_ < this.xPosition + this.width
-                        && p_146112_3_ < this.yPosition + this.height;
+                FontRenderer fontrenderer = mc.fontRenderer;
+                this.field_146123_n = mouseX >= this.xPosition && mouseY >= this.yPosition
+                        && mouseX < this.xPosition + this.width
+                        && mouseY < this.yPosition + this.height;
                 int l = colorEnabled;
 
                 if (packedFGColour != 0) {

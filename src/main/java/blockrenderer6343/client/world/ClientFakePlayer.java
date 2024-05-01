@@ -16,7 +16,7 @@ public class ClientFakePlayer extends EntityPlayer {
     }
 
     @Override
-    public void addChatMessage(IChatComponent p_145747_1_) {}
+    public void addChatMessage(IChatComponent message) {}
 
     @Override
     public boolean canCommandSenderUseCommand(int i, String s) {

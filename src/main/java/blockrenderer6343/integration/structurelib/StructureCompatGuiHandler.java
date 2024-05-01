@@ -76,7 +76,7 @@ public class StructureCompatGuiHandler extends GUI_MultiblocksHandler<IConstruct
         // A single tick is needed for some non GT multiblocks to complete
         ((TrackedDummyWorld) renderer.world).updateEntitiesForNEI();
 
-        if (StructureLibAPI.isInstrumentEnabled()){
+        if (StructureLibAPI.isInstrumentEnabled()) {
             StructureLibAPI.disableInstrument();
         }
 

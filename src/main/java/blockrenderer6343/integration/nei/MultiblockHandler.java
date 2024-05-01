@@ -71,7 +71,7 @@ public abstract class MultiblockHandler extends TemplateRecipeHandler {
 
     protected abstract void tryLoadMultiblocks(ItemStack candidate);
 
-    protected GUI_MultiblocksHandler<?> getGuiHandler(){
+    protected GUI_MultiblocksHandler<?> getGuiHandler() {
         return guiHandler;
     }
 

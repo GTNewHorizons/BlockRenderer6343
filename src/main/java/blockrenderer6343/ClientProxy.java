@@ -2,7 +2,6 @@ package blockrenderer6343;
 
 import net.minecraftforge.common.MinecraftForge;
 
-import blockrenderer6343.client.renderer.TooltipsFrameRenderer;
 import blockrenderer6343.integration.nei.IMCForNEI;
 import blockrenderer6343.integration.nei.InputHandler;
 import codechicken.nei.guihook.GuiContainerManager;
@@ -16,7 +15,6 @@ public class ClientProxy extends CommonProxy {
     // etc, and register them with the GameRegistry."
     public void preInit(FMLPreInitializationEvent event) {
         super.preInit(event);
-        new TooltipsFrameRenderer();
         GuiContainerManager.addInputHandler(new InputHandler());
         GuiContainerManager.addTooltipHandler(new InputHandler());
     }

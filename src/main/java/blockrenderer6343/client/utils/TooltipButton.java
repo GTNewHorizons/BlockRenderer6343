@@ -22,7 +22,7 @@ public class TooltipButton extends GuiButtonExt {
         super.drawButton(mc, mouseX, mouseY);
         if (isMouseOver(mouseX, mouseY)) {
             int textWidth = mc.fontRenderer.getStringWidth(this.hoverString);
-            drawTooltipBox(mc.fontRenderer, mouseX - 10, mouseY - 17, textWidth + 1, this.height, 33, 33, 33, 200);
+            drawTooltipBox(mc.fontRenderer, mouseX - 10, mouseY - 17, textWidth + 1, this.height);
         }
 
     }
@@ -35,12 +35,12 @@ public class TooltipButton extends GuiButtonExt {
                 && mouseY < this.yPosition + this.height;
     }
 
-    public void drawTooltipBox(FontRenderer fontRenderer, int x, int y, int w, int h, int r, int g, int b, int a) {
+    public void drawTooltipBox(FontRenderer fontRenderer, int x, int y, int w, int h) {
         GL11.glDisable(GL11.GL_DEPTH_TEST);
         GL11.glDisable(GL11.GL_TEXTURE_2D);
         Tessellator tessellator = Tessellator.instance;
         tessellator.startDrawingQuads();
-        tessellator.setColorRGBA(r, g, b, a);
+        tessellator.setColorRGBA(33, 33, 33, 200);
         tessellator.addVertex(x, y + h, 0D);
         tessellator.addVertex(x + w, y + h, 0D);
         tessellator.addVertex(x + w, y, 0D);

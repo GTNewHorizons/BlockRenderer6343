@@ -274,10 +274,10 @@ public abstract class WorldSceneRenderer {
 
         final int savedAo = mc.gameSettings.ambientOcclusion;
         mc.gameSettings.ambientOcclusion = 0;
-
-        Tessellator.instance.startDrawingQuads();
+        Tessellator tessellator = Tessellator.instance;
+        tessellator.startDrawingQuads();
         try {
-            Tessellator.instance.setBrightness(15 << 20 | 15 << 4);
+            tessellator.setBrightness(15 << 20 | 15 << 4);
             for (BlockPosition pos : renderedBlocks) {
                 Block block = world.getBlock(pos.x, pos.y, pos.z);
                 if (block.equals(Blocks.air)) continue;
@@ -316,24 +316,24 @@ public abstract class WorldSceneRenderer {
             }
         } finally {
             mc.gameSettings.ambientOcclusion = savedAo;
-            Tessellator.instance.draw();
-            Tessellator.instance.setTranslation(0, 0, 0);
+            tessellator.draw();
+            tessellator.setTranslation(0, 0, 0);
         }
 
         RenderHelper.enableStandardItemLighting();
         glEnable(GL_LIGHTING);
 
         // render TESR
+        TileEntityRendererDispatcher tesr = TileEntityRendererDispatcher.instance;
         for (int pass = 0; pass < 2; pass++) {
             ForgeHooksClient.setRenderPass(pass);
             int finalPass = pass;
             renderedBlocks.forEach(blockPosition -> {
                 setDefaultPassRenderState(finalPass);
                 TileEntity tile = world.getTileEntity(blockPosition.x, blockPosition.y, blockPosition.z);
-                if (tile != null && TileEntityRendererDispatcher.instance.hasSpecialRenderer(tile)) {
+                if (tile != null && tesr.hasSpecialRenderer(tile)) {
                     if (tile.shouldRenderInPass(finalPass)) {
-                        TileEntityRendererDispatcher.instance
-                                .renderTileEntityAt(tile, blockPosition.x, blockPosition.y, blockPosition.z, 0);
+                        tesr.renderTileEntityAt(tile, blockPosition.x, blockPosition.y, blockPosition.z, 0);
                     }
                 }
             });

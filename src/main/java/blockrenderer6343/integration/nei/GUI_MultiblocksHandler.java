@@ -14,6 +14,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.renderer.RenderBlocks;
+import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
@@ -164,8 +165,6 @@ public abstract class GUI_MultiblocksHandler<T> {
         buttons.put(projectMultiblocksButton, this::projectMultiblocks);
         buttons.put(overlayMultiblocksButton, this::neiOverlay);
     }
-
-    protected abstract String getMultiblockName();
 
     protected abstract void placeMultiblock();
 
@@ -370,6 +369,10 @@ public abstract class GUI_MultiblocksHandler<T> {
         // GlStateManager.disableRescaleNormal();
         // GlStateManager.disableLighting();
         // RenderHelper.disableStandardItemLighting();
+    }
+
+    protected String getMultiblockName() {
+        return I18n.format(stackForm.getDisplayName());
     }
 
     private void drawMultiblockName() {

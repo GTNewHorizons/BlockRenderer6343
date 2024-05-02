@@ -4,7 +4,6 @@ import java.util.Arrays;
 import java.util.UUID;
 
 import net.minecraft.block.Block;
-import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
@@ -28,11 +27,6 @@ public class StructureCompatGuiHandler extends GUI_MultiblocksHandler<IConstruct
 
     public StructureCompatGuiHandler() {
         super();
-    }
-
-    @Override
-    protected String getMultiblockName() {
-        return I18n.format(stackForm.getDisplayName());
     }
 
     @Override

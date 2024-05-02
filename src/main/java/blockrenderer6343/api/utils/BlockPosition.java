@@ -1,6 +1,6 @@
 package blockrenderer6343.api.utils;
 
-import java.util.Objects;
+import com.google.common.base.Objects;
 
 public class BlockPosition {
 
@@ -24,6 +24,6 @@ public class BlockPosition {
 
     @Override
     public int hashCode() {
-        return Objects.hash(x, y, z);
+        return Objects.hashCode(x, y, z);
     }
 }

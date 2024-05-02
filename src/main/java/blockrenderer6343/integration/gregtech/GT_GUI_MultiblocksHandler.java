@@ -3,7 +3,6 @@ package blockrenderer6343.integration.gregtech;
 import java.util.Arrays;
 import java.util.UUID;
 
-import net.minecraft.client.resources.I18n;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraftforge.common.util.ForgeDirection;
@@ -28,11 +27,6 @@ public class GT_GUI_MultiblocksHandler extends GUI_MultiblocksHandler<IConstruct
 
     public GT_GUI_MultiblocksHandler() {
         super();
-    }
-
-    @Override
-    protected String getMultiblockName() {
-        return I18n.format(stackForm.getDisplayName());
     }
 
     @Override

@@ -1,6 +1,6 @@
 package blockrenderer6343.api.utils;
 
-import java.util.Objects;
+import com.google.common.base.Objects;
 
 public class Size {
 
@@ -32,11 +32,11 @@ public class Size {
 
     @Override
     public int hashCode() {
-        return Objects.hash(width, height);
+        return Objects.hashCode(width, height);
     }
 
     @Override
     public String toString() {
-        return com.google.common.base.Objects.toStringHelper(this).add("width", width).add("height", height).toString();
+        return Objects.toStringHelper(this).add("width", width).add("height", height).toString();
     }
 }

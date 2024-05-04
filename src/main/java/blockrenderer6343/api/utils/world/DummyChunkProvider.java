@@ -11,6 +11,7 @@ import net.minecraft.util.LongHashMap;
 import net.minecraft.world.ChunkCoordIntPair;
 import net.minecraft.world.ChunkPosition;
 import net.minecraft.world.World;
+import net.minecraft.world.biome.BiomeGenBase;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.IChunkProvider;
 
@@ -33,7 +34,10 @@ public class DummyChunkProvider implements IChunkProvider {
     @Override
     public Chunk provideChunk(int x, int z) {
         long chunkKey = ChunkCoordIntPair.chunkXZ2Int(x, z);
-        if (loadedChunks.containsItem(chunkKey)) return (Chunk) loadedChunks.getValueByKey(chunkKey);
+        if (loadedChunks.containsItem(chunkKey)) {
+            return (Chunk) loadedChunks.getValueByKey(chunkKey);
+        }
+
         Chunk chunk = new Chunk(world, x, z);
         loadedChunks.add(chunkKey, chunk);
         return chunk;
@@ -64,7 +68,8 @@ public class DummyChunkProvider implements IChunkProvider {
     }
 
     @Override
-    public List getPossibleCreatures(EnumCreatureType p_73155_1_, int p_73155_2_, int p_73155_3_, int p_73155_4_) {
+    public List<BiomeGenBase.SpawnListEntry> getPossibleCreatures(EnumCreatureType p_73155_1_, int p_73155_2_,
+            int p_73155_3_, int p_73155_4_) {
         return null;
     }
 

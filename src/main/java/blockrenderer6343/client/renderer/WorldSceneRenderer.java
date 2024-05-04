@@ -56,6 +56,7 @@ import org.lwjgl.util.vector.Vector3f;
 
 import com.github.bartimaeusnek.bartworks.common.blocks.BW_GlasBlocks;
 
+import blockrenderer6343.BlockRenderer6343;
 import blockrenderer6343.api.utils.BlockPosition;
 import blockrenderer6343.api.utils.Position;
 import blockrenderer6343.api.utils.PositionedRect;
@@ -63,7 +64,6 @@ import blockrenderer6343.api.utils.Size;
 import blockrenderer6343.client.utils.ProjectionUtils;
 import blockrenderer6343.client.world.TrackedDummyWorld;
 import codechicken.lib.vec.Vector3;
-import gregtech.api.enums.Mods;
 import gregtech.common.render.GT_Renderer_Block;
 
 /**
@@ -274,10 +274,10 @@ public abstract class WorldSceneRenderer {
 
         final int savedAo = mc.gameSettings.ambientOcclusion;
         mc.gameSettings.ambientOcclusion = 0;
-
-        Tessellator.instance.startDrawingQuads();
+        Tessellator tessellator = Tessellator.instance;
+        tessellator.startDrawingQuads();
         try {
-            Tessellator.instance.setBrightness(15 << 20 | 15 << 4);
+            tessellator.setBrightness(15 << 20 | 15 << 4);
             for (BlockPosition pos : renderedBlocks) {
                 Block block = world.getBlock(pos.x, pos.y, pos.z);
                 if (block.equals(Blocks.air)) continue;
@@ -286,7 +286,7 @@ public abstract class WorldSceneRenderer {
                 bufferBuilder.blockAccess = world;
                 bufferBuilder.setRenderBounds(0, 0, 0, 1, 1, 1);
                 bufferBuilder.renderAllFaces = renderAllFaces;
-                if (Mods.BartWorks.isModLoaded() && block instanceof BW_GlasBlocks bwGlass) {
+                if (BlockRenderer6343.isBartworksLoaded && block instanceof BW_GlasBlocks bwGlass) {
                     // this mod cannot render renderpass = 1 blocks for now
                     bufferBuilder.renderStandardBlockWithColorMultiplier(
                             block,
@@ -296,33 +296,44 @@ public abstract class WorldSceneRenderer {
                             bwGlass.getColor(world.getBlockMetadata(pos.x, pos.y, pos.z))[0] / 255f,
                             bwGlass.getColor(world.getBlockMetadata(pos.x, pos.y, pos.z))[1] / 255f,
                             bwGlass.getColor(world.getBlockMetadata(pos.x, pos.y, pos.z))[2] / 255f);
-                } else if (!GT_Renderer_Block.INSTANCE
-                        .renderWorldBlock(world, pos.x, pos.y, pos.z, block, block.getRenderType(), bufferBuilder)) {
-                            bufferBuilder.renderBlockByRenderType(block, pos.x, pos.y, pos.z);
-                        }
+                } else if (BlockRenderer6343.isGTLoaded) {
+                    if (!GT_Renderer_Block.INSTANCE.renderWorldBlock(
+                            world,
+                            pos.x,
+                            pos.y,
+                            pos.z,
+                            block,
+                            block.getRenderType(),
+                            bufferBuilder)) {
+                        bufferBuilder.renderBlockByRenderType(block, pos.x, pos.y, pos.z);
+                    }
+                } else {
+                    bufferBuilder.renderBlockByRenderType(block, pos.x, pos.y, pos.z);
+                }
             }
             if (onRender != null) {
                 onRender.accept(this);
             }
         } finally {
             mc.gameSettings.ambientOcclusion = savedAo;
-            Tessellator.instance.draw();
-            Tessellator.instance.setTranslation(0, 0, 0);
+            tessellator.draw();
+            tessellator.setTranslation(0, 0, 0);
         }
 
         RenderHelper.enableStandardItemLighting();
         glEnable(GL_LIGHTING);
 
         // render TESR
+        TileEntityRendererDispatcher tesr = TileEntityRendererDispatcher.instance;
         for (int pass = 0; pass < 2; pass++) {
             ForgeHooksClient.setRenderPass(pass);
             int finalPass = pass;
             renderedBlocks.forEach(blockPosition -> {
                 setDefaultPassRenderState(finalPass);
                 TileEntity tile = world.getTileEntity(blockPosition.x, blockPosition.y, blockPosition.z);
-                if (tile != null) {
+                if (tile != null && tesr.hasSpecialRenderer(tile)) {
                     if (tile.shouldRenderInPass(finalPass)) {
-                        TileEntityRendererDispatcher.instance.renderTileEntity(tile, 0);
+                        tesr.renderTileEntityAt(tile, blockPosition.x, blockPosition.y, blockPosition.z, 0);
                     }
                 }
             });

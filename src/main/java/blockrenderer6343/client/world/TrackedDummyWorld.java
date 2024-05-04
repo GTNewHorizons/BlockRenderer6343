@@ -9,6 +9,7 @@ import net.minecraft.util.MathHelper;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.chunk.Chunk;
+import net.minecraftforge.common.util.BlockSnapshot;
 
 import org.lwjgl.util.vector.Vector3f;
 
@@ -46,14 +47,14 @@ public class TrackedDummyWorld extends DummyWorld {
             } else {
                 Chunk chunk = this.getChunkFromChunkCoords(x >> 4, z >> 4);
                 Block block1 = null;
-                net.minecraftforge.common.util.BlockSnapshot blockSnapshot = null;
+                BlockSnapshot blockSnapshot = null;
 
                 if ((flags & 1) != 0) {
                     block1 = chunk.getBlock(x & 15, y, z & 15);
                 }
 
                 if (this.captureBlockSnapshots && !this.isRemote) {
-                    blockSnapshot = net.minecraftforge.common.util.BlockSnapshot.getBlockSnapshot(this, x, y, z, flags);
+                    blockSnapshot = BlockSnapshot.getBlockSnapshot(this, x, y, z, flags);
                     this.capturedBlockSnapshots.add(blockSnapshot);
                 }
 

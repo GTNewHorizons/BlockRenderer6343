@@ -1,6 +1,6 @@
 package blockrenderer6343.api.utils;
 
-import java.util.Objects;
+import com.google.common.base.Objects;
 
 public class PositionedRect {
 
@@ -44,19 +44,17 @@ public class PositionedRect {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof PositionedRect)) return false;
-        PositionedRect that = (PositionedRect) o;
+        if (!(o instanceof PositionedRect that)) return false;
         return position.equals(that.position) && size.equals(that.size);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(position, size);
+        return Objects.hashCode(position, size);
     }
 
     @Override
     public String toString() {
-        return com.google.common.base.Objects.toStringHelper(this).add("position", position).add("size", size)
-                .toString();
+        return Objects.toStringHelper(this).add("position", position).add("size", size).toString();
     }
 }

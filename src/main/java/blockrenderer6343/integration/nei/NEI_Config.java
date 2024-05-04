@@ -2,7 +2,7 @@ package blockrenderer6343.integration.nei;
 
 import blockrenderer6343.BlockRenderer6343;
 import blockrenderer6343.Tags;
-import blockrenderer6343.integration.gregtech.GT_NEI_MultiblocksHandler;
+import blockrenderer6343.integration.gregtech.GT_NEI_MultiblockHandler;
 import blockrenderer6343.integration.structurelib.StructureCompatNEIHandler;
 import codechicken.nei.api.IConfigureNEI;
 import codechicken.nei.recipe.GuiCraftingRecipe;
@@ -21,7 +21,7 @@ public class NEI_Config implements IConfigureNEI {
         GuiUsageRecipe.usagehandlers.add(handler);
 
         if (BlockRenderer6343.isGTLoaded) {
-            handler = new GT_NEI_MultiblocksHandler();
+            handler = new GT_NEI_MultiblockHandler();
             GuiCraftingRecipe.craftinghandlers.add(handler);
             GuiUsageRecipe.usagehandlers.add(handler);
         }

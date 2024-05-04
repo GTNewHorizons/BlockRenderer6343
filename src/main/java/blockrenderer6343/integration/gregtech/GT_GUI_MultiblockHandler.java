@@ -1,8 +1,5 @@
 package blockrenderer6343.integration.gregtech;
 
-import java.util.Arrays;
-import java.util.UUID;
-
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraftforge.common.util.ForgeDirection;
@@ -12,32 +9,26 @@ import com.gtnewhorizon.structurelib.alignment.constructable.IConstructable;
 import com.gtnewhorizon.structurelib.alignment.constructable.IConstructableProvider;
 import com.gtnewhorizon.structurelib.alignment.constructable.ISurvivalConstructable;
 import com.gtnewhorizon.structurelib.structure.ISurvivalBuildEnvironment;
-import com.mojang.authlib.GameProfile;
 
 import blockrenderer6343.BlockRenderer6343;
 import blockrenderer6343.api.utils.CreativeItemSource;
-import blockrenderer6343.client.world.ClientFakePlayer;
-import blockrenderer6343.integration.nei.GUI_MultiblocksHandler;
+import blockrenderer6343.integration.nei.GUI_MultiblockHandler;
 import gregtech.api.interfaces.metatileentity.IMetaTileEntity;
 import gregtech.api.interfaces.tileentity.IGregTechTileEntity;
 import gregtech.api.interfaces.tileentity.ITurnable;
 import gregtech.api.threads.GT_Runnable_MachineBlockUpdate;
 
-public class GT_GUI_MultiblocksHandler extends GUI_MultiblocksHandler<IConstructable> {
+public class GT_GUI_MultiblockHandler extends GUI_MultiblockHandler<IConstructable> {
 
-    public GT_GUI_MultiblocksHandler() {
+    public GT_GUI_MultiblockHandler() {
         super();
     }
 
     @Override
     protected void placeMultiblock() {
-        if (GT_Runnable_MachineBlockUpdate.isCurrentThreadEnabled())
+        if (GT_Runnable_MachineBlockUpdate.isCurrentThreadEnabled()) {
             GT_Runnable_MachineBlockUpdate.setCurrentThreadEnabled(false);
-
-        fakeMultiblockBuilder = new ClientFakePlayer(
-                renderer.world,
-                new GameProfile(UUID.fromString("518FDF18-EC2A-4322-832A-58ED1721309B"), "[GregTech]"));
-        renderer.world.unloadEntities(Arrays.asList(fakeMultiblockBuilder));
+        }
 
         IConstructable constructable = null;
         ItemStack copy = stackForm.copy();
@@ -57,7 +48,9 @@ public class GT_GUI_MultiblocksHandler extends GUI_MultiblocksHandler<IConstruct
         ((ITurnable) tTileEntity).setFrontFacing(ForgeDirection.SOUTH);
         IMetaTileEntity mte = ((IGregTechTileEntity) tTileEntity).getMetaTileEntity();
 
-        if (!StructureLibAPI.isInstrumentEnabled()) StructureLibAPI.enableInstrument(BlockRenderer6343.MOD_ID);
+        if (!StructureLibAPI.isInstrumentEnabled()) {
+            StructureLibAPI.enableInstrument(BlockRenderer6343.MOD_ID);
+        }
         structureElements.clear();
 
         if (mte instanceof ISurvivalConstructable) {
@@ -78,9 +71,12 @@ public class GT_GUI_MultiblocksHandler extends GUI_MultiblocksHandler<IConstruct
             constructable.construct(getTriggerStack(), false);
         }
 
-        if (StructureLibAPI.isInstrumentEnabled()) StructureLibAPI.disableInstrument();
+        if (StructureLibAPI.isInstrumentEnabled()) {
+            StructureLibAPI.disableInstrument();
+        }
 
-        if (!GT_Runnable_MachineBlockUpdate.isCurrentThreadEnabled())
+        if (!GT_Runnable_MachineBlockUpdate.isCurrentThreadEnabled()) {
             GT_Runnable_MachineBlockUpdate.setCurrentThreadEnabled(true);
+        }
     }
 }

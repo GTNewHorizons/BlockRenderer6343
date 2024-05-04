@@ -1,6 +1,5 @@
 package blockrenderer6343.client.utils;
 
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.Tessellator;
 
@@ -10,24 +9,14 @@ import cpw.mods.fml.client.config.GuiButtonExt;
 
 public class TooltipButton extends GuiButtonExt {
 
-    private final String hoverString;
+    public final String hoverString;
 
     public TooltipButton(int id, int xPos, int yPos, int width, int height, String displayString, String hoverString) {
         super(id, xPos, yPos, width, height, displayString);
         this.hoverString = hoverString;
     }
 
-    @Override
-    public void drawButton(Minecraft mc, int mouseX, int mouseY) {
-        super.drawButton(mc, mouseX, mouseY);
-        if (isMouseOver(mouseX, mouseY)) {
-            int textWidth = mc.fontRenderer.getStringWidth(this.hoverString);
-            drawTooltipBox(mc.fontRenderer, mouseX - 10, mouseY - 17, textWidth + 1, this.height);
-        }
-
-    }
-
-    private boolean isMouseOver(int mouseX, int mouseY) {
+    public boolean isMouseOver(int mouseX, int mouseY) {
         return this.enabled && this.visible
                 && mouseX >= this.xPosition
                 && mouseY >= this.yPosition

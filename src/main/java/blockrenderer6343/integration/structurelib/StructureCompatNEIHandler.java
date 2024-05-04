@@ -32,7 +32,7 @@ public class StructureCompatNEIHandler extends MultiblockHandler {
     }
 
     @Override
-    protected void tryLoadMultiblocks(ItemStack candidate) {
+    protected void tryLoadingMultiblock(ItemStack candidate) {
         if (candidate.getItem() instanceof ItemBlock ib) {
             Block block = ib.field_150939_a;
             if (block.hasTileEntity(candidate.getItemDamage())) {

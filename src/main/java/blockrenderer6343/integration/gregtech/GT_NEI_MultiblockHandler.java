@@ -15,12 +15,12 @@ import codechicken.nei.NEIClientUtils;
 import codechicken.nei.recipe.TemplateRecipeHandler;
 import gregtech.api.interfaces.metatileentity.IMetaTileEntity;
 
-public class GT_NEI_MultiblocksHandler extends MultiblockHandler {
+public class GT_NEI_MultiblockHandler extends MultiblockHandler {
 
     public static List<IConstructable> multiblocksList = new ArrayList<>();
-    private static final GT_GUI_MultiblocksHandler baseHandler = new GT_GUI_MultiblocksHandler();
+    private static final GT_GUI_MultiblockHandler baseHandler = new GT_GUI_MultiblockHandler();
 
-    public GT_NEI_MultiblocksHandler() {
+    public GT_NEI_MultiblockHandler() {
         super(baseHandler);
         for (IMetaTileEntity mte : METATILEENTITIES) {
             if (mte instanceof IConstructable) {
@@ -36,11 +36,11 @@ public class GT_NEI_MultiblocksHandler extends MultiblockHandler {
 
     @Override
     public TemplateRecipeHandler newInstance() {
-        return new GT_NEI_MultiblocksHandler();
+        return new GT_NEI_MultiblockHandler();
     }
 
     @Override
-    protected void tryLoadMultiblocks(ItemStack candidate) {
+    protected void tryLoadingMultiblock(ItemStack candidate) {
         for (IConstructable multiblock : multiblocksList) {
             ItemStack stackForm = ((IMetaTileEntity) multiblock).getStackForm(1);
             if (NEIClientUtils.areStacksSameType(stackForm, candidate)) {

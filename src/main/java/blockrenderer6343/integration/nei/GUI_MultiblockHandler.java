@@ -1,10 +1,12 @@
 package blockrenderer6343.integration.nei;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -37,6 +39,7 @@ import com.gtnewhorizon.structurelib.alignment.constructable.ConstructableUtilit
 import com.gtnewhorizon.structurelib.alignment.constructable.IConstructable;
 import com.gtnewhorizon.structurelib.structure.AutoPlaceEnvironment;
 import com.gtnewhorizon.structurelib.structure.IStructureElement;
+import com.mojang.authlib.GameProfile;
 
 import blockrenderer6343.BlockRenderer6343;
 import blockrenderer6343.api.utils.BlockPosition;
@@ -46,6 +49,7 @@ import blockrenderer6343.client.renderer.ImmediateWorldSceneRenderer;
 import blockrenderer6343.client.renderer.WorldSceneRenderer;
 import blockrenderer6343.client.utils.GuiText;
 import blockrenderer6343.client.utils.TooltipButton;
+import blockrenderer6343.client.world.ClientFakePlayer;
 import blockrenderer6343.client.world.DummyWorld;
 import blockrenderer6343.client.world.TrackedDummyWorld;
 import codechicken.lib.gui.GuiDraw;
@@ -53,7 +57,7 @@ import codechicken.lib.math.MathHelper;
 import codechicken.nei.NEIClientUtils;
 import codechicken.nei.recipe.GuiRecipe;
 
-public abstract class GUI_MultiblocksHandler<T> {
+public abstract class GUI_MultiblockHandler<T> {
 
     protected static ImmediateWorldSceneRenderer renderer;
 
@@ -122,7 +126,7 @@ public abstract class GUI_MultiblocksHandler<T> {
 
     protected ClearGuiButton previousTierButton, nextTierButton;
 
-    public GUI_MultiblocksHandler() {
+    public GUI_MultiblockHandler() {
         previousLayerButton = new ClearGuiButton(0, LAYER_BUTTON_X, UNDER_PREVIEW_Y, ICON_SIZE_X, ICON_SIZE_Y, "<");
         nextLayerButton = new ClearGuiButton(
                 0,
@@ -345,11 +349,25 @@ public abstract class GUI_MultiblocksHandler<T> {
         }
 
         // draw buttons
+        int actualMouseX = guiMouseX - k - MOUSE_OFFSET_X;
+        int actualMouseY = guiMouseY - l - MOUSE_OFFSET_Y;
+        FontRenderer fontRenderer = Minecraft.getMinecraft().fontRenderer;
         for (GuiButton button : buttons.keySet()) {
-            button.drawButton(Minecraft.getMinecraft(), guiMouseX - k - MOUSE_OFFSET_X, guiMouseY - l - MOUSE_OFFSET_Y);
+            button.drawButton(Minecraft.getMinecraft(), actualMouseX, actualMouseY);
         }
-        drawButtonsTitle();
-
+        drawButtonsTitle(fontRenderer);
+        for (GuiButton button : buttons.keySet()) {
+            if (button instanceof TooltipButton tooltipButton
+                    && tooltipButton.isMouseOver(actualMouseX, actualMouseY)) {
+                int textWidth = fontRenderer.getStringWidth(tooltipButton.hoverString);
+                tooltipButton.drawTooltipBox(
+                        fontRenderer,
+                        actualMouseX - 10,
+                        actualMouseY - 17,
+                        textWidth + 3,
+                        tooltipButton.height);
+            }
+        }
         if (!(leftClickHeld || rightClickHeld) && rayTraceResult != null
                 && !renderer.world.isAirBlock(rayTraceResult.blockX, rayTraceResult.blockY, rayTraceResult.blockZ)) {
             Block block = renderer.world.getBlock(rayTraceResult.blockX, rayTraceResult.blockY, rayTraceResult.blockZ);
@@ -392,8 +410,7 @@ public abstract class GUI_MultiblocksHandler<T> {
         return guiTextLayer + ": " + (layerIndex == -1 ? "A" : Integer.toString(layerIndex + 1));
     }
 
-    protected void drawButtonsTitle() {
-        FontRenderer fontRenderer = Minecraft.getMinecraft().fontRenderer;
+    protected void drawButtonsTitle(FontRenderer fontRenderer) {
         fontRenderer.drawString(
                 guiLayerButtonTitle,
                 LAYER_BUTTON_X + ICON_SIZE_X
@@ -423,6 +440,9 @@ public abstract class GUI_MultiblocksHandler<T> {
         renderer = new ImmediateWorldSceneRenderer(new TrackedDummyWorld());
         ((DummyWorld) renderer.world).updateEntitiesForNEI();
         renderer.setClearColor(guiColorBg);
+
+        fakeMultiblockBuilder = createFakeBuilder(renderer.world, BlockRenderer6343.MOD_NAME);
+        renderer.world.unloadEntities(Arrays.asList(fakeMultiblockBuilder));
 
         placeMultiblock();
 
@@ -631,6 +651,10 @@ public abstract class GUI_MultiblocksHandler<T> {
         return new ItemStack(StructureLibAPI.getDefaultHologramItem(), tierIndex);
     }
 
+    protected EntityPlayer createFakeBuilder(World world, String name) {
+        return new ClientFakePlayer(world, new GameProfile(UUID.nameUUIDFromBytes(name.getBytes()), name));
+    }
+
     protected void scanCandidates() {
         candidates.clear();
         if (selectedBlock != null) {
@@ -715,9 +739,8 @@ public abstract class GUI_MultiblocksHandler<T> {
         private int colorDisabled;
         private int colorHovered;
 
-        public ClearGuiButton(int stateName, int id, int p_i1021_3_, int p_i1021_4_, int p_i1021_5_,
-                String p_i1021_6_) {
-            super(stateName, id, p_i1021_3_, p_i1021_4_, p_i1021_5_, p_i1021_6_);
+        public ClearGuiButton(int id, int x, int y, int width, int height, String displayString) {
+            super(id, x, y, width, height, displayString);
         }
 
         public void setColors(int clrEnabled, int clrDisabled, int clrHovered) {

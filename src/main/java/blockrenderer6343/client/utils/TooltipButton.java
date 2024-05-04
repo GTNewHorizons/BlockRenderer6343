@@ -36,7 +36,6 @@ public class TooltipButton extends GuiButtonExt {
     }
 
     public void drawTooltipBox(FontRenderer fontRenderer, int x, int y, int w, int h) {
-        GL11.glDisable(GL11.GL_DEPTH_TEST);
         GL11.glDisable(GL11.GL_TEXTURE_2D);
         Tessellator tessellator = Tessellator.instance;
         tessellator.startDrawingQuads();
@@ -48,6 +47,5 @@ public class TooltipButton extends GuiButtonExt {
         tessellator.draw();
         GL11.glEnable(GL11.GL_TEXTURE_2D);
         fontRenderer.drawString(hoverString, x + 2, y + 3, 0XFFFFFF);
-        GL11.glDisable(GL11.GL_DEPTH_TEST);
     }
 }

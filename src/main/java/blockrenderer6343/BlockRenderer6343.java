@@ -32,6 +32,7 @@ public class BlockRenderer6343 {
 
     public static boolean isGTLoaded;
     public static boolean isBartworksLoaded;
+    public static boolean isNEELoaded;
 
     @Mod.EventHandler
     // preInit "Run before anything else. Read your config, create blocks, items,
@@ -40,6 +41,7 @@ public class BlockRenderer6343 {
         proxy.preInit(event);
         isGTLoaded = Loader.isModLoaded("gregtech");
         isBartworksLoaded = Loader.isModLoaded("bartworks");
+        isNEELoaded = Loader.isModLoaded("neenergistics");
     }
 
     @Mod.EventHandler

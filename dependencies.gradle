@@ -8,5 +8,5 @@ dependencies {
     implementation("com.github.GTNewHorizons:bartworks:0.10.0:dev")
 
     runtimeOnlyNonPublishable("com.github.GTNewHorizons:GTplusplus:1.12.2:dev")
-    runtimeOnlyNonPublishable("com.github.GTNewHorizons:StructureCompat:1.0.0:dev")
+    runtimeOnlyNonPublishable("com.github.GTNewHorizons:StructureCompat:0.6.1:dev")
 }

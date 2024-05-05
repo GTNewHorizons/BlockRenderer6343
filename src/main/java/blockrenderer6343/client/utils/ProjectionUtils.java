@@ -1,117 +1,61 @@
 package blockrenderer6343.client.utils;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.FloatBuffer;
-import java.nio.IntBuffer;
-
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.util.glu.GLU;
+import org.lwjgl.util.vector.Matrix4f;
 import org.lwjgl.util.vector.Vector3f;
+import org.lwjgl.util.vector.Vector4f;
 
-import blockrenderer6343.api.utils.BlockPosition;
+import blockrenderer6343.api.utils.PositionedRect;
 
 public class ProjectionUtils {
 
-    private static final FloatBuffer MODELVIEW_MATRIX_BUFFER = ByteBuffer.allocateDirect(16 * 4)
-            .order(ByteOrder.nativeOrder()).asFloatBuffer();
-    private static final FloatBuffer PROJECTION_MATRIX_BUFFER = ByteBuffer.allocateDirect(16 * 4)
-            .order(ByteOrder.nativeOrder()).asFloatBuffer();
-    private static final IntBuffer VIEWPORT_BUFFER = ByteBuffer.allocateDirect(16 * 4).order(ByteOrder.nativeOrder())
-            .asIntBuffer();
-    protected static final FloatBuffer PIXEL_DEPTH_BUFFER = ByteBuffer.allocateDirect(4).order(ByteOrder.nativeOrder())
-            .asFloatBuffer();
-    protected static final FloatBuffer OBJECT_POS_BUFFER = ByteBuffer.allocateDirect(3 * 4)
-            .order(ByteOrder.nativeOrder()).asFloatBuffer();
+    public static Vector3f unProject(PositionedRect rect, Vector3f eyePos, Vector3f lookat, int mouseX, int mouseY) {
+        int width = rect.size.width;
+        int height = rect.size.height;
 
-    public static Vector3f project(BlockPosition pos) {
-        // read current rendering parameters
-        GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX, MODELVIEW_MATRIX_BUFFER);
-        GL11.glGetFloat(GL11.GL_PROJECTION_MATRIX, PROJECTION_MATRIX_BUFFER);
-        GL11.glGetInteger(GL11.GL_VIEWPORT, VIEWPORT_BUFFER);
+        double aspectRatio = ((double) width / (double) height);
+        double fov = ((60 / 2d)) * (Math.PI / 180);
 
-        // rewind buffers after write by OpenGL glGet calls
-        MODELVIEW_MATRIX_BUFFER.rewind();
-        PROJECTION_MATRIX_BUFFER.rewind();
-        VIEWPORT_BUFFER.rewind();
+        double a = -((double) (mouseX - rect.position.x) / (double) width - 0.5) * 2;
+        double b = -((double) (height - (mouseY - rect.position.y)) / (double) height - 0.5) * 2;
+        double tanf = Math.tan(fov);
 
-        // call gluProject with retrieved parameters
-        GLU.gluProject(
-                pos.x + 0.5f,
-                pos.y + 0.5f,
-                pos.z + 0.5f,
-                MODELVIEW_MATRIX_BUFFER,
-                PROJECTION_MATRIX_BUFFER,
-                VIEWPORT_BUFFER,
-                OBJECT_POS_BUFFER);
+        Vector3f lookVec = new Vector3f();
+        Vector3f.sub(eyePos, lookat, lookVec);
+        float yawn = (float) Math.atan2(lookVec.x, -lookVec.z);
+        float pitch = (float) Math.atan2(lookVec.y, Math.sqrt(lookVec.x * lookVec.x + lookVec.z * lookVec.z));
 
-        // rewind buffers after read by gluProject
-        VIEWPORT_BUFFER.rewind();
-        PROJECTION_MATRIX_BUFFER.rewind();
-        MODELVIEW_MATRIX_BUFFER.rewind();
+        Matrix4f rot = new Matrix4f();
+        rot.rotate(yawn, new Vector3f(0, -1, 0));
+        rot.rotate(pitch, new Vector3f(1, 0, 0));
+        Vector4f foward = new Vector4f(0, 0, 1, 0);
+        Vector4f up = new Vector4f(0, 1, 0, 0);
+        Vector4f left = new Vector4f(1, 0, 0, 0);
+        Matrix4f.transform(rot, foward, foward);
+        Matrix4f.transform(rot, up, up);
+        Matrix4f.transform(rot, left, left);
 
-        // rewind buffer after write by gluProject
-        OBJECT_POS_BUFFER.rewind();
-
-        // obtain position in Screen
-        float winX = OBJECT_POS_BUFFER.get();
-        float winY = OBJECT_POS_BUFFER.get();
-        float winZ = OBJECT_POS_BUFFER.get();
-
-        // rewind buffer after read
-        OBJECT_POS_BUFFER.rewind();
-
-        return new Vector3f(winX, winY, winZ);
+        Vector3f result = new Vector3f(foward.x, foward.y, foward.z);
+        Vector3f.add(
+                result,
+                new Vector3f(
+                        (float) (left.x * tanf * aspectRatio * a),
+                        (float) (left.y * tanf * aspectRatio * a),
+                        (float) (left.z * tanf * aspectRatio * a)),
+                result);
+        Vector3f.add(
+                result,
+                new Vector3f((float) (up.x * tanf * b), (float) (up.y * tanf * b), (float) (up.z * tanf * b)),
+                result);
+        return normalize(result);
     }
 
-    public static Vector3f unProject(int mouseX, int mouseY) {
-        // read depth of pixel under mouse
-        GL11.glReadPixels(mouseX, mouseY, 1, 1, GL11.GL_DEPTH_COMPONENT, GL11.GL_FLOAT, PIXEL_DEPTH_BUFFER);
+    public static Vector3f normalize(Vector3f vec) {
+        float length = (float) Math.sqrt(vec.x * vec.x + vec.y * vec.y + vec.z * vec.z);
 
-        // rewind buffer after write by glReadPixels
-        PIXEL_DEPTH_BUFFER.rewind();
+        vec.x /= length;
+        vec.y /= length;
+        vec.z /= length;
 
-        // retrieve depth from buffer (0.0-1.0f)
-        float pixelDepth = PIXEL_DEPTH_BUFFER.get();
-
-        // rewind buffer after read
-        PIXEL_DEPTH_BUFFER.rewind();
-
-        // read current rendering parameters
-        GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX, MODELVIEW_MATRIX_BUFFER);
-        GL11.glGetFloat(GL11.GL_PROJECTION_MATRIX, PROJECTION_MATRIX_BUFFER);
-        GL11.glGetInteger(GL11.GL_VIEWPORT, VIEWPORT_BUFFER);
-
-        // rewind buffers after write by OpenGL glGet calls
-        MODELVIEW_MATRIX_BUFFER.rewind();
-        PROJECTION_MATRIX_BUFFER.rewind();
-        VIEWPORT_BUFFER.rewind();
-
-        // call gluUnProject with retrieved parameters
-        GLU.gluUnProject(
-                mouseX,
-                mouseY,
-                pixelDepth,
-                MODELVIEW_MATRIX_BUFFER,
-                PROJECTION_MATRIX_BUFFER,
-                VIEWPORT_BUFFER,
-                OBJECT_POS_BUFFER);
-
-        // rewind buffers after read by gluUnProject
-        VIEWPORT_BUFFER.rewind();
-        PROJECTION_MATRIX_BUFFER.rewind();
-        MODELVIEW_MATRIX_BUFFER.rewind();
-
-        // rewind buffer after write by gluUnProject
-        OBJECT_POS_BUFFER.rewind();
-
-        // obtain absolute position in world
-        float posX = OBJECT_POS_BUFFER.get();
-        float posY = OBJECT_POS_BUFFER.get();
-        float posZ = OBJECT_POS_BUFFER.get();
-
-        // rewind buffer after read
-        OBJECT_POS_BUFFER.rewind();
-        return new Vector3f(posX, posY, posZ);
+        return vec;
     }
 }

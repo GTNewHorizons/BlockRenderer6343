@@ -7,5 +7,5 @@ dependencies {
     compileOnly("com.github.GTNewHorizons:NotEnoughEnergistics:1.6.0:dev")
 
     runtimeOnlyNonPublishable("com.github.GTNewHorizons:GTplusplus:1.12.2:dev")
-    runtimeOnlyNonPublishable("com.github.GTNewHorizons:StructureCompat:0.6.0:dev")
+    runtimeOnlyNonPublishable("com.github.GTNewHorizons:StructureCompat:0.6.1:dev")
 }

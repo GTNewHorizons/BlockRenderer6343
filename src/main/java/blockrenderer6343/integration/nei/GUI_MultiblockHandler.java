@@ -619,17 +619,11 @@ public abstract class GUI_MultiblockHandler<T> {
         setNextLayer(layerIndex);
 
         if (resetCamera) {
-            float max = Math.max(Math.max(Math.max(size.x, size.y), size.z), 1);
-            // Compact Series multiblocks compat
-            if (size.x >= 30 || size.y >= 30 || size.z >= 30) {
-                zoom = (float) (DEFAULT_RANGE_MULTIPLIER * 4 * Math.sqrt(max));
-            }
-            // Mega Series multiblocks compat
-            if (size.x >= 15 && size.y >= 15 && size.z >= 11) {
-                zoom = (float) (DEFAULT_RANGE_MULTIPLIER * 2 * Math.sqrt(max));
-            } else {
-                zoom = (float) (DEFAULT_RANGE_MULTIPLIER * Math.sqrt(max));
-            }
+            float max = Math.max(Math.max(size.x, size.y), size.z);
+            float baseZoom = (float) (DEFAULT_RANGE_MULTIPLIER * Math.sqrt(max));
+            float sizeFactor = (float) (1.0f + Math.log(max) / Math.log(10));
+
+            zoom = baseZoom * sizeFactor / 1.5f;
             rotationYaw = 20.0f;
             rotationPitch = 50f;
             if (renderer != null) {

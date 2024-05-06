@@ -33,6 +33,7 @@ public class TooltipButton extends GuiButtonExt {
     }
 
     public boolean isMouseOver(int mouseX, int mouseY) {
+        if (supplier != null && !supplier.getAsBoolean()) return false;
         return this.enabled && this.visible
                 && mouseX >= this.xPosition
                 && mouseY >= this.yPosition

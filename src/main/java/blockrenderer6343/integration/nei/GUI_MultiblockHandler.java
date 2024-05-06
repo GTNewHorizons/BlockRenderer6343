@@ -76,7 +76,7 @@ public abstract class GUI_MultiblockHandler<T> {
     protected static final int ICON_SIZE_X = 20;
     protected static final int ICON_SIZE_Y = 12;
     protected static final int MOUSE_OFFSET_X = 5;
-    protected static final int MOUSE_OFFSET_Y = 43;
+    protected static final int MOUSE_OFFSET_Y = 37;
     protected static final int BUTTON_LEFT = -5;
     protected static final int UNDER_PREVIEW_Y = 153;
     protected static final int BUTTON_RIGHT = 145;

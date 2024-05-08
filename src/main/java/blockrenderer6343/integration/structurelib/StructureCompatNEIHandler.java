@@ -37,7 +37,7 @@ public class StructureCompatNEIHandler extends MultiblockHandler {
             Block block = ib.field_150939_a;
             if (block.hasTileEntity(candidate.getItemDamage())) {
                 TileEntity te = block.createTileEntity(DummyWorld.INSTANCE, ib.getMetadata(candidate.getItemDamage()));
-                if (IMultiblockInfoContainer.contains(te.getClass())) {
+                if (te != null && IMultiblockInfoContainer.contains(te.getClass())) {
                     baseHandler.setOnIngredientChanged(ingredients -> {
                         this.ingredients = ingredients;
                         resetPositionedIngredients();

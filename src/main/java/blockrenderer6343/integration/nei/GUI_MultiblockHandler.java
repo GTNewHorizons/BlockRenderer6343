@@ -288,7 +288,7 @@ public abstract class GUI_MultiblockHandler<T> {
         channels.clear();
         layerIndex = -1;
         tierIndex = 1;
-        channelIndex = 1;
+        channelIndex = 0;
         initializeSceneRenderer(true);
         lastRenderingController = renderingController;
         channelTier = new int[channels.size()];

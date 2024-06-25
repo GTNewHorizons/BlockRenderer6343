@@ -2,6 +2,7 @@ package blockrenderer6343.client.world;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.stats.StatBase;
+import net.minecraft.util.ChatComponentTranslation;
 import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.IChatComponent;
@@ -9,7 +10,11 @@ import net.minecraft.world.World;
 
 import com.mojang.authlib.GameProfile;
 
+import blockrenderer6343.integration.nei.GUI_MultiblockHandler;
+
 public class ClientFakePlayer extends EntityPlayer {
+
+    private static final String CHANNEL_KEY = "structurelib.autoplace.warning.no_explicit_channel";
 
     public ClientFakePlayer(World world, GameProfile name) {
         super(world, name);
@@ -29,7 +34,11 @@ public class ClientFakePlayer extends EntityPlayer {
     }
 
     @Override
-    public void addChatComponentMessage(IChatComponent chatmessagecomponent) {}
+    public void addChatComponentMessage(IChatComponent message) {
+        if (message instanceof ChatComponentTranslation msg && msg.getKey().equals(CHANNEL_KEY)) {
+            GUI_MultiblockHandler.channels.add(msg.getFormatArgs()[0].toString());
+        }
+    }
 
     @Override
     public void addStat(StatBase par1StatBase, int par2) {}

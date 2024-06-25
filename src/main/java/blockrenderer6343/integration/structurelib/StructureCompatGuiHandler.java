@@ -42,7 +42,7 @@ public class StructureCompatGuiHandler extends GUI_MultiblockHandler<IConstructa
         boolean tryContruct = false;
         do {
             result = multi.survivalConstruct(
-                    getTriggerStack(),
+                    getBuildTriggerStack(),
                     Integer.MAX_VALUE,
                     ISurvivalBuildEnvironment.create(CreativeItemSource.instance, fakeMultiblockBuilder));
             iterations++;
@@ -53,7 +53,7 @@ public class StructureCompatGuiHandler extends GUI_MultiblockHandler<IConstructa
         } while (result > 0 && iterations < MAX_PLACE_ROUNDS);
 
         if (tryContruct) {
-            multi.construct(getTriggerStack(), false);
+            multi.construct(getBuildTriggerStack(), false);
         }
 
         // A single tick is needed for some non GT multiblocks to complete

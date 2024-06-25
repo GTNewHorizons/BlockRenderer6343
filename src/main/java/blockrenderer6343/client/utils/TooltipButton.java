@@ -1,5 +1,8 @@
 package blockrenderer6343.client.utils;
 
+import java.util.function.BooleanSupplier;
+
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.Tessellator;
 
@@ -10,13 +13,27 @@ import cpw.mods.fml.client.config.GuiButtonExt;
 public class TooltipButton extends GuiButtonExt {
 
     public final String hoverString;
+    private final BooleanSupplier supplier;
 
     public TooltipButton(int id, int xPos, int yPos, int width, int height, String displayString, String hoverString) {
+        this(id, xPos, yPos, width, height, displayString, hoverString, null);
+    }
+
+    public TooltipButton(int id, int xPos, int yPos, int width, int height, String displayString, String hoverString,
+            BooleanSupplier supplier) {
         super(id, xPos, yPos, width, height, displayString);
         this.hoverString = hoverString;
+        this.supplier = supplier;
+    }
+
+    @Override
+    public void drawButton(Minecraft mc, int mouseX, int mouseY) {
+        if (supplier != null && !supplier.getAsBoolean()) return;
+        super.drawButton(mc, mouseX, mouseY);
     }
 
     public boolean isMouseOver(int mouseX, int mouseY) {
+        if (supplier != null && !supplier.getAsBoolean()) return false;
         return this.enabled && this.visible
                 && mouseX >= this.xPosition
                 && mouseY >= this.yPosition

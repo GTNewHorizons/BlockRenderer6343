@@ -149,8 +149,8 @@ public abstract class WorldSceneRenderer {
                 && mouseX < positionedRect.position.x + positionedRect.size.width
                 && mouseY > positionedRect.position.y
                 && mouseY < positionedRect.position.y + positionedRect.size.height) {
-            Vector3f hitPos = ProjectionUtils.unProject(mouseX, mouseY);
-            MovingObjectPosition result = rayTrace(hitPos);
+            Vector3f lookVec = ProjectionUtils.unProject(positionedRect, eyePos, lookAt, mouseX, mouseY);
+            MovingObjectPosition result = rayTrace(lookVec);
             if (result != null) {
                 this.lastTraceResult = result;
                 onLookingAt.accept(result);
@@ -357,55 +357,13 @@ public abstract class WorldSceneRenderer {
         }
     }
 
-    public MovingObjectPosition rayTrace(Vector3f hitPos) {
+    public MovingObjectPosition rayTrace(Vector3f lookVec) {
         Vec3 startPos = Vec3.createVectorHelper(this.eyePos.x, this.eyePos.y, this.eyePos.z);
-        hitPos.scale(2); // Double view range to ensure pos can be seen.
+        lookVec.scale(100); // range: 100 Blocks
         Vec3 endPos = Vec3.createVectorHelper(
-                (hitPos.x - startPos.xCoord),
-                (hitPos.y - startPos.yCoord),
-                (hitPos.z - startPos.zCoord));
+                (lookVec.x + startPos.xCoord),
+                (lookVec.y + startPos.yCoord),
+                (lookVec.z + startPos.zCoord));
         return ((TrackedDummyWorld) this.world).rayTraceBlockswithTargetMap(startPos, endPos, renderedBlocks);
-    }
-
-    /***
-     * For better performance, You'd better handle the event setOnLookingAt(Consumer) or getLastTraceResult()
-     *
-     * @param mouseX xPos in Texture
-     * @param mouseY yPos in Texture
-     * @return RayTraceResult Hit
-     */
-    protected MovingObjectPosition screenPos2BlockPosFace(int mouseX, int mouseY, int x, int y, int width, int height) {
-        // render a frame
-        glEnable(GL_DEPTH_TEST);
-        setupCamera(getPositionedRect(x, y, width, height));
-
-        drawWorld();
-
-        Vector3f hitPos = ProjectionUtils.unProject(mouseX, mouseY);
-        MovingObjectPosition result = rayTrace(hitPos);
-
-        resetCamera();
-
-        return result;
-    }
-
-    /***
-     * For better performance, You'd better do project in setOnWorldRender(Consumer)
-     *
-     * @param pos   BlockPos
-     * @param depth should pass Depth Test
-     * @return x, y, z
-     */
-    protected Vector3f blockPos2ScreenPos(BlockPosition pos, boolean depth, int x, int y, int width, int height) {
-        // render a frame
-        glEnable(GL_DEPTH_TEST);
-        setupCamera(getPositionedRect(x, y, width, height));
-
-        drawWorld();
-        Vector3f winPos = ProjectionUtils.project(pos);
-
-        resetCamera();
-
-        return winPos;
     }
 }

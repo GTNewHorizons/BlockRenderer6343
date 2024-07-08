@@ -3,10 +3,12 @@ package blockrenderer6343.integration.nei;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -25,6 +27,7 @@ import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.IIcon;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.StatCollector;
+import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 
 import org.jetbrains.annotations.NotNull;
@@ -34,9 +37,12 @@ import org.lwjgl.util.vector.Vector3f;
 
 import com.github.vfyjxf.nee.network.NEENetworkHandler;
 import com.github.vfyjxf.nee.network.packet.PacketNEIPatternRecipe;
+import com.gtnewhorizon.structurelib.StructureLib;
 import com.gtnewhorizon.structurelib.StructureLibAPI;
+import com.gtnewhorizon.structurelib.alignment.constructable.ChannelDataAccessor;
 import com.gtnewhorizon.structurelib.alignment.constructable.ConstructableUtility;
 import com.gtnewhorizon.structurelib.alignment.constructable.IConstructable;
+import com.gtnewhorizon.structurelib.item.ItemConstructableTrigger;
 import com.gtnewhorizon.structurelib.structure.AutoPlaceEnvironment;
 import com.gtnewhorizon.structurelib.structure.IStructureElement;
 import com.mojang.authlib.GameProfile;
@@ -70,13 +76,11 @@ public abstract class GUI_MultiblockHandler<T> {
     protected static final int ICON_SIZE_X = 20;
     protected static final int ICON_SIZE_Y = 12;
     protected static final int MOUSE_OFFSET_X = 5;
-    protected static final int MOUSE_OFFSET_Y = 43;
-    protected static final int LAYER_BUTTON_X = -5;
-    protected static final int UNDER_PREVIEW_Y = 135;
-    protected static final int TIER_BUTTON_X = LAYER_BUTTON_X;
-    protected static final int TIER_BUTTON_Y = UNDER_PREVIEW_Y - ICON_SIZE_Y;
-    protected static final int PROJECT_BUTTON_X = 145;
-    protected static final int OVERLAY_BUTTON_X = 145 - ICON_SIZE_X - 5;
+    protected static final int MOUSE_OFFSET_Y = 37;
+    protected static final int BUTTON_LEFT = -5;
+    protected static final int UNDER_PREVIEW_Y = 153;
+    protected static final int BUTTON_RIGHT = 145;
+    protected static final int BETWEEN_BUTTON_X = ICON_SIZE_X + 3;
     protected static final float DEFAULT_RANGE_MULTIPLIER = 3.5f;
     public static final int MAX_PLACE_ROUNDS = 2000;
     public static final BlockPosition MB_PLACE_POS = new BlockPosition(0, 64, 0);
@@ -106,7 +110,11 @@ public abstract class GUI_MultiblockHandler<T> {
     protected static String guiTierButtonTitle;
     protected static int initialTierButtonTitleWidth;
     protected static int initialLayerButtonTitleWidth;
+    protected static int initialChannelTierButtonTitleWidth;
     protected ClearGuiButton previousLayerButton, nextLayerButton;
+    protected ClearGuiButton previousTierButton, nextTierButton;
+    protected ClearGuiButton previousChannelButton, nextChannelButton;
+    protected ClearGuiButton previousChannelTier, nextChannelTier;
 
     protected List<ItemStack> ingredients = new ArrayList<>();
     protected Consumer<List<ItemStack>> onIngredientChanged;
@@ -123,88 +131,147 @@ public abstract class GUI_MultiblockHandler<T> {
     protected static EntityPlayer fakeMultiblockBuilder;
 
     protected int scrolled = 0;
+    protected int blocksBelowController;
+    protected static int scaledSceneHeight = sceneHeight;
 
-    protected ClearGuiButton previousTierButton, nextTierButton;
+    protected int channelIndex;
+    protected ItemStack trigger;
+    public static Set<String> channels = new HashSet<>();
+    protected int[] channelTier;
+    protected String[] channelArray;
+    protected boolean useMasterChannel = true;
+    protected String channelTitle, channelTierTitle;
+    protected int lastHeight;
 
     public GUI_MultiblockHandler() {
-        previousLayerButton = new ClearGuiButton(0, LAYER_BUTTON_X, UNDER_PREVIEW_Y, ICON_SIZE_X, ICON_SIZE_Y, "<");
-        nextLayerButton = new ClearGuiButton(
-                0,
-                LAYER_BUTTON_X + ICON_SIZE_X,
-                UNDER_PREVIEW_Y,
-                ICON_SIZE_X,
-                ICON_SIZE_Y,
-                ">");
-
-        buttons.put(previousLayerButton, this::togglePreviousLayer);
-        buttons.put(nextLayerButton, this::toggleNextLayer);
-
-        previousTierButton = new ClearGuiButton(0, TIER_BUTTON_X, TIER_BUTTON_Y, ICON_SIZE_X, ICON_SIZE_Y, "<");
-        nextTierButton = new ClearGuiButton(
-                0,
-                TIER_BUTTON_X + ICON_SIZE_X,
-                TIER_BUTTON_Y,
-                ICON_SIZE_X,
-                ICON_SIZE_Y,
-                ">");
+        previousTierButton = new ClearGuiButton(1, BUTTON_LEFT, UNDER_PREVIEW_Y, "<");
+        nextTierButton = new ClearGuiButton(1, BUTTON_LEFT + ICON_SIZE_X, UNDER_PREVIEW_Y, ">");
+        previousLayerButton = new ClearGuiButton(2, BUTTON_LEFT, UNDER_PREVIEW_Y + ICON_SIZE_Y, "<");
+        nextLayerButton = new ClearGuiButton(2, BUTTON_LEFT + ICON_SIZE_X, UNDER_PREVIEW_Y + ICON_SIZE_Y, ">");
+        previousChannelButton = new ClearGuiButton(
+                4,
+                BUTTON_LEFT,
+                UNDER_PREVIEW_Y + ICON_SIZE_Y * 3,
+                "<",
+                this::hasChannels);
+        nextChannelButton = new ClearGuiButton(
+                4,
+                BUTTON_LEFT + ICON_SIZE_X,
+                UNDER_PREVIEW_Y + ICON_SIZE_Y * 3,
+                ">",
+                this::hasChannels);
+        previousChannelTier = new ClearGuiButton(
+                5,
+                BUTTON_LEFT,
+                UNDER_PREVIEW_Y + ICON_SIZE_Y * 4,
+                "<",
+                this::hasChannels);
+        nextChannelTier = new ClearGuiButton(
+                5,
+                BUTTON_LEFT + ICON_SIZE_X,
+                UNDER_PREVIEW_Y + ICON_SIZE_Y * 4,
+                ">",
+                this::hasChannels);
         TooltipButton projectMultiblocksButton = new TooltipButton(
-                0,
-                PROJECT_BUTTON_X,
+                1,
+                BUTTON_RIGHT,
                 UNDER_PREVIEW_Y,
                 ICON_SIZE_X,
                 ICON_SIZE_Y,
                 "P",
                 StatCollector.translateToLocal("blockrenderer6343.multiblock.project"));
         TooltipButton overlayMultiblocksButton = new TooltipButton(
-                0,
-                OVERLAY_BUTTON_X,
+                1,
+                BUTTON_RIGHT - BETWEEN_BUTTON_X,
                 UNDER_PREVIEW_Y,
                 ICON_SIZE_X,
                 ICON_SIZE_Y,
                 "?",
                 StatCollector.translateToLocal("blockrenderer6343.multiblock.overlay"));
+        TooltipButton copyChannelButton = new TooltipButton(
+                1,
+                BUTTON_RIGHT - BETWEEN_BUTTON_X * 2,
+                UNDER_PREVIEW_Y,
+                ICON_SIZE_X,
+                ICON_SIZE_Y,
+                "C",
+                StatCollector.translateToLocal("blockrenderer6343.multiblock.copy_channels"),
+                this::hasChannels);
 
+        buttons.put(previousLayerButton, this::togglePreviousLayer);
+        buttons.put(nextLayerButton, this::toggleNextLayer);
         buttons.put(previousTierButton, this::togglePreviousTier);
         buttons.put(nextTierButton, this::toggleNextTier);
-        buttons.put(projectMultiblocksButton, this::projectMultiblocks);
+        buttons.put(previousChannelButton, this::togglePreviousChannel);
+        buttons.put(nextChannelButton, this::toggleNextChannel);
+        buttons.put(previousChannelTier, this::togglePreviousChannelTier);
+        buttons.put(nextChannelTier, this::toggleNextChannelTier);
+        buttons.put(projectMultiblocksButton, this::projectMultiblock);
         buttons.put(overlayMultiblocksButton, this::neiOverlay);
+        buttons.put(copyChannelButton, this::copyToHologram);
     }
 
     protected abstract void placeMultiblock();
 
-    protected void setLocalizationAndColor() {
+    protected void setupColors() {
         guiTextLayer = GuiText.Layer.getLocal();
         guiColorBg = GuiText.BgColor.getColor();
         guiColorFont = GuiText.FontColor.getColor();
         buttonColorEnabled = GuiText.ButtonEnabledColor.getColor();
         buttonColorDisabled = GuiText.ButtonDisabledColor.getColor();
         buttonColorHovered = GuiText.ButtonHoveredColor.getColor();
+    }
 
-        previousLayerButton.setColors(buttonColorEnabled, buttonColorDisabled, buttonColorHovered);
-        nextLayerButton.setColors(buttonColorEnabled, buttonColorDisabled, buttonColorHovered);
-
-        guiLayerButtonTitle = getLayerButtonTitle();
-
+    protected void setupButtonText() {
         FontRenderer fontRenderer = Minecraft.getMinecraft().fontRenderer;
-        initialLayerButtonTitleWidth = fontRenderer.getStringWidth(guiLayerButtonTitle);
-        nextLayerButton.xPosition = LAYER_BUTTON_X + ICON_SIZE_X
-                + initialLayerButtonTitleWidth
-                - fontRenderer.getStringWidth("<") / 2;
-
         guiTextTier = GuiText.Tier.getLocal();
-        previousTierButton.setColors(buttonColorEnabled, buttonColorDisabled, buttonColorHovered);
-        nextTierButton.setColors(buttonColorEnabled, buttonColorDisabled, buttonColorHovered);
-
-        guiTierButtonTitle = getTierButtonTitle();
-
+        refreshButtonText();
+        initialLayerButtonTitleWidth = fontRenderer.getStringWidth(guiLayerButtonTitle);
         initialTierButtonTitleWidth = fontRenderer.getStringWidth(guiTierButtonTitle);
-        nextTierButton.xPosition = TIER_BUTTON_X + ICON_SIZE_X
+        if (hasChannels()) {
+            initialChannelTierButtonTitleWidth = fontRenderer.getStringWidth(channelTierTitle);
+        }
+        for (GuiButton button : buttons.keySet()) {
+            if (button instanceof ClearGuiButton clearButton) {
+                clearButton.setColors(buttonColorEnabled, buttonColorDisabled, buttonColorHovered);
+            }
+        }
+        refreshButtonPos();
+    }
+
+    protected void refreshButtonPos() {
+        FontRenderer fontRenderer = Minecraft.getMinecraft().fontRenderer;
+        nextTierButton.xPosition = BUTTON_LEFT + ICON_SIZE_X
                 + initialTierButtonTitleWidth
                 - fontRenderer.getStringWidth("<") / 2;
+        nextLayerButton.xPosition = BUTTON_LEFT + ICON_SIZE_X
+                + initialLayerButtonTitleWidth
+                - fontRenderer.getStringWidth("<") / 2;
+        nextChannelButton.xPosition = BUTTON_LEFT + ICON_SIZE_X
+                + fontRenderer.getStringWidth(StatCollector.translateToLocal("blockrenderer6343.nei.channel"));
+        nextChannelTier.xPosition = BUTTON_LEFT + ICON_SIZE_X
+                + initialChannelTierButtonTitleWidth
+                - fontRenderer.getStringWidth("<") / 2;
+        for (GuiButton b : buttons.keySet()) {
+            if (b instanceof TooltipButton tooltipButton) {
+                tooltipButton.yPosition = scaledSceneHeight + ICON_SIZE_Y;
+                continue;
+            }
+            b.yPosition = scaledSceneHeight + ICON_SIZE_Y * b.id;
+        }
+    }
+
+    public void refreshButtonText() {
+        guiLayerButtonTitle = getLayerButtonTitle();
+        guiTierButtonTitle = getTierButtonTitle();
+        if (hasChannels()) {
+            channelTitle = getChannelTitle();
+            channelTierTitle = getChannelTierTitle();
+        }
     }
 
     public void loadMultiblock(T multiblock, ItemStack stackForm) {
-        setLocalizationAndColor();
+        setupColors();
         renderingController = multiblock;
         this.stackForm = stackForm;
         if (stackForm.stackSize == 0) stackForm.stackSize = 1;
@@ -213,14 +280,22 @@ public abstract class GUI_MultiblockHandler<T> {
         } else {
             loadPreviousMultiblockAgain();
         }
-        guiTierButtonTitle = getTierButtonTitle();
+        setupButtonText();
     }
 
     protected void loadNewMultiblock() {
+        trigger = getOriginalTriggerStack();
+        channels.clear();
         layerIndex = -1;
         tierIndex = 1;
+        channelIndex = 0;
         initializeSceneRenderer(true);
         lastRenderingController = renderingController;
+        channelTier = new int[channels.size()];
+        Arrays.fill(channelTier, 1);
+        if (hasChannels()) {
+            channelArray = channels.toArray(new String[0]);
+        }
     }
 
     protected void loadPreviousMultiblockAgain() {
@@ -239,6 +314,7 @@ public abstract class GUI_MultiblockHandler<T> {
             layerIndex = -1;
         }
         setNextLayer(layerIndex);
+        refreshButtonText();
     }
 
     private void togglePreviousLayer() {
@@ -249,6 +325,70 @@ public abstract class GUI_MultiblockHandler<T> {
             layerIndex = -1;
         }
         setNextLayer(layerIndex);
+        refreshButtonText();
+    }
+
+    private void toggleNextChannel() {
+        if (!hasChannels()) return;
+        if (++channelIndex >= channels.size()) {
+            channelIndex = 0;
+        }
+        useMasterChannel = false;
+        initializeSceneRenderer(false);
+        refreshButtonText();
+    }
+
+    private void togglePreviousChannel() {
+        if (!hasChannels()) return;
+        if (--channelIndex < 0) {
+            channelIndex = channels.size() - 1;
+        }
+        useMasterChannel = false;
+        initializeSceneRenderer(false);
+        refreshButtonText();
+    }
+
+    private void toggleNextChannelTier() {
+        if (!hasChannels()) return;
+        channelTier[channelIndex] += 1;
+        useMasterChannel = false;
+        ChannelDataAccessor.setChannelData(trigger, channelArray[channelIndex], channelTier[channelIndex]);
+        initializeSceneRenderer(false);
+        refreshButtonText();
+    }
+
+    private void togglePreviousChannelTier() {
+        if (!hasChannels()) return;
+        channelTier[channelIndex] -= 1;
+        if (channelTier[channelIndex] == 0) {
+            channelTier[channelIndex] = 1;
+            refreshButtonText();
+            return;
+        }
+        useMasterChannel = false;
+        ChannelDataAccessor.setChannelData(trigger, channelArray[channelIndex], channelTier[channelIndex]);
+        initializeSceneRenderer(false);
+        refreshButtonText();
+    }
+
+    protected void toggleNextTier() {
+        tierIndex++;
+        useMasterChannel = true;
+        initializeSceneRenderer(false);
+        refreshButtonText();
+    }
+
+    protected void togglePreviousTier() {
+        if (tierIndex > 1) {
+            useMasterChannel = true;
+            tierIndex--;
+            initializeSceneRenderer(false);
+            refreshButtonText();
+        }
+    }
+
+    protected boolean hasChannels() {
+        return !channels.isEmpty();
     }
 
     private void setNextLayer(int newLayer) {
@@ -269,7 +409,6 @@ public abstract class GUI_MultiblockHandler<T> {
             }
             renderer.addRenderedBlocks(renderBlocks);
             scanIngredients();
-            guiLayerButtonTitle = getLayerButtonTitle();
         }
     }
 
@@ -284,16 +423,19 @@ public abstract class GUI_MultiblockHandler<T> {
     public void drawMultiblock() {
         guiMouseX = GuiDraw.getMousePosition().x;
         guiMouseY = GuiDraw.getMousePosition().y;
-        // NEI guiLeft
-        int k = (NEIClientUtils.getGuiContainer().width - 176) / 2;
-        // NEI guiTop
-        int l = (NEIClientUtils.getGuiContainer().height
-                - Math.min(Math.max(NEIClientUtils.getGuiContainer().height - 68, 166), 370)) / 2;
+        int guiLeft = NEIClientUtils.getGuiContainer().guiLeft;
+        int guiTop = NEIClientUtils.getGuiContainer().guiTop;
+
+        int guiHeight = NEIClientUtils.getGuiContainer().height;
+        if (guiHeight != lastHeight) {
+            scaledSceneHeight = Math.min(sceneHeight, sceneHeight * guiHeight / 500);
+            refreshButtonPos();
+        }
         renderer.render(
-                RECIPE_LAYOUT_X + k,
-                RECIPE_LAYOUT_Y + l,
+                RECIPE_LAYOUT_X + guiLeft,
+                RECIPE_LAYOUT_Y + guiTop,
                 RECIPE_WIDTH,
-                sceneHeight,
+                scaledSceneHeight,
                 lastGuiMouseX,
                 lastGuiMouseY);
         drawMultiblockName();
@@ -303,9 +445,9 @@ public abstract class GUI_MultiblockHandler<T> {
         tooltipBlockStack = null;
 
         MovingObjectPosition rayTraceResult = renderer.getLastTraceResult();
-        boolean insideView = guiMouseX >= k + RECIPE_LAYOUT_X && guiMouseY >= l + RECIPE_LAYOUT_Y
-                && guiMouseX < k + RECIPE_LAYOUT_X + RECIPE_WIDTH
-                && guiMouseY < l + RECIPE_LAYOUT_Y + sceneHeight;
+        boolean insideView = guiMouseX >= guiLeft + RECIPE_LAYOUT_X && guiMouseY >= guiTop + RECIPE_LAYOUT_Y
+                && guiMouseX < guiLeft + RECIPE_LAYOUT_X + RECIPE_WIDTH
+                && guiMouseY < guiTop + RECIPE_LAYOUT_Y + sceneHeight;
         boolean leftClickHeld = Mouse.isButtonDown(0);
         boolean rightClickHeld = Mouse.isButtonDown(1);
         boolean middleClickHeld = Mouse.isButtonDown(2);
@@ -349,8 +491,8 @@ public abstract class GUI_MultiblockHandler<T> {
         }
 
         // draw buttons
-        int actualMouseX = guiMouseX - k - MOUSE_OFFSET_X;
-        int actualMouseY = guiMouseY - l - MOUSE_OFFSET_Y;
+        int actualMouseX = guiMouseX - guiLeft - MOUSE_OFFSET_X;
+        int actualMouseY = guiMouseY - guiTop - MOUSE_OFFSET_Y;
         FontRenderer fontRenderer = Minecraft.getMinecraft().fontRenderer;
         for (GuiButton button : buttons.keySet()) {
             button.drawButton(Minecraft.getMinecraft(), actualMouseX, actualMouseY);
@@ -362,7 +504,7 @@ public abstract class GUI_MultiblockHandler<T> {
                 int textWidth = fontRenderer.getStringWidth(tooltipButton.hoverString);
                 tooltipButton.drawTooltipBox(
                         fontRenderer,
-                        actualMouseX - 10,
+                        actualMouseX - 3,
                         actualMouseY - 17,
                         textWidth + 3,
                         tooltipButton.height);
@@ -380,6 +522,7 @@ public abstract class GUI_MultiblockHandler<T> {
                     Minecraft.getMinecraft().thePlayer);
         }
 
+        lastHeight = guiHeight;
         lastGuiMouseX = guiMouseX;
         lastGuiMouseY = guiMouseY;
 
@@ -406,23 +549,37 @@ public abstract class GUI_MultiblockHandler<T> {
         }
     }
 
-    protected String getLayerButtonTitle() {
-        return guiTextLayer + ": " + (layerIndex == -1 ? "A" : Integer.toString(layerIndex + 1));
-    }
-
     protected void drawButtonsTitle(FontRenderer fontRenderer) {
         fontRenderer.drawString(
-                guiLayerButtonTitle,
-                LAYER_BUTTON_X + ICON_SIZE_X
-                        + (initialLayerButtonTitleWidth - fontRenderer.getStringWidth(guiLayerButtonTitle)) / 2,
-                UNDER_PREVIEW_Y + 2,
+                guiTierButtonTitle,
+                BUTTON_LEFT + ICON_SIZE_X
+                        + (initialTierButtonTitleWidth - fontRenderer.getStringWidth(guiTierButtonTitle)) / 2,
+                scaledSceneHeight + ICON_SIZE_Y + 2,
                 guiColorFont);
         fontRenderer.drawString(
-                guiTierButtonTitle,
-                TIER_BUTTON_X + ICON_SIZE_X
-                        + (initialTierButtonTitleWidth - fontRenderer.getStringWidth(guiTierButtonTitle)) / 2,
-                TIER_BUTTON_Y + 2,
+                guiLayerButtonTitle,
+                BUTTON_LEFT + ICON_SIZE_X
+                        + (initialLayerButtonTitleWidth - fontRenderer.getStringWidth(guiLayerButtonTitle)) / 2,
+                scaledSceneHeight + (ICON_SIZE_Y * 2) + 2,
                 guiColorFont);
+        if (hasChannels()) {
+            fontRenderer.drawString(
+                    StatCollector.translateToLocal("blockrenderer6343.nei.current_channel") + ": " + channelTitle,
+                    BUTTON_LEFT + 6,
+                    scaledSceneHeight + (ICON_SIZE_Y * 3) + 2,
+                    guiColorFont);
+            fontRenderer.drawString(
+                    StatCollector.translateToLocal("blockrenderer6343.nei.channel"),
+                    BUTTON_LEFT + ICON_SIZE_X,
+                    scaledSceneHeight + (ICON_SIZE_Y * 4) + 2,
+                    guiColorFont);
+            fontRenderer.drawString(
+                    channelTierTitle,
+                    BUTTON_LEFT + ICON_SIZE_X
+                            + (initialChannelTierButtonTitleWidth - fontRenderer.getStringWidth(channelTierTitle)) / 2,
+                    scaledSceneHeight + (ICON_SIZE_Y * 5) + 2,
+                    guiColorFont);
+        }
     }
 
     protected void initializeSceneRenderer(boolean resetCamera) {
@@ -456,22 +613,17 @@ public abstract class GUI_MultiblockHandler<T> {
 
         renderer.setOnWorldRender(this::onRendererRender);
 
+        blocksBelowController = MathHelper.floor_double(MB_PLACE_POS.y - minPos.y);
         selectedBlock = null;
         onBlockSelected();
         setNextLayer(layerIndex);
 
         if (resetCamera) {
-            float max = Math.max(Math.max(Math.max(size.x, size.y), size.z), 1);
-            // Compact Series multiblocks compat
-            if (size.x >= 30 || size.y >= 30 || size.z >= 30) {
-                zoom = (float) (DEFAULT_RANGE_MULTIPLIER * 4 * Math.sqrt(max));
-            }
-            // Mega Series multiblocks compat
-            if (size.x >= 15 && size.y >= 15 && size.z >= 11) {
-                zoom = (float) (DEFAULT_RANGE_MULTIPLIER * 2 * Math.sqrt(max));
-            } else {
-                zoom = (float) (DEFAULT_RANGE_MULTIPLIER * Math.sqrt(max));
-            }
+            float max = Math.max(Math.max(size.x, size.y), size.z);
+            float baseZoom = (float) (DEFAULT_RANGE_MULTIPLIER * Math.sqrt(max));
+            float sizeFactor = (float) (1.0f + Math.log(max) / Math.log(10));
+
+            zoom = baseZoom * sizeFactor / 1.5f;
             rotationYaw = 20.0f;
             rotationPitch = 50f;
             if (renderer != null) {
@@ -486,22 +638,20 @@ public abstract class GUI_MultiblockHandler<T> {
         this.scrolled = scrolled;
     }
 
-    protected void toggleNextTier() {
-        tierIndex++;
-        guiTierButtonTitle = getTierButtonTitle();
-        initializeSceneRenderer(false);
-    }
-
-    protected void togglePreviousTier() {
-        if (tierIndex > 1) {
-            tierIndex--;
-            guiTierButtonTitle = getTierButtonTitle();
-            initializeSceneRenderer(false);
-        }
-    }
-
     protected String getTierButtonTitle() {
         return guiTextTier + ": " + tierIndex;
+    }
+
+    protected String getChannelTitle() {
+        return useMasterChannel ? "All" : firstUpper(channelArray[channelIndex]);
+    }
+
+    protected String getChannelTierTitle() {
+        return StatCollector.translateToLocal("blockrenderer6343.nei.channel_tier") + ": " + channelTier[channelIndex];
+    }
+
+    protected String getLayerButtonTitle() {
+        return guiTextLayer + ": " + (layerIndex == -1 ? "A" : Integer.toString(layerIndex + 1));
     }
 
     public void onRendererRender(WorldSceneRenderer renderer) {
@@ -518,43 +668,39 @@ public abstract class GUI_MultiblockHandler<T> {
         renderBlockOverLay(selectedBlock, Blocks.stained_glass.getIcon(0, 14));
     }
 
-    protected void projectMultiblocks() {
+    protected void projectMultiblock() {
         EntityPlayer player = Minecraft.getMinecraft().thePlayer;
         World baseWorld = Minecraft.getMinecraft().theWorld;
+        Vec3 lookVec = player.getLookVec();
         MovingObjectPosition lookingPos = player.rayTrace(10, 1);
-        if (lookingPos.typeOfHit == MovingObjectPosition.MovingObjectType.MISS) return;
-        int playerDir = MathHelper.floor_double((player.rotationYaw * 4F) / 360F + 0.5D) & 3;
-        ItemStack itemStack = stackForm.copy();
+        int blockX, blockY, blockZ;
+        if (lookingPos == null || lookingPos.typeOfHit == MovingObjectPosition.MovingObjectType.MISS) {
+            blockX = MathHelper.floor_double(player.posX + lookVec.xCoord * 2);
+            blockZ = MathHelper.floor_double(player.posZ + lookVec.zCoord * 2);
+            blockY = baseWorld.getPrecipitationHeight(blockX, blockZ) + blocksBelowController;
+        } else {
+            blockX = lookingPos.blockX;
+            blockY = lookingPos.blockY + blocksBelowController + 1;
+            blockZ = lookingPos.blockZ;
+        }
+        ItemStack copy = stackForm.copy();
 
-        if (!baseWorld.isAirBlock(lookingPos.blockX, lookingPos.blockY + 1, lookingPos.blockZ)) {
+        if (!baseWorld.isAirBlock(blockX, blockY, blockZ)) {
             player.addChatMessage(new ChatComponentText(StatCollector.translateToLocal("blockrenderer6343.no_space")));
             return;
         }
 
-        itemStack.getItem().onItemUse(
-                itemStack,
-                player,
-                baseWorld,
-                lookingPos.blockX,
-                lookingPos.blockY + 1,
-                lookingPos.blockZ,
-                0,
-                lookingPos.blockX,
-                lookingPos.blockY,
-                lookingPos.blockZ);
-        ConstructableUtility.handle(
-                getTriggerStack(),
-                player,
-                baseWorld,
-                lookingPos.blockX,
-                lookingPos.blockY + 1,
-                lookingPos.blockZ,
-                playerDir);
-        baseWorld.setBlockToAir(lookingPos.blockX, lookingPos.blockY + 1, lookingPos.blockZ);
-        baseWorld.removeTileEntity(lookingPos.blockX, lookingPos.blockY + 1, lookingPos.blockZ);
+        if (!copy.getItem().onItemUse(copy, player, baseWorld, blockX, blockY, blockZ, 0, blockX, blockY - 1, blockZ)) {
+            player.addChatMessage(new ChatComponentText(StatCollector.translateToLocal("blockrenderer6343.no_block")));
+            return;
+        }
+        ConstructableUtility.handle(getBuildTriggerStack(), player, baseWorld, blockX, blockY, blockZ, 0);
+        baseWorld.setBlockToAir(blockX, blockY, blockZ);
+        baseWorld.removeTileEntity(blockX, blockY, blockZ);
     }
 
     protected void neiOverlay() {
+        if (!BlockRenderer6343.isNEELoaded) return;
         NBTTagCompound recipeInputs = new NBTTagCompound();
         GuiRecipe<?> currentScreen = (GuiRecipe<?>) Minecraft.getMinecraft().currentScreen;
         Minecraft.getMinecraft().displayGuiScreen(currentScreen.firstGui);
@@ -568,6 +714,18 @@ public abstract class GUI_MultiblockHandler<T> {
             }
         }
         NEENetworkHandler.getInstance().sendToServer(new PacketNEIPatternRecipe(recipeInputs, new NBTTagCompound()));
+    }
+
+    protected void copyToHologram() {
+        if (!hasChannels()) return;
+        EntityPlayer player = Minecraft.getMinecraft().thePlayer;
+        ItemStack stack = player.getHeldItem();
+        if (stack == null || !(stack.getItem() instanceof ItemConstructableTrigger)) {
+            player.addChatMessage(
+                    new ChatComponentText(StatCollector.translateToLocal("blockrenderer6343.no_projector")));
+        } else {
+            StructureLib.instance().proxy().uploadChannels(trigger);
+        }
     }
 
     private void scanIngredients() {
@@ -613,15 +771,12 @@ public abstract class GUI_MultiblockHandler<T> {
 
     public boolean mouseClicked(int button) {
         for (Map.Entry<GuiButton, Runnable> buttons : buttons.entrySet()) {
-            // NEI guiLeft
-            int k = (NEIClientUtils.getGuiContainer().width - 176) / 2;
-            // NEI guiTop
-            int l = (NEIClientUtils.getGuiContainer().height
-                    - Math.min(Math.max(NEIClientUtils.getGuiContainer().height - 68, 166), 370)) / 2;
+            int guiLeft = NEIClientUtils.getGuiContainer().guiLeft;
+            int guiTop = NEIClientUtils.getGuiContainer().guiTop;
             if (buttons.getKey().mousePressed(
                     Minecraft.getMinecraft(),
-                    guiMouseX - k - MOUSE_OFFSET_X,
-                    guiMouseY - l - MOUSE_OFFSET_Y)) {
+                    guiMouseX - guiLeft - MOUSE_OFFSET_X,
+                    guiMouseY - guiTop - MOUSE_OFFSET_Y)) {
                 buttons.getValue().run();
                 selectedBlock = null;
                 onBlockSelected();
@@ -647,12 +802,17 @@ public abstract class GUI_MultiblockHandler<T> {
     }
 
     @NotNull
-    protected static ItemStack getTriggerStack() {
+    protected static ItemStack getOriginalTriggerStack() {
         return new ItemStack(StructureLibAPI.getDefaultHologramItem(), tierIndex);
     }
 
     protected EntityPlayer createFakeBuilder(World world, String name) {
         return new ClientFakePlayer(world, new GameProfile(UUID.nameUUIDFromBytes(name.getBytes()), name));
+    }
+
+    @NotNull
+    protected ItemStack getBuildTriggerStack() {
+        return useMasterChannel ? getOriginalTriggerStack() : trigger;
     }
 
     protected void scanCandidates() {
@@ -668,7 +828,7 @@ public abstract class GUI_MultiblockHandler<T> {
                             selectedBlock.x,
                             selectedBlock.y,
                             selectedBlock.z,
-                            getTriggerStack(),
+                            getOriginalTriggerStack(),
                             AutoPlaceEnvironment.fromLegacy(
                                     CreativeItemSource.instance,
                                     fakeMultiblockBuilder,
@@ -733,14 +893,24 @@ public abstract class GUI_MultiblockHandler<T> {
         }
     }
 
+    public String firstUpper(String str) {
+        return str.substring(0, 1).toUpperCase() + str.substring(1);
+    }
+
     protected static class ClearGuiButton extends GuiButton {
 
         private int colorEnabled;
         private int colorDisabled;
         private int colorHovered;
+        private BooleanSupplier booleanSupplier;
 
-        public ClearGuiButton(int id, int x, int y, int width, int height, String displayString) {
-            super(id, x, y, width, height, displayString);
+        public ClearGuiButton(int id, int x, int y, String displayString) {
+            this(id, x, y, displayString, null);
+        }
+
+        public ClearGuiButton(int id, int x, int y, String displayString, BooleanSupplier booleanSupplier) {
+            super(id, x, y, ICON_SIZE_X, ICON_SIZE_Y, displayString);
+            this.booleanSupplier = booleanSupplier;
         }
 
         public void setColors(int clrEnabled, int clrDisabled, int clrHovered) {
@@ -752,6 +922,8 @@ public abstract class GUI_MultiblockHandler<T> {
         @Override
         public void drawButton(Minecraft mc, int mouseX, int mouseY) {
             if (this.visible) {
+                if (booleanSupplier != null && !booleanSupplier.getAsBoolean()) return;
+
                 FontRenderer fontrenderer = mc.fontRenderer;
                 this.field_146123_n = mouseX >= this.xPosition && mouseY >= this.yPosition
                         && mouseX < this.xPosition + this.width

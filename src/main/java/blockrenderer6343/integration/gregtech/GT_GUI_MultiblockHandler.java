@@ -53,22 +53,22 @@ public class GT_GUI_MultiblockHandler extends GUI_MultiblockHandler<IConstructab
         }
         structureElements.clear();
 
-        if (mte instanceof ISurvivalConstructable) {
+        if (mte instanceof ISurvivalConstructable survivalConstructable) {
             int result, iterations = 0;
             do {
-                result = ((ISurvivalConstructable) mte).survivalConstruct(
-                        getTriggerStack(),
+                result = survivalConstructable.survivalConstruct(
+                        getBuildTriggerStack(),
                         Integer.MAX_VALUE,
                         ISurvivalBuildEnvironment.create(CreativeItemSource.instance, fakeMultiblockBuilder));
                 iterations++;
             } while (result > 0 && iterations < MAX_PLACE_ROUNDS);
-        } else if (tTileEntity instanceof IConstructableProvider) {
-            constructable = ((IConstructableProvider) tTileEntity).getConstructable();
-        } else if (tTileEntity instanceof IConstructable) {
-            constructable = (IConstructable) tTileEntity;
+        } else if (tTileEntity instanceof IConstructableProvider iConstructableProvider) {
+            constructable = iConstructableProvider.getConstructable();
+        } else if (tTileEntity instanceof IConstructable iConstructable) {
+            constructable = iConstructable;
         }
         if (constructable != null) {
-            constructable.construct(getTriggerStack(), false);
+            constructable.construct(getBuildTriggerStack(), false);
         }
 
         if (StructureLibAPI.isInstrumentEnabled()) {

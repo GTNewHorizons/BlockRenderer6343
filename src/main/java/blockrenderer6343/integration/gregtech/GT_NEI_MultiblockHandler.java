@@ -1,7 +1,7 @@
 package blockrenderer6343.integration.gregtech;
 
 import static blockrenderer6343.integration.nei.IMCForNEI.GT_NEI_MB_HANDLER_NAME;
-import static gregtech.api.GregTech_API.METATILEENTITIES;
+import static gregtech.api.GregTechAPI.METATILEENTITIES;
 
 import java.util.ArrayList;
 import java.util.List;

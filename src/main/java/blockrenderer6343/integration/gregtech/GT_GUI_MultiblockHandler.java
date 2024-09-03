@@ -16,7 +16,7 @@ import blockrenderer6343.integration.nei.GUI_MultiblockHandler;
 import gregtech.api.interfaces.metatileentity.IMetaTileEntity;
 import gregtech.api.interfaces.tileentity.IGregTechTileEntity;
 import gregtech.api.interfaces.tileentity.ITurnable;
-import gregtech.api.threads.GT_Runnable_MachineBlockUpdate;
+import gregtech.api.threads.RunnableMachineUpdate;
 
 public class GT_GUI_MultiblockHandler extends GUI_MultiblockHandler<IConstructable> {
 
@@ -26,8 +26,8 @@ public class GT_GUI_MultiblockHandler extends GUI_MultiblockHandler<IConstructab
 
     @Override
     protected void placeMultiblock() {
-        if (GT_Runnable_MachineBlockUpdate.isCurrentThreadEnabled()) {
-            GT_Runnable_MachineBlockUpdate.setCurrentThreadEnabled(false);
+        if (RunnableMachineUpdate.isCurrentThreadEnabled()) {
+            RunnableMachineUpdate.setCurrentThreadEnabled(false);
         }
 
         IConstructable constructable = null;
@@ -75,8 +75,8 @@ public class GT_GUI_MultiblockHandler extends GUI_MultiblockHandler<IConstructab
             StructureLibAPI.disableInstrument();
         }
 
-        if (!GT_Runnable_MachineBlockUpdate.isCurrentThreadEnabled()) {
-            GT_Runnable_MachineBlockUpdate.setCurrentThreadEnabled(true);
+        if (!RunnableMachineUpdate.isCurrentThreadEnabled()) {
+            RunnableMachineUpdate.setCurrentThreadEnabled(true);
         }
     }
 }

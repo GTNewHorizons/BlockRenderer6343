@@ -10,9 +10,9 @@ import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
 import com.gtnewhorizon.structurelib.structure.ISurvivalBuildEnvironment;
 
 import blockrenderer6343.api.utils.CreativeItemSource;
-import blockrenderer6343.integration.nei.GUI_MultiblockHandler;
+import blockrenderer6343.integration.nei.GuiMultiblockHandler;
 
-public class StructureCompatGuiHandler extends GUI_MultiblockHandler {
+public class StructureCompatGuiHandler extends GuiMultiblockHandler {
 
     public StructureCompatGuiHandler() {
         super();

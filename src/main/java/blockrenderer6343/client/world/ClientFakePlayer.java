@@ -10,7 +10,7 @@ import net.minecraft.world.World;
 
 import com.mojang.authlib.GameProfile;
 
-import blockrenderer6343.integration.nei.GUI_MultiblockHandler;
+import blockrenderer6343.integration.nei.GuiMultiblockHandler;
 
 public class ClientFakePlayer extends EntityPlayer {
 
@@ -36,7 +36,7 @@ public class ClientFakePlayer extends EntityPlayer {
     @Override
     public void addChatComponentMessage(IChatComponent message) {
         if (message instanceof ChatComponentTranslation msg && msg.getKey().equals(CHANNEL_KEY)) {
-            GUI_MultiblockHandler.channels.add(msg.getFormatArgs()[0].toString());
+            GuiMultiblockHandler.channels.add(msg.getFormatArgs()[0].toString());
         }
     }
 

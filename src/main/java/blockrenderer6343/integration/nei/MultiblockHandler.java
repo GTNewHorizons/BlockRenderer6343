@@ -1,6 +1,6 @@
 package blockrenderer6343.integration.nei;
 
-import static blockrenderer6343.integration.nei.GUI_MultiblockHandler.SLOT_SIZE;
+import static blockrenderer6343.integration.nei.GuiMultiblockHandler.SLOT_SIZE;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -29,11 +29,11 @@ public abstract class MultiblockHandler extends TemplateRecipeHandler {
     protected final List<PositionedStack> positionedIngredients = new ArrayList<>();
     protected int lastRecipeHeight;
     protected RecipeCacher recipeCacher = new RecipeCacher();
-    protected GUI_MultiblockHandler guiHandler;
+    protected GuiMultiblockHandler guiHandler;
     protected IConstructable[] currentMultiblocks;
     protected int oldRecipe;
 
-    public MultiblockHandler(GUI_MultiblockHandler guiHandler) {
+    public MultiblockHandler(GuiMultiblockHandler guiHandler) {
         this.guiHandler = guiHandler;
         guiHandler.setOnIngredientChanged(this::resetPositionedIngredients);
         guiHandler.setOnCandidateChanged(this::setResults);
@@ -100,7 +100,7 @@ public abstract class MultiblockHandler extends TemplateRecipeHandler {
         return StatCollector.translateToLocal("blockrenderer6343.multiblock.structure");
     }
 
-    protected GUI_MultiblockHandler getGuiHandler() {
+    protected GuiMultiblockHandler getGuiHandler() {
         return guiHandler;
     }
 

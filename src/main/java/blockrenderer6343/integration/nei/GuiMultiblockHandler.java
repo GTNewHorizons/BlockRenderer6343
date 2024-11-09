@@ -71,7 +71,7 @@ import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
 
 @EventBusSubscriber(side = Side.CLIENT)
-public abstract class GUI_MultiblockHandler {
+public abstract class GuiMultiblockHandler {
 
     protected static ImmediateWorldSceneRenderer renderer;
     private final RenderBlocks renderBlocks = new RenderBlocks();
@@ -152,7 +152,7 @@ public abstract class GUI_MultiblockHandler {
     protected String channelTitle, channelTierTitle;
     protected int lastHeight;
 
-    public GUI_MultiblockHandler() {
+    public GuiMultiblockHandler() {
         previousTierButton = new ClearGuiButton(1, BUTTON_LEFT, UNDER_PREVIEW_Y, "<");
         nextTierButton = new ClearGuiButton(1, BUTTON_LEFT + ICON_SIZE_X, UNDER_PREVIEW_Y, ">");
         previousLayerButton = new ClearGuiButton(2, BUTTON_LEFT, UNDER_PREVIEW_Y + ICON_SIZE_Y, "<");

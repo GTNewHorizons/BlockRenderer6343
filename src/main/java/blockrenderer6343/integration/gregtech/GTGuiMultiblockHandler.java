@@ -10,15 +10,15 @@ import com.gtnewhorizon.structurelib.alignment.constructable.ISurvivalConstructa
 import com.gtnewhorizon.structurelib.structure.ISurvivalBuildEnvironment;
 
 import blockrenderer6343.api.utils.CreativeItemSource;
-import blockrenderer6343.integration.nei.GUI_MultiblockHandler;
+import blockrenderer6343.integration.nei.GuiMultiblockHandler;
 import gregtech.api.interfaces.metatileentity.IMetaTileEntity;
 import gregtech.api.interfaces.tileentity.IGregTechTileEntity;
 import gregtech.api.interfaces.tileentity.ITurnable;
 import gregtech.api.threads.RunnableMachineUpdate;
 
-public class GT_GUI_MultiblockHandler extends GUI_MultiblockHandler {
+public class GTGuiMultiblockHandler extends GuiMultiblockHandler {
 
-    public GT_GUI_MultiblockHandler() {
+    public GTGuiMultiblockHandler() {
         super();
     }
 

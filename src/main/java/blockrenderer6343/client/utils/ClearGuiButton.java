@@ -1,7 +1,7 @@
 package blockrenderer6343.client.utils;
 
-import static blockrenderer6343.integration.nei.GUI_MultiblockHandler.ICON_SIZE_X;
-import static blockrenderer6343.integration.nei.GUI_MultiblockHandler.ICON_SIZE_Y;
+import static blockrenderer6343.integration.nei.GuiMultiblockHandler.ICON_SIZE_X;
+import static blockrenderer6343.integration.nei.GuiMultiblockHandler.ICON_SIZE_Y;
 
 import java.util.function.BooleanSupplier;
 

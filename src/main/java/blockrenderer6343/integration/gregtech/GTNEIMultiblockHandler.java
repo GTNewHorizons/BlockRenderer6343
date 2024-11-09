@@ -36,11 +36,11 @@ import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
 import it.unimi.dsi.fastutil.objects.ObjectSets;
 
-public class GT_NEI_MultiblockHandler extends MultiblockHandler {
+public class GTNEIMultiblockHandler extends MultiblockHandler {
 
     public static final List<IConstructable> multiblocksList = new ArrayList<>();
     private static final ItemStackMap<ObjectSet<IConstructable>> casingForMulti;
-    private static final GT_GUI_MultiblockHandler baseHandler = new GT_GUI_MultiblockHandler();
+    private static final GTGuiMultiblockHandler baseHandler = new GTGuiMultiblockHandler();
     private static final ItemStack HOLO_STACK = new ItemStack(StructureLibAPI.getDefaultHologramItem());
     public static final String GT_NEI_MB_HANDLER_NAME = "gregtech.nei.multiblockhandler";
 
@@ -54,7 +54,7 @@ public class GT_NEI_MultiblockHandler extends MultiblockHandler {
         casingForMulti = getCasingForMulti();
     }
 
-    public GT_NEI_MultiblockHandler() {
+    public GTNEIMultiblockHandler() {
         super(baseHandler);
     }
 
@@ -65,7 +65,7 @@ public class GT_NEI_MultiblockHandler extends MultiblockHandler {
 
     @Override
     public TemplateRecipeHandler newInstance() {
-        return new GT_NEI_MultiblockHandler();
+        return new GTNEIMultiblockHandler();
     }
 
     @Override

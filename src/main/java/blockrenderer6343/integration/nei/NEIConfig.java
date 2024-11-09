@@ -7,7 +7,7 @@ import com.gtnewhorizon.structurelib.StructureLibAPI;
 
 import blockrenderer6343.BlockRenderer6343;
 import blockrenderer6343.Tags;
-import blockrenderer6343.integration.gregtech.GT_NEI_MultiblockHandler;
+import blockrenderer6343.integration.gregtech.GTNEIMultiblockHandler;
 import blockrenderer6343.integration.structurelib.StructureCompatNEIHandler;
 import codechicken.nei.api.IConfigureNEI;
 import codechicken.nei.event.NEIRegisterHandlerInfosEvent;
@@ -25,7 +25,7 @@ public class NEIConfig implements IConfigureNEI {
     public static void registerHandler(NEIRegisterHandlerInfosEvent event) {
         if (BlockRenderer6343.isGTLoaded) {
             event.registerHandlerInfo(
-                    new HandlerInfo.Builder(GT_NEI_MultiblockHandler.class, "GregTech", "gregtech")
+                    new HandlerInfo.Builder(GTNEIMultiblockHandler.class, "GregTech", "gregtech")
                             .setDisplayStack(new ItemStack(StructureLibAPI.getDefaultHologramItem())).setHeight(168)
                             .setWidth(192).setMaxRecipesPerPage(1).setShiftY(6).build());
         }
@@ -40,7 +40,7 @@ public class NEIConfig implements IConfigureNEI {
         addHandler(new StructureCompatNEIHandler());
 
         if (BlockRenderer6343.isGTLoaded) {
-            addHandler(new GT_NEI_MultiblockHandler());
+            addHandler(new GTNEIMultiblockHandler());
         }
     }
 

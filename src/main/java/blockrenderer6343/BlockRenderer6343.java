@@ -19,12 +19,12 @@ import cpw.mods.fml.relauncher.Side;
         version = Tags.VERSION,
         name = BlockRenderer6343.MOD_NAME,
         acceptedMinecraftVersions = "[1.7.10]",
-        dependencies = "required-after:NotEnoughItems;required-after:structurelib")
+        dependencies = "required-after:NotEnoughItems;required-after:structurelib;required-after:gtnhlib;")
 public class BlockRenderer6343 {
 
     public static final String MOD_ID = "blockrenderer6343";
     public static final String MOD_NAME = "BlockRenderer6343";
-    public static Logger LOG = LogManager.getLogger(MOD_ID);
+    public static final Logger LOG = LogManager.getLogger(MOD_ID);
 
     @SidedProxy(clientSide = MOD_ID + ".ClientProxy", serverSide = MOD_ID + ".CommonProxy")
     public static CommonProxy proxy;
@@ -37,10 +37,10 @@ public class BlockRenderer6343 {
     // preInit "Run before anything else. Read your config, create blocks, items,
     // etc, and register them with the GameRegistry."
     public void preInit(FMLPreInitializationEvent event) {
-        proxy.preInit(event);
         isGTLoaded = Loader.isModLoaded("gregtech");
         isBartworksLoaded = Loader.isModLoaded("bartworks");
         isNEELoaded = Loader.isModLoaded("neenergistics");
+        proxy.preInit(event);
     }
 
     @Mod.EventHandler

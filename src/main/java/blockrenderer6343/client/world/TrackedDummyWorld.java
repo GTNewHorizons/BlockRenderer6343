@@ -1,8 +1,5 @@
 package blockrenderer6343.client.world;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.MathHelper;
@@ -13,13 +10,16 @@ import net.minecraftforge.common.util.BlockSnapshot;
 
 import org.lwjgl.util.vector.Vector3f;
 
-import blockrenderer6343.api.utils.BlockPosition;
+import com.gtnewhorizon.gtnhlib.util.CoordinatePacker;
+
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
+import it.unimi.dsi.fastutil.longs.LongSet;
 
 public class TrackedDummyWorld extends DummyWorld {
 
-    public final Set<BlockPosition> placedBlocks = new HashSet<>();
+    public final LongSet placedBlocks = new LongOpenHashSet();
 
     private final Vector3f minPos = new Vector3f(Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE);
     private final Vector3f maxPos = new Vector3f(Integer.MIN_VALUE, Integer.MIN_VALUE, Integer.MIN_VALUE);
@@ -27,9 +27,9 @@ public class TrackedDummyWorld extends DummyWorld {
     @Override
     public boolean setBlock(int x, int y, int z, Block block, int meta, int flags) {
         if (block == Blocks.air) {
-            placedBlocks.remove(new BlockPosition(x, y, z));
+            placedBlocks.remove(CoordinatePacker.pack(x, y, z));
         } else {
-            placedBlocks.add(new BlockPosition(x, y, z));
+            placedBlocks.add(CoordinatePacker.pack(x, y, z));
         }
         minPos.x = Math.min(minPos.x, x);
         minPos.y = Math.min(minPos.y, y);
@@ -112,11 +112,11 @@ public class TrackedDummyWorld extends DummyWorld {
         return maxPos;
     }
 
-    public MovingObjectPosition rayTraceBlockswithTargetMap(Vec3 start, Vec3 end, Set<BlockPosition> targetedBlocks) {
-        return rayTraceBlockswithTargetMap(start, end, targetedBlocks, false, false, false);
+    public MovingObjectPosition rayTraceBlocksWithTargetMap(Vec3 start, Vec3 end, LongSet targetedBlocks) {
+        return rayTraceBlocksWithTargetMap(start, end, targetedBlocks, false, false, false);
     }
 
-    public MovingObjectPosition rayTraceBlockswithTargetMap(Vec3 start, Vec3 end, Set<BlockPosition> targetedBlocks,
+    public MovingObjectPosition rayTraceBlocksWithTargetMap(Vec3 start, Vec3 end, LongSet targetedBlocks,
             boolean stopOnLiquid, boolean ignoreBlockWithoutBoundingBox, boolean returnLastUncollidableBlock) {
         if (!Double.isNaN(start.xCoord) && !Double.isNaN(start.yCoord) && !Double.isNaN(start.zCoord)) {
             if (!Double.isNaN(end.xCoord) && !Double.isNaN(end.yCoord) && !Double.isNaN(end.zCoord)) {
@@ -285,7 +285,7 @@ public class TrackedDummyWorld extends DummyWorld {
         }
     }
 
-    private boolean isBlockTargeted(MovingObjectPosition result, Set<BlockPosition> targetedBlocks) {
-        return targetedBlocks.contains(new BlockPosition(result.blockX, result.blockY, result.blockZ));
+    private boolean isBlockTargeted(MovingObjectPosition result, LongSet targetedBlocks) {
+        return targetedBlocks.contains(CoordinatePacker.pack(result.blockX, result.blockY, result.blockZ));
     }
 }

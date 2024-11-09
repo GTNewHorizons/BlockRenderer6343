@@ -4,13 +4,11 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraftforge.common.util.ForgeDirection;
 
-import com.gtnewhorizon.structurelib.StructureLibAPI;
 import com.gtnewhorizon.structurelib.alignment.constructable.IConstructable;
 import com.gtnewhorizon.structurelib.alignment.constructable.IConstructableProvider;
 import com.gtnewhorizon.structurelib.alignment.constructable.ISurvivalConstructable;
 import com.gtnewhorizon.structurelib.structure.ISurvivalBuildEnvironment;
 
-import blockrenderer6343.BlockRenderer6343;
 import blockrenderer6343.api.utils.CreativeItemSource;
 import blockrenderer6343.integration.nei.GUI_MultiblockHandler;
 import gregtech.api.interfaces.metatileentity.IMetaTileEntity;
@@ -18,7 +16,7 @@ import gregtech.api.interfaces.tileentity.IGregTechTileEntity;
 import gregtech.api.interfaces.tileentity.ITurnable;
 import gregtech.api.threads.RunnableMachineUpdate;
 
-public class GT_GUI_MultiblockHandler extends GUI_MultiblockHandler<IConstructable> {
+public class GT_GUI_MultiblockHandler extends GUI_MultiblockHandler {
 
     public GT_GUI_MultiblockHandler() {
         super();
@@ -48,11 +46,6 @@ public class GT_GUI_MultiblockHandler extends GUI_MultiblockHandler<IConstructab
         ((ITurnable) tTileEntity).setFrontFacing(ForgeDirection.SOUTH);
         IMetaTileEntity mte = ((IGregTechTileEntity) tTileEntity).getMetaTileEntity();
 
-        if (!StructureLibAPI.isInstrumentEnabled()) {
-            StructureLibAPI.enableInstrument(BlockRenderer6343.MOD_ID);
-        }
-        structureElements.clear();
-
         if (mte instanceof ISurvivalConstructable survivalConstructable) {
             int result, iterations = 0;
             do {
@@ -69,10 +62,6 @@ public class GT_GUI_MultiblockHandler extends GUI_MultiblockHandler<IConstructab
         }
         if (constructable != null) {
             constructable.construct(getBuildTriggerStack(), false);
-        }
-
-        if (StructureLibAPI.isInstrumentEnabled()) {
-            StructureLibAPI.disableInstrument();
         }
 
         if (!RunnableMachineUpdate.isCurrentThreadEnabled()) {

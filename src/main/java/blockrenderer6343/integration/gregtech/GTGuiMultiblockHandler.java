@@ -1,5 +1,7 @@
 package blockrenderer6343.integration.gregtech;
 
+import static blockrenderer6343.client.utils.BRUtil.FAKE_PLAYER;
+
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraftforge.common.util.ForgeDirection;
@@ -18,10 +20,6 @@ import gregtech.api.threads.RunnableMachineUpdate;
 
 public class GTGuiMultiblockHandler extends GuiMultiblockHandler {
 
-    public GTGuiMultiblockHandler() {
-        super();
-    }
-
     @Override
     protected void placeMultiblock() {
         if (RunnableMachineUpdate.isCurrentThreadEnabled()) {
@@ -32,7 +30,7 @@ public class GTGuiMultiblockHandler extends GuiMultiblockHandler {
         ItemStack copy = stackForm.copy();
         copy.getItem().onItemUse(
                 copy,
-                fakeMultiblockBuilder,
+                FAKE_PLAYER,
                 renderer.world,
                 MB_PLACE_POS.x,
                 MB_PLACE_POS.y,
@@ -52,7 +50,7 @@ public class GTGuiMultiblockHandler extends GuiMultiblockHandler {
                 result = survivalConstructable.survivalConstruct(
                         getBuildTriggerStack(),
                         Integer.MAX_VALUE,
-                        ISurvivalBuildEnvironment.create(CreativeItemSource.instance, fakeMultiblockBuilder));
+                        ISurvivalBuildEnvironment.create(CreativeItemSource.instance, FAKE_PLAYER));
                 iterations++;
             } while (result > 0 && iterations < MAX_PLACE_ROUNDS);
         } else if (tTileEntity instanceof IConstructableProvider iConstructableProvider) {

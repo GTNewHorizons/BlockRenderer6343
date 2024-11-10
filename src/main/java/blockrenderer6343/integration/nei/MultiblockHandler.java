@@ -1,23 +1,43 @@
 package blockrenderer6343.integration.nei;
 
+import static blockrenderer6343.client.utils.BRUtil.FAKE_PLAYER;
 import static blockrenderer6343.integration.nei.GuiMultiblockHandler.SLOT_SIZE;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Predicate;
 
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.StatCollector;
 
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import com.google.common.base.Stopwatch;
 import com.gtnewhorizon.structurelib.alignment.constructable.IConstructable;
+import com.gtnewhorizon.structurelib.structure.AutoPlaceEnvironment;
+import com.gtnewhorizon.structurelib.structure.IStructureDefinition;
+import com.gtnewhorizon.structurelib.structure.IStructureElement;
+import com.gtnewhorizon.structurelib.structure.StructureDefinition;
 
+import blockrenderer6343.api.utils.CreativeItemSource;
+import blockrenderer6343.client.utils.BRUtil;
+import blockrenderer6343.client.utils.ConstructableData;
+import blockrenderer6343.integration.gregtech.StructureHacks;
 import codechicken.nei.PositionedStack;
 import codechicken.nei.recipe.GuiRecipeCatalyst;
 import codechicken.nei.recipe.RecipeCatalysts;
 import codechicken.nei.recipe.TemplateRecipeHandler;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
 
 public abstract class MultiblockHandler extends TemplateRecipeHandler {
@@ -25,6 +45,7 @@ public abstract class MultiblockHandler extends TemplateRecipeHandler {
     public static final int CANDIDATE_SLOTS_X = 150;
     public static final int CANDIDATE_SLOTS_Y = 20;
     public static final int CANDIDATE_IN_COlUMN = 6;
+    private static ItemStack lastStack;
     protected List<ItemStack> ingredients = new ArrayList<>();
     protected final List<PositionedStack> positionedIngredients = new ArrayList<>();
     protected int lastRecipeHeight;
@@ -64,6 +85,7 @@ public abstract class MultiblockHandler extends TemplateRecipeHandler {
 
         ObjectSet<IConstructable> multiblocks = tryLoadingMultiblocks(stack);
         if (multiblocks.isEmpty()) return;
+        lastStack = stack;
         currentMultiblocks = multiblocks.toArray(new IConstructable[0]);
     }
 
@@ -74,7 +96,10 @@ public abstract class MultiblockHandler extends TemplateRecipeHandler {
         if (oldRecipe != recipe) {
             oldRecipe = recipe;
             IConstructable multi = currentMultiblocks[recipe];
-            guiHandler.loadMultiblock(multi, getConstructableStack(multi));
+            guiHandler.loadMultiblock(
+                    multi,
+                    getConstructableStack(multi),
+                    ConstructableData.getTierData(multi).setTierFromStack(lastStack));
         }
 
         guiHandler.drawMultiblock();
@@ -83,6 +108,28 @@ public abstract class MultiblockHandler extends TemplateRecipeHandler {
             resetPositionedIngredients(ingredients);
             lastRecipeHeight = RecipeCatalysts.getHeight();
         }
+    }
+
+    public static @Nullable MultiblockHandler getHandlerFromGui(GuiScreen gui) {
+        // noinspection rawtypes
+        if (!(gui instanceof GuiRecipe recipe)) return null;
+        if (recipe.getHandler() instanceof MultiblockHandler handler) {
+            return handler;
+        }
+        return null;
+    }
+
+    public static @Nullable GuiMultiblockHandler getCurrentGuiHandler() {
+        MultiblockHandler handler = getHandlerFromGui(Minecraft.getMinecraft().currentScreen);
+        if (handler != null) {
+            return handler.getGuiHandler();
+        }
+        return null;
+    }
+
+    @Override
+    public String getOverlayIdentifier() {
+        return getClass().getName();
     }
 
     @Override
@@ -97,10 +144,10 @@ public abstract class MultiblockHandler extends TemplateRecipeHandler {
 
     @Override
     public String getRecipeName() {
-        return StatCollector.translateToLocal("blockrenderer6343.multiblock.structure");
+        return StringUtils.abbreviate(guiHandler.getMultiblockName(), 45);
     }
 
-    protected GuiMultiblockHandler getGuiHandler() {
+    protected @NotNull GuiMultiblockHandler getGuiHandler() {
         return guiHandler;
     }
 
@@ -143,6 +190,32 @@ public abstract class MultiblockHandler extends TemplateRecipeHandler {
         arecipes.clear();
         recipeCacher.setResults(results);
         arecipes.add(recipeCacher);
+    }
+
+    protected static Long2ObjectMap<ObjectSet<IConstructable>> getComponentToConstructableMap(
+            Collection<IConstructable> constructables, Predicate<ItemStack> isValidItem) {
+        Long2ObjectMap<ObjectSet<IConstructable>> result = new Long2ObjectOpenHashMap<>();
+        for (IConstructable multi : constructables) {
+            IStructureDefinition<?> structure = multi.getStructureDefinition();
+            if (!(structure instanceof StructureDefinition)) continue;
+            // noinspection unchecked
+            StructureDefinition<IConstructable> structureDefinition = (StructureDefinition<IConstructable>) structure;
+
+            ObjectSet<IStructureElement<IConstructable>> checkedElements = new ObjectOpenHashSet<>();
+            for (IStructureElement<IConstructable>[] elementArray : structureDefinition.getStructures().values()) {
+                for (IStructureElement<IConstructable> element : elementArray) {
+                    if (!checkedElements.add(element)) continue;
+                    Iterable<ItemStack> stacks = StructureHacks.getStacksForElement(multi, element);
+                    if (stacks == null) continue;
+
+                    for (ItemStack stack : stacks) {
+                        if (!isValidItem.test(stack)) continue;
+                        result.computeIfAbsent(BRUtil.hashStack(stack), k -> new ObjectOpenHashSet<>()).add(multi);
+                    }
+                }
+            }
+        }
+        return result;
     }
 
     public class RecipeCacher extends CachedRecipe {

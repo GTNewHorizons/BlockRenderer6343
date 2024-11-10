@@ -1,5 +1,9 @@
 package blockrenderer6343;
 
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.resources.IReloadableResourceManager;
+
+import blockrenderer6343.client.utils.GuiColor;
 import blockrenderer6343.client.world.TrackedDummyWorld;
 import blockrenderer6343.integration.nei.InputHandler;
 import codechicken.nei.guihook.GuiContainerManager;
@@ -19,6 +23,8 @@ public class ClientProxy extends CommonProxy {
         if (BlockRenderer6343.isGTLoaded) {
             GregTechAPI.addDummyWorld(TrackedDummyWorld.class);
         }
+        ((IReloadableResourceManager) Minecraft.getMinecraft().getResourceManager())
+                .registerReloadListener(GuiColor.FontColor);
     }
 
     // load "Do your mod setup. Build whatever data structures you care about. Register recipes."

@@ -97,28 +97,20 @@ public abstract class GuiMultiblockHandler {
     public static final BlockPos MB_PLACE_POS = new BlockPos(0, 64, 0);
     protected static final BlockPos SELECTED_BLOCK = new BlockPos().set(NO_SELECTED_BLOCK);
 
-    protected static int guiMouseX;
-    protected static int guiMouseY;
-    protected static int lastGuiMouseX;
-    protected static int lastGuiMouseY;
+    protected static int guiMouseX, guiMouseY, guiLeft, guiTop;
+    protected static int lastGuiMouseX, lastGuiMouseY;
     protected static Vector3f center;
-    protected static float rotationYaw;
-    protected static float rotationPitch;
+    protected static float rotationYaw, rotationPitch;
     protected static float zoom;
 
     protected static ItemStack tooltipBlockStack;
 
     protected static int layerIndex = -1;
-    protected static int guiColorBg;
-    protected static int guiColorFont;
-    protected static int buttonColorEnabled;
-    protected static int buttonColorDisabled;
-    protected static int buttonColorHovered;
+    protected static int guiColorBg, guiColorFont;
+    protected static int buttonColorEnabled, buttonColorDisabled, buttonColorHovered;
 
-    protected static String guiTextLayer;
-    protected static String guiLayerButtonTitle;
-    protected static String guiTextTier;
-    protected static String guiTierButtonTitle;
+    protected static String guiTextLayer, guiLayerButtonTitle;
+    protected static String guiTextTier, guiTierButtonTitle;
     protected static int initialTierButtonTitleWidth;
     protected static int initialLayerButtonTitleWidth;
     protected static int initialChannelTierButtonTitleWidth;
@@ -131,9 +123,8 @@ public abstract class GuiMultiblockHandler {
     protected Consumer<List<ItemStack>> onIngredientChanged;
     protected final Map<GuiButton, Runnable> buttons = new HashMap<>();
 
-    protected IConstructable renderingController;
+    protected IConstructable renderingController, lastRenderingController;
     protected ItemStack stackForm;
-    protected IConstructable lastRenderingController;
 
     public static final Long2ObjectMap<IStructureElement<IConstructable>> structureElementMap = new Long2ObjectOpenHashMap<>();
     protected Consumer<List<List<ItemStack>>> onCandidateChanged;
@@ -442,8 +433,8 @@ public abstract class GuiMultiblockHandler {
     public void drawMultiblock() {
         guiMouseX = GuiDraw.getMousePosition().x;
         guiMouseY = GuiDraw.getMousePosition().y;
-        int guiLeft = NEIClientUtils.getGuiContainer().guiLeft;
-        int guiTop = NEIClientUtils.getGuiContainer().guiTop;
+        guiLeft = NEIClientUtils.getGuiContainer().guiLeft;
+        guiTop = NEIClientUtils.getGuiContainer().guiTop;
 
         int guiHeight = NEIClientUtils.getGuiContainer().height;
         if (guiHeight != lastHeight) {
@@ -464,14 +455,11 @@ public abstract class GuiMultiblockHandler {
         tooltipBlockStack = null;
 
         MovingObjectPosition rayTraceResult = renderer.getLastTraceResult();
-        boolean insideView = guiMouseX >= guiLeft + RECIPE_LAYOUT_X && guiMouseY >= guiTop + RECIPE_LAYOUT_Y
-                && guiMouseX < guiLeft + RECIPE_LAYOUT_X + RECIPE_WIDTH
-                && guiMouseY < guiTop + RECIPE_LAYOUT_Y + sceneHeight;
         boolean leftClickHeld = Mouse.isButtonDown(0);
         boolean rightClickHeld = Mouse.isButtonDown(1);
         boolean middleClickHeld = Mouse.isButtonDown(2);
 
-        if (insideView) {
+        if (isInsideView()) {
             if (leftClickHeld) {
                 rotationPitch += guiMouseX - lastGuiMouseX + 360;
                 rotationPitch = rotationPitch % 360;
@@ -549,6 +537,12 @@ public abstract class GuiMultiblockHandler {
         // GlStateManager.disableRescaleNormal();
         // GlStateManager.disableLighting();
         // RenderHelper.disableStandardItemLighting();
+    }
+
+    private boolean isInsideView() {
+        return guiMouseX >= guiLeft + RECIPE_LAYOUT_X && guiMouseX <= guiLeft + RECIPE_LAYOUT_X + RECIPE_WIDTH
+                && guiMouseY >= guiTop + RECIPE_LAYOUT_Y
+                && guiMouseY <= guiTop + RECIPE_LAYOUT_Y + scaledSceneHeight;
     }
 
     protected String getMultiblockName() {
@@ -662,8 +656,12 @@ public abstract class GuiMultiblockHandler {
         }
     }
 
-    public void handleMouseScrollUp(int scrolled) {
-        this.scrolled = scrolled;
+    public boolean handleMouseScrollUp(int scrolled) {
+        if (isInsideView()) {
+            this.scrolled = scrolled;
+            return true;
+        }
+        return false;
     }
 
     protected String getTierButtonTitle() {

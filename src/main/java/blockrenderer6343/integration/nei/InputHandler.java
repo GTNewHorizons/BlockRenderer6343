@@ -74,15 +74,14 @@ public class InputHandler implements IContainerInputHandler, IContainerTooltipHa
 
     @Override
     public boolean mouseScrolled(GuiContainer gui, int mousex, int mousey, int scrolled) {
+        if (canHandle(gui)) {
+            return activeHandler.getGuiHandler().handleMouseScrollUp(scrolled);
+        }
         return false;
     }
 
     @Override
-    public void onMouseScrolled(GuiContainer gui, int mousex, int mousey, int scrolled) {
-        if (canHandle(gui)) {
-            activeHandler.getGuiHandler().handleMouseScrollUp(scrolled);
-        }
-    }
+    public void onMouseScrolled(GuiContainer gui, int mousex, int mousey, int scrolled) {}
 
     @Override
     public void onMouseDragged(GuiContainer gui, int amousex, int amousey, int button, long heldTime) {}

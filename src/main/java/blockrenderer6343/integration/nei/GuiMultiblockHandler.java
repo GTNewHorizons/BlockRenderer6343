@@ -56,6 +56,7 @@ import blockrenderer6343.client.renderer.ImmediateWorldSceneRenderer;
 import blockrenderer6343.client.renderer.WorldSceneRenderer;
 import blockrenderer6343.client.utils.ClearGuiButton;
 import blockrenderer6343.client.utils.GuiText;
+import blockrenderer6343.client.utils.TieredConstructable;
 import blockrenderer6343.client.utils.TooltipButton;
 import blockrenderer6343.client.world.ClientFakePlayer;
 import blockrenderer6343.client.world.TrackedDummyWorld;
@@ -296,8 +297,13 @@ public abstract class GuiMultiblockHandler {
         trigger = getOriginalTriggerStack();
         channels.clear();
         layerIndex = -1;
-        tierIndex = 1;
         channelIndex = 0;
+        if (renderingController instanceof TieredConstructable tiered) {
+            tierIndex = tiered.getTier();
+        } else {
+            tierIndex = 1;
+        }
+
         initializeSceneRenderer(true);
         lastRenderingController = renderingController;
         if (hasChannels()) {

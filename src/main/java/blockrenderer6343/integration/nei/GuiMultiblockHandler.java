@@ -258,11 +258,11 @@ public abstract class GuiMultiblockHandler {
         int minY = (int) world.getMinPos().getY();
         LongSet renderBlocks;
         if (newLayer == -1) {
-            renderBlocks = world.placedBlocks;
+            renderBlocks = world.blockMap.keySet();
             renderer.setRenderAllFaces(false);
         } else {
             renderBlocks = new LongOpenHashSet();
-            for (long pos : world.placedBlocks) {
+            for (long pos : world.blockMap.keySet()) {
                 if (CoordinatePacker.unpackY(pos) - minY == newLayer) {
                     renderBlocks.add(pos);
                 }
@@ -284,7 +284,6 @@ public abstract class GuiMultiblockHandler {
     public void drawMultiblock() {
         guiMouseX = GuiDraw.getMousePosition().x;
         guiMouseY = GuiDraw.getMousePosition().y;
-        GuiRecipe<?> recipeGui = (GuiRecipe<?>) NEIClientUtils.getGuiContainer();
         guiLeft = recipeGui.guiLeft;
         guiTop = recipeGui.guiTop;
 
@@ -434,7 +433,7 @@ public abstract class GuiMultiblockHandler {
         center = new Vector3f(minPos.x + size.x / 2, minPos.y + size.y / 2, minPos.z + size.z / 2);
 
         renderer.renderedBlocks.clear();
-        renderer.addRenderedBlocks(renderer.world.placedBlocks);
+        renderer.addRenderedBlocks(renderer.world.blockMap.keySet());
         renderer.setOnLookingAt(ray -> {});
 
         renderer.setOnWorldRender(this::onRendererRender);

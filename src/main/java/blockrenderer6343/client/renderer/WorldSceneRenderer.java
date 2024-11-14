@@ -86,6 +86,7 @@ public abstract class WorldSceneRenderer {
     private Vector3f lookAt = new Vector3f(0, 0, 0);
     private Vector3f worldUp = new Vector3f(0, 1, 0);
     private boolean renderAllFaces = false;
+    private final RenderBlocks bufferBuilder = new RenderBlocks();
 
     public WorldSceneRenderer(TrackedDummyWorld world) {
         this.world = world;
@@ -276,33 +277,17 @@ public abstract class WorldSceneRenderer {
         tessellator.startDrawingQuads();
         try {
             tessellator.setBrightness(15 << 20 | 15 << 4);
-            for (long pos : renderedBlocks) {
-                int x = CoordinatePacker.unpackX(pos);
-                int y = CoordinatePacker.unpackY(pos);
-                int z = CoordinatePacker.unpackZ(pos);
-                Block block = world.getBlock(x, y, z);
-                if (block.equals(Blocks.air)) continue;
+            for (int i = 0; i < 2; i++) {
+                for (long pos : renderedBlocks) {
+                    int x = CoordinatePacker.unpackX(pos);
+                    int y = CoordinatePacker.unpackY(pos);
+                    int z = CoordinatePacker.unpackZ(pos);
+                    Block block = world.getBlock(x, y, z);
+                    if (block.equals(Blocks.air) || !block.canRenderInPass(i)) continue;
 
-                RenderBlocks bufferBuilder = new RenderBlocks();
-                bufferBuilder.blockAccess = world;
-                bufferBuilder.setRenderBounds(0, 0, 0, 1, 1, 1);
-                bufferBuilder.renderAllFaces = renderAllFaces;
-                if (BlockRenderer6343.isBartworksLoaded && block instanceof BWBlocksGlass bwGlass) {
-                    // this mod cannot render renderpass = 1 blocks for now
-                    bufferBuilder.renderStandardBlockWithColorMultiplier(
-                            block,
-                            x,
-                            y,
-                            z,
-                            bwGlass.getColor(world.getBlockMetadata(x, y, z))[0] / 255f,
-                            bwGlass.getColor(world.getBlockMetadata(x, y, z))[1] / 255f,
-                            bwGlass.getColor(world.getBlockMetadata(x, y, z))[2] / 255f);
-                } else if (BlockRenderer6343.isGTLoaded) {
-                    if (!GTRendererBlock.INSTANCE
-                            .renderWorldBlock(world, x, y, z, block, block.getRenderType(), bufferBuilder)) {
-                        bufferBuilder.renderBlockByRenderType(block, x, y, z);
-                    }
-                } else {
+                    bufferBuilder.blockAccess = world;
+                    bufferBuilder.setRenderBounds(0, 0, 0, 1, 1, 1);
+                    bufferBuilder.renderAllFaces = renderAllFaces;
                     bufferBuilder.renderBlockByRenderType(block, x, y, z);
                 }
             }

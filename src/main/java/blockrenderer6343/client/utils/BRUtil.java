@@ -9,6 +9,7 @@ import java.util.UUID;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
@@ -18,6 +19,7 @@ import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.StatCollector;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
+import net.minecraftforge.common.util.ForgeDirection;
 
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL11;
@@ -42,6 +44,7 @@ import blockrenderer6343.client.world.DummyWorld;
 import codechicken.lib.math.MathHelper;
 import codechicken.nei.NEIClientUtils;
 import codechicken.nei.recipe.GuiRecipe;
+import it.unimi.dsi.fastutil.longs.LongSet;
 
 public class BRUtil {
 
@@ -196,6 +199,72 @@ public class BRUtil {
         Block block = world.getBlock(x, y, z);
         return block.hashCode() * 31L + block.getDamageValue(world, x, y, z) * 31L;
     }
+
+    public static void renderOverlay(LongSet positions, long pos, int color, int alpha) {
+        Tessellator t = Tessellator.instance;
+        int posX = CoordinatePacker.unpackX(pos);
+        int posY = CoordinatePacker.unpackY(pos);
+        int posZ = CoordinatePacker.unpackZ(pos);
+
+        GL11.glPushMatrix();
+        GL11.glTranslatef(posX, posY, posZ);
+
+        t.startDrawingQuads();
+        t.setColorRGBA_I(color, alpha);
+
+        for (ForgeDirection dir : ForgeDirection.VALID_DIRECTIONS) {
+            long neighborPos = CoordinatePacker.pack(posX + dir.offsetX, posY + dir.offsetY, posZ + dir.offsetZ);
+            if (!positions.contains(neighborPos)) {
+                renderBlockOverlaySide(t, dir);
+            }
+        }
+
+        t.draw();
+
+        GL11.glPopMatrix();
+    }
+
+    public static void renderBlockOverlaySide(Tessellator tessellator, ForgeDirection side) {
+        switch (side) {
+            case DOWN:
+                tessellator.addVertex(0, 0, 0);
+                tessellator.addVertex(1, 0, 0);
+                tessellator.addVertex(1, 0, 1);
+                tessellator.addVertex(0, 0, 1);
+                break;
+            case UP:
+                tessellator.addVertex(1, 1, 0);
+                tessellator.addVertex(0, 1, 0);
+                tessellator.addVertex(0, 1, 1);
+                tessellator.addVertex(1, 1, 1);
+                break;
+            case NORTH:
+                tessellator.addVertex(0, 1, 0);
+                tessellator.addVertex(1, 1, 0);
+                tessellator.addVertex(1, 0, 0);
+                tessellator.addVertex(0, 0, 0);
+                break;
+            case SOUTH:
+                tessellator.addVertex(1, 1, 1);
+                tessellator.addVertex(0, 1, 1);
+                tessellator.addVertex(0, 0, 1);
+                tessellator.addVertex(1, 0, 1);
+                break;
+            case WEST:
+                tessellator.addVertex(0, 1, 1);
+                tessellator.addVertex(0, 1, 0);
+                tessellator.addVertex(0, 0, 0);
+                tessellator.addVertex(0, 0, 1);
+                break;
+            case EAST:
+                tessellator.addVertex(1, 1, 0);
+                tessellator.addVertex(1, 1, 1);
+                tessellator.addVertex(1, 0, 1);
+                tessellator.addVertex(1, 0, 0);
+                break;
+        }
+    }
+
     public static void drawCenteredScaledString(String text, double textX, double textY, int fontColor,
             double fontScale) {
         drawScaledString(text, textX, textY, fontColor, true, true, fontScale);

@@ -426,6 +426,7 @@ public abstract class GuiMultiblockHandler {
         renderer.setOnLookingAt(ray -> {});
 
         renderer.setOnWorldRender(this::onRendererRender);
+        renderer.setPostBlockRender(this::onPostBlocksRendered);
 
         SELECTED_BLOCK.set(NO_SELECTED_BLOCK);
         onCandidateChanged.accept(Collections.emptyList());
@@ -616,11 +617,18 @@ public abstract class GuiMultiblockHandler {
         return Collections.emptyList();
     }
 
+    protected void onPostBlocksRendered(WorldSceneRenderer renderer) {}
+
+    protected void onElementAdded(@NotNull IStructureElement<IConstructable> element, long pos) {}
+
     @SubscribeEvent
     @SuppressWarnings({ "unused", "unchecked" })
     public static void OnStructureEvent(StructureEvent.StructureElementVisitedEvent event) {
-        structureElementMap.put(
-                CoordinatePacker.pack(event.getX(), event.getY(), event.getZ()),
-                (IStructureElement<IConstructable>) event.getElement());
+        GuiMultiblockHandler handler = MultiblockHandler.getCurrentGuiHandler();
+        if (handler == null) return;
+        IStructureElement<IConstructable> element = (IStructureElement<IConstructable>) event.getElement();
+        long pos = CoordinatePacker.pack(event.getX(), event.getY(), event.getZ());
+        handler.onElementAdded(element, pos);
+        structureElementMap.put(pos, element);
     }
 }

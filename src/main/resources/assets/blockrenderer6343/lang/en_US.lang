@@ -16,3 +16,6 @@ blockrenderer6343.no_projector=No hologram projector found in hand
 blockrenderer6343.no_block=Can't find block to place on
 blockrenderer6343.nei.tier=Tier:
 blockrenderer6343.nei.layer=Layer:
+blockrenderer6343.nei.hatch_highlight=Toggle hatch position highlight
+blockrenderer6343.nei.hint_dot=Hint dot: %s
+blockrenderer6343.nei.valid_hatches=Valid hatches:%s

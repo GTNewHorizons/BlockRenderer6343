@@ -80,6 +80,7 @@ public abstract class WorldSceneRenderer {
     private Consumer<WorldSceneRenderer> beforeRender;
     private Consumer<WorldSceneRenderer> onRender;
     private Consumer<MovingObjectPosition> onLookingAt;
+    private Consumer<WorldSceneRenderer> onPostBlockRendered;
     private int clearColor;
     private MovingObjectPosition lastTraceResult;
     private Vector3f eyePos = new Vector3f(0, 0, -10f);
@@ -94,6 +95,11 @@ public abstract class WorldSceneRenderer {
 
     public WorldSceneRenderer setBeforeWorldRender(Consumer<WorldSceneRenderer> callback) {
         this.beforeRender = callback;
+        return this;
+    }
+
+    public WorldSceneRenderer setPostBlockRender(Consumer<WorldSceneRenderer> callback) {
+        this.onPostBlockRendered = callback;
         return this;
     }
 
@@ -298,6 +304,10 @@ public abstract class WorldSceneRenderer {
             mc.gameSettings.ambientOcclusion = savedAo;
             tessellator.draw();
             tessellator.setTranslation(0, 0, 0);
+        }
+
+        if (onPostBlockRendered != null) {
+            onPostBlockRendered.accept(this);
         }
 
         RenderHelper.enableStandardItemLighting();

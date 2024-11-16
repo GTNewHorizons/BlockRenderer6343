@@ -1,14 +1,11 @@
 package blockrenderer6343.integration.nei;
 
-import static blockrenderer6343.client.utils.BRUtil.FAKE_PLAYER;
 import static blockrenderer6343.integration.nei.GuiMultiblockHandler.SLOT_SIZE;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Predicate;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
@@ -23,13 +20,7 @@ import org.jetbrains.annotations.Nullable;
 
 import com.gtnewhorizon.gtnhlib.eventbus.EventBusSubscriber;
 import com.gtnewhorizon.structurelib.alignment.constructable.IConstructable;
-import com.gtnewhorizon.structurelib.structure.AutoPlaceEnvironment;
-import com.gtnewhorizon.structurelib.structure.IStructureDefinition;
-import com.gtnewhorizon.structurelib.structure.IStructureElement;
-import com.gtnewhorizon.structurelib.structure.StructureDefinition;
 
-import blockrenderer6343.api.utils.CreativeItemSource;
-import blockrenderer6343.client.utils.BRUtil;
 import blockrenderer6343.client.utils.ConstructableData;
 import codechicken.nei.LayoutManager;
 import codechicken.nei.PositionedStack;
@@ -231,32 +222,6 @@ public abstract class MultiblockHandler extends TemplateRecipeHandler {
         arecipes.clear();
         recipeCacher.setResults(results);
         arecipes.add(recipeCacher);
-    }
-
-    protected static Long2ObjectMap<ObjectSet<IConstructable>> getComponentToConstructableMap(
-            Collection<IConstructable> constructables, Predicate<ItemStack> isValidItem) {
-        Long2ObjectMap<ObjectSet<IConstructable>> result = new Long2ObjectOpenHashMap<>();
-        for (IConstructable multi : constructables) {
-            IStructureDefinition<?> structure = multi.getStructureDefinition();
-            if (!(structure instanceof StructureDefinition)) continue;
-            // noinspection unchecked
-            StructureDefinition<IConstructable> structureDefinition = (StructureDefinition<IConstructable>) structure;
-
-            ObjectSet<IStructureElement<IConstructable>> checkedElements = new ObjectOpenHashSet<>();
-            for (IStructureElement<IConstructable>[] elementArray : structureDefinition.getStructures().values()) {
-                for (IStructureElement<IConstructable> element : elementArray) {
-                    if (!checkedElements.add(element)) continue;
-                    Iterable<ItemStack> stacks = StructureHacks.getStacksForElement(multi, element);
-                    if (stacks == null) continue;
-
-                    for (ItemStack stack : stacks) {
-                        if (!isValidItem.test(stack)) continue;
-                        result.computeIfAbsent(BRUtil.hashStack(stack), k -> new ObjectOpenHashSet<>()).add(multi);
-                    }
-                }
-            }
-        }
-        return result;
     }
 
     public class RecipeCacher extends CachedRecipe {

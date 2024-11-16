@@ -37,7 +37,7 @@ public class ConstructableData {
 
     public void setMaxTier(int tier, @NotNull String channel) {
         maxTotalTier = Math.max(maxTotalTier, tier);
-        if (!channel.isEmpty()) {
+        if (!channel.isEmpty() && channelMaxTierMap.getInt(channel) < tier) {
             channelMaxTierMap.put(channel, tier);
         }
     }

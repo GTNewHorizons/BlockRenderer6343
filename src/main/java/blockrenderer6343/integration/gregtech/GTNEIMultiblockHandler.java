@@ -6,7 +6,6 @@ import static gregtech.api.GregTechAPI.METATILEENTITIES;
 import java.util.ArrayList;
 import java.util.List;
 
-import blockrenderer6343.integration.nei.StructureHacks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
@@ -16,9 +15,9 @@ import org.jetbrains.annotations.NotNull;
 import com.gtnewhorizon.structurelib.alignment.constructable.IConstructable;
 
 import blockrenderer6343.client.utils.BRUtil;
-import blockrenderer6343.client.utils.ConstructableData;
 import blockrenderer6343.client.world.DummyWorld;
 import blockrenderer6343.integration.nei.MultiblockHandler;
+import blockrenderer6343.integration.nei.StructureHacks;
 import codechicken.nei.NEIClientUtils;
 import codechicken.nei.recipe.TemplateRecipeHandler;
 import gregtech.api.enums.HeatingCoilLevel;
@@ -36,9 +35,9 @@ import it.unimi.dsi.fastutil.objects.ObjectSets;
 public class GTNEIMultiblockHandler extends MultiblockHandler {
 
     public static final List<IConstructable> multiblocksList = new ArrayList<>();
-    private final Long2ObjectMap<ObjectSet<IConstructable>> multiBlockComponents;
+    private static final Long2ObjectMap<ObjectSet<IConstructable>> multiBlockComponents;
     private static final GTGuiMultiblockHandler baseHandler = new GTGuiMultiblockHandler();
-    private static final List<Item> validGlass = getGlasses();
+    private static List<Item> validGlass;
 
     static {
         StructureHacks.addTieredElement(
@@ -48,11 +47,14 @@ public class GTNEIMultiblockHandler extends MultiblockHandler {
                 multiblocksList.add(constructable);
             }
         }
+
+        multiBlockComponents = StructureHacks
+                .getComponentToConstructableMap(multiblocksList, GTNEIMultiblockHandler::isValidItem);
+
     }
 
     public GTNEIMultiblockHandler() {
         super(baseHandler);
-        multiBlockComponents = getComponentToConstructableMap(multiblocksList, GTNEIMultiblockHandler::isValidItem);
     }
 
     @Override
@@ -94,17 +96,19 @@ public class GTNEIMultiblockHandler extends MultiblockHandler {
         if (!(candidate instanceof ItemBlock)) return false;
         return candidate instanceof ItemCasingsAbstract || candidate instanceof ItemFrames
                 || candidate instanceof GregtechMetaItemCasingsAbstract
-                || validGlass.contains(candidate);
+                || getGlasses().contains(candidate);
     }
 
     private static List<Item> getGlasses() {
-        List<Item> result = new ArrayList<>();
-        // noinspection ConstantConditions
-        Iterable<ItemStack> stacks = Glasses.chainAllGlasses()
-                .getBlocksToPlace(null, DummyWorld.INSTANCE, 0, 0, 0, HOLO_STACK, BRUtil.getBuildEnvironment())
-                .getStacks();
-        if (stacks == null) return result;
-        stacks.forEach(stack -> result.add(stack.getItem()));
-        return result;
+        if (validGlass == null) {
+            validGlass = new ArrayList<>();
+            // noinspection ConstantConditions
+            Iterable<ItemStack> stacks = Glasses.chainAllGlasses()
+                    .getBlocksToPlace(null, DummyWorld.INSTANCE, 0, 0, 0, HOLO_STACK, BRUtil.getBuildEnvironment())
+                    .getStacks();
+            if (stacks == null) return validGlass;
+            stacks.forEach(stack -> validGlass.add(stack.getItem()));
+        }
+        return validGlass;
     }
 }

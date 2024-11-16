@@ -189,6 +189,13 @@ public class BRUtil {
         return stack.getItem().hashCode() * 31L + stack.getItemDamage() * 31L;
     }
 
+    public static long hashBlock(World world, long pos) {
+        int x = CoordinatePacker.unpackX(pos);
+        int y = CoordinatePacker.unpackY(pos);
+        int z = CoordinatePacker.unpackZ(pos);
+        Block block = world.getBlock(x, y, z);
+        return block.hashCode() * 31L + block.getDamageValue(world, x, y, z) * 31L;
+    }
     public static void drawCenteredScaledString(String text, double textX, double textY, int fontColor,
             double fontScale) {
         drawScaledString(text, textX, textY, fontColor, true, true, fontScale);

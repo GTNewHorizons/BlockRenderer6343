@@ -48,6 +48,8 @@ import codechicken.nei.NEIClientUtils;
 import codechicken.nei.recipe.GuiRecipe;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.relauncher.Side;
+import it.unimi.dsi.fastutil.longs.Long2BooleanMap;
+import it.unimi.dsi.fastutil.longs.Long2BooleanOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
@@ -214,6 +216,7 @@ public abstract class GuiMultiblockHandler {
         }
 
         layerIndex = -1;
+        lastSearch = "";
         initializeSceneRenderer(true);
         lastRenderingController = renderingController;
     }
@@ -297,7 +300,6 @@ public abstract class GuiMultiblockHandler {
                 scaledScene,
                 lastGuiMouseX,
                 lastGuiMouseY);
-        drawMultiblockName();
 
         GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
 
@@ -381,21 +383,8 @@ public abstract class GuiMultiblockHandler {
                 && guiMouseY <= guiTop + RECIPE_LAYOUT_Y + (SCENE_HEIGHT * scaleFactor);
     }
 
-    protected String getMultiblockName() {
-        return I18n.format(stackForm.getDisplayName());
-    }
-
-    private void drawMultiblockName() {
-        String localizedName = getMultiblockName();
-        FontRenderer fontRenderer = Minecraft.getMinecraft().fontRenderer;
-        List<String> lines = fontRenderer.listFormattedStringToWidth(localizedName, RECIPE_WIDTH - 10);
-        for (int i = 0; i < lines.size(); i++) {
-            fontRenderer.drawString(
-                lines.get(i),
-                (RECIPE_WIDTH - fontRenderer.getStringWidth(lines.get(i))) / 2,
-                fontRenderer.FONT_HEIGHT * i,
-                guiColorFont);
-        }
+    protected @NotNull String getMultiblockName() {
+        return stackForm == null ? "" : I18n.format(stackForm.getDisplayName());
     }
 
     protected void initializeSceneRenderer(boolean resetCamera) {
@@ -556,6 +545,56 @@ public abstract class GuiMultiblockHandler {
 
     public void setOnIngredientChanged(Consumer<List<ItemStack>> callback) {
         onIngredientChanged = callback;
+    }
+
+    public void recalculateSearch(String searchText) {
+        if (renderer == null) return;
+        if (searchText.isEmpty() && !lastSearch.isEmpty()) {
+            renderer.renderedBlocks.clear();
+            renderer.setRenderAllFaces(false);
+            renderer.addRenderedBlocks(renderer.world.blockMap.keySet());
+        }
+
+        if (searchText.equals(lastSearch) || (lastSearch = searchText).isEmpty()) return;
+        renderer.renderedBlocks.clear();
+        boolean foundAny = false;
+        Long2BooleanMap checkedBlocks = new Long2BooleanOpenHashMap();
+        for (Long2ObjectMap.Entry<Block> entry : renderer.world.blockMap.long2ObjectEntrySet()) {
+            boolean add = checkedBlocks.computeIfAbsent(BRUtil.hashBlock(renderer.world, entry.getLongKey()), b -> {
+                Block block = entry.getValue();
+                ItemStack stack = new ItemStack(block, 1, getDamageValue(block, entry.getLongKey()));
+                return matchesSearch(stack, searchText);
+            });
+
+            if (add) {
+                foundAny = true;
+                renderer.renderedBlocks.add(entry.getLongKey());
+            }
+        }
+
+        if (!foundAny) {
+            renderer.renderedBlocks.addAll(renderer.world.blockMap.keySet());
+            renderer.setRenderAllFaces(false);
+        } else {
+            renderer.setRenderAllFaces(true);
+        }
+    }
+
+    public int getDamageValue(Block block, long pos) {
+        return block.getDamageValue(
+            renderer.world,
+            CoordinatePacker.unpackX(pos),
+            CoordinatePacker.unpackY(pos),
+            CoordinatePacker.unpackZ(pos));
+    }
+
+    public boolean matchesSearch(ItemStack stack, String searchText) {
+        boolean matches = StringUtils.containsIgnoreCase(stack.getDisplayName(), searchText);
+        if (!matches) {
+            List<String> tooltip = stack.getTooltip(mc.thePlayer, mc.gameSettings.advancedItemTooltips);
+            matches = tooltip.stream().anyMatch(s -> StringUtils.containsIgnoreCase(s, searchText));
+        }
+        return matches;
     }
 
     public List<String> getHoveredTooltip(@NotNull ItemStack stack) {

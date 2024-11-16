@@ -7,7 +7,7 @@ import net.minecraft.util.MathHelper;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
 
-import org.lwjgl.util.vector.Vector3f;
+import org.joml.Vector3f;
 
 import com.gtnewhorizon.gtnhlib.util.CoordinatePacker;
 
@@ -27,6 +27,7 @@ public class TrackedDummyWorld extends DummyWorld {
 
     private final Vector3f minPos = new Vector3f(Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE);
     private final Vector3f maxPos = new Vector3f(Integer.MIN_VALUE, Integer.MIN_VALUE, Integer.MIN_VALUE);
+    private final Vector3f size = new Vector3f();
 
     @Override
     public boolean setBlock(int x, int y, int z, Block block, int meta, int flags) {
@@ -98,11 +99,7 @@ public class TrackedDummyWorld extends DummyWorld {
     }
 
     public Vector3f getSize() {
-        Vector3f result = new Vector3f();
-        result.x = maxPos.x - minPos.x + 1;
-        result.y = maxPos.y - minPos.y + 1;
-        result.z = maxPos.z - minPos.z + 1;
-        return result;
+        return size.set(maxPos.x - minPos.x + 1, maxPos.y - minPos.y + 1, maxPos.z - minPos.z + 1);
     }
 
     public Vector3f getMinPos() {

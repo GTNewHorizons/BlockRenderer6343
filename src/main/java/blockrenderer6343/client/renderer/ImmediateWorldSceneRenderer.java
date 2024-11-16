@@ -5,7 +5,6 @@ import net.minecraft.client.gui.ScaledResolution;
 
 import org.lwjgl.opengl.GL11;
 
-import blockrenderer6343.api.utils.PositionedRect;
 import blockrenderer6343.client.world.TrackedDummyWorld;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -26,18 +25,26 @@ public class ImmediateWorldSceneRenderer extends WorldSceneRenderer {
     }
 
     @Override
-    protected PositionedRect getPositionedRect(int x, int y, int width, int height) {
+    public void render(int x, int y, int width, int height, int mouseX, int mouseY) {
         Minecraft mc = Minecraft.getMinecraft();
         ScaledResolution resolution = new ScaledResolution(mc, mc.displayWidth, mc.displayHeight);
         // compute window size from scaled width & height
-        int windowWidth = (int) (width / (resolution.getScaledWidth() * 1.0) * mc.displayWidth);
-        int windowHeight = (int) (height / (resolution.getScaledHeight() * 1.0) * mc.displayHeight);
+        int windowWidth = getScaledX(mc, resolution, width);
+        int windowHeight = getScaledY(mc, resolution, height);
         // translate gui coordinates to window's ones (y is inverted)
-        int windowX = (int) (x / (resolution.getScaledWidth() * 1.0) * mc.displayWidth);
-        int windowY = mc.displayHeight - (int) (y / (resolution.getScaledHeight() * 1.0) * mc.displayHeight)
-                - windowHeight;
+        int windowX = getScaledX(mc, resolution, x);
+        int windowY = mc.displayHeight - getScaledY(mc, resolution, y) - windowHeight;
+        int windowMouseX = getScaledX(mc, resolution, mouseX);
+        int windowMouseY = mc.displayHeight - getScaledY(mc, resolution, mouseY);
+        super.render(windowX, windowY, windowWidth, windowHeight, windowMouseX, windowMouseY);
+    }
 
-        return super.getPositionedRect(windowX, windowY, windowWidth, windowHeight);
+    private int getScaledX(Minecraft mc, ScaledResolution res, int x) {
+        return (int) (x / (res.getScaledWidth() * 1.0) * mc.displayWidth);
+    }
+
+    private int getScaledY(Minecraft mc, ScaledResolution res, int y) {
+        return (int) (y / (res.getScaledHeight() * 1.0) * mc.displayHeight);
     }
 
     @Override

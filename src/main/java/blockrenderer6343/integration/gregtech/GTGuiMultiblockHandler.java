@@ -251,8 +251,9 @@ public class GTGuiMultiblockHandler extends GuiMultiblockHandler {
     }
 
     private String getFallbackHint(@Nullable IStructureElement<IConstructable> element) {
-        IStructureElement<IConstructable> hatchEle = StructureHacks.getFirstMatchingElement(HATCH_ELEMENT, renderingController, element);
-        if(hatchEle == null) return "";
+        IStructureElement<IConstructable> hatchEle = StructureHacks
+                .getFirstMatchingElement(HATCH_ELEMENT, renderingController, element);
+        if (hatchEle == null) return "";
         try {
             String hint = (String) HINT_FALLBACK.invokeWithArguments(hatchEle);
             StringBuilder builder = new StringBuilder(hint);

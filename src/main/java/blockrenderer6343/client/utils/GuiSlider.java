@@ -41,16 +41,6 @@ public class GuiSlider extends BRButton {
         this(name, x, y, width, height, value, minValue, 0);
     }
 
-    public GuiSlider(String name, int x, int y, int width, int height, int value) {
-        this(name, x, y, width, height, value, 0, 0);
-    }
-
-    public GuiSlider setClamp(int minValue, int maxValue) {
-        this.minValue = minValue;
-        this.maxValue = maxValue;
-        return this;
-    }
-
     public GuiSlider setMaxValueSupplier(@NotNull IntSupplier supplier) {
         this.maxValueSupplier = supplier;
         return this;

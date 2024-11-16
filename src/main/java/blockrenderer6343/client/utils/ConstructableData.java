@@ -6,6 +6,7 @@ import org.jetbrains.annotations.NotNull;
 
 import com.gtnewhorizon.structurelib.alignment.constructable.IConstructable;
 
+import blockrenderer6343.integration.nei.StructureHacks;
 import it.unimi.dsi.fastutil.longs.Long2IntMap;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
@@ -28,6 +29,7 @@ public class ConstructableData {
     private int currentTier;
 
     public boolean addItemTier(@NotNull ItemStack item, @NotNull String channel, int tier) {
+        if (!StructureHacks.isSafeStack(item)) return false;
         long hash = BRUtil.hashStack(item);
         if (!channel.isEmpty()) {
             itemChannels.put(hash, channel);

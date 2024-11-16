@@ -137,7 +137,7 @@ public abstract class GuiMultiblockHandler {
                         0,
                         UNDER_PREVIEW_Y,
                         SLIDER_WIDTH,
-                        12,
+                        16,
                         1,
                         1,
                         constructableData.getMaxTotalTier()).setValueListener(this::setTier).setIndex(0));
@@ -147,7 +147,7 @@ public abstract class GuiMultiblockHandler {
                         0,
                         UNDER_PREVIEW_Y + 12,
                         SLIDER_WIDTH,
-                        12,
+                        16,
                         -1,
                         -1).setTextSupplier(value -> value == -1 ? "All" : String.valueOf(value + 1))
                                 .setMaxValueSupplier(
@@ -185,14 +185,14 @@ public abstract class GuiMultiblockHandler {
             String channel = entry.getKey();
             int startVal = constructableData.getCurrentChannel().equals(channel) ? constructableData.getCurrentTier()
                     : 0;
-            String channelName = StringUtils.capitalize(StringUtils.abbreviate(channel, 30)) + ":";
+            String channelName = StringUtils.capitalize(StringUtils.abbreviate(channel, 20)) + ":";
             allButtons.add(
                     new GuiSlider(
                             channelName,
                             0,
                             UNDER_PREVIEW_Y + (12 * (i + curSliders)),
                             SLIDER_WIDTH,
-                            12,
+                            16,
                             startVal,
                             0,
                             entry.getIntValue()).setValueListener(val -> setChannelTier(channel, val))
@@ -290,7 +290,7 @@ public abstract class GuiMultiblockHandler {
         guiTop = recipeGui.guiTop;
 
         int guiHeight = recipeGui.height;
-        scaleFactor = (float) recipeGui.height / 500;
+        scaleFactor = Math.min((float) recipeGui.height / 500, 1f);
         int scaledScene = Math.round(SCENE_HEIGHT * scaleFactor);
         renderer.render(
                 RECIPE_LAYOUT_X + guiLeft,

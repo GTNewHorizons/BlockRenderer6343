@@ -116,7 +116,9 @@ public class GTGuiMultiblockHandler extends GuiMultiblockHandler {
         String hint = hintForDot.get(dot);
         if (hint != null) {
             stackTooltip.add("");
-            stackTooltip.add(EnumChatFormatting.GOLD + I18n.format("blockrenderer6343.nei.hint_dot", dot));
+            EnumChatFormatting dotColor = EnumColor.VALUES[dot % EnumColor.VALUES.length].formatting;
+            stackTooltip
+                    .add(EnumChatFormatting.GOLD + I18n.format("blockrenderer6343.nei.hint_dot", dotColor + "" + dot));
             String hintStr = EnumChatFormatting.GOLD + I18n.format("blockrenderer6343.nei.valid_hatches", hint);
             stackTooltip.addAll(mc.fontRenderer.listFormattedStringToWidth(hintStr, 200));
         }
@@ -139,6 +141,7 @@ public class GTGuiMultiblockHandler extends GuiMultiblockHandler {
 
             int color = EnumColor.VALUES[entry.getIntKey() % EnumColor.VALUES.length].color;
             for (long pos : positions) {
+                if (!renderer.renderedBlocks.contains(pos)) continue;
                 BRUtil.renderOverlay(positions, pos, color, 150);
             }
 
@@ -266,7 +269,7 @@ public class GTGuiMultiblockHandler extends GuiMultiblockHandler {
             int index;
             while ((index = builder.indexOf(" or")) != -1) {
                 int last = builder.lastIndexOf(" or");
-                String replacement = last == index ? "and" : ",";
+                String replacement = last == index ? " and" : ",";
                 builder.replace(index, index + 3, replacement);
             }
 

@@ -43,6 +43,10 @@ public class StructureHacks {
     public static final String LAZY_ELEMENT = "com.gtnewhorizon.structurelib.structure.LazyStructureElement";
     private static final MethodHandle CHAIN_GETTER, CHANNEL_GETTER, LAZY_ELEMENT_GETTER;
     public static final ItemStack HOLO_STACK = new ItemStack(StructureLibAPI.getDefaultHologramItem());
+    public static final Collection<String> SKIP_ELEMENTS = getClassNames(
+            StructureUtility.isAir(),
+            StructureUtility.notAir(),
+            StructureUtility.error());
 
     static {
         // This is so dumb but all elements are anonymous classes so this is the best way to only check the necessary
@@ -89,7 +93,7 @@ public class StructureHacks {
                     if (stacks == null || Iterables.isEmpty(stacks)) continue;
 
                     for (ItemStack stack : stacks) {
-                        if (!isValidItem.test(stack)) continue;
+                        if (!isSafeStack(stack) || !isValidItem.test(stack)) continue;
                         result.computeIfAbsent(BRUtil.hashStack(stack), k -> new ObjectOpenHashSet<>()).add(multi);
                     }
                 }
@@ -107,6 +111,8 @@ public class StructureHacks {
             if (element == null) return Collections.emptyList();
             name = element.getClass().getName();
         }
+
+        if (SKIP_ELEMENTS.contains(name)) return Collections.emptyList();
 
         if (element instanceof IStructureElementChain) {
             IStructureElement<IConstructable>[] elements = unwrapChainElement(element);
@@ -149,8 +155,6 @@ public class StructureHacks {
             Iterator<ItemStack> iterator = toPlace.getStacks().iterator();
             if (!iterator.hasNext()) break;
             ItemStack firstStack = iterator.next();
-            // Some elements contained stacks that had a null getItem() so we need to check for that
-            if (firstStack == null || firstStack.getItem() == null) break;
 
             if (!data.addItemTier(firstStack, channel, tier)) break;
             result.add(firstStack);
@@ -242,5 +246,18 @@ public class StructureHacks {
             // This should never happen
             throw new RuntimeException();
         }
+    }
+
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
+    public static boolean isSafeStack(ItemStack stack) {
+        return stack != null && stack.getItem() != null;
+    }
+
+    private static ObjectSet<String> getClassNames(Object... elements) {
+        ObjectSet<String> classNames = new ObjectOpenHashSet<>();
+        for (Object elem : elements) {
+            classNames.add(elem.getClass().getName());
+        }
+        return classNames;
     }
 }

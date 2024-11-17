@@ -185,10 +185,9 @@ public abstract class GuiMultiblockHandler {
             String channel = entry.getKey();
             int startVal = constructableData.getCurrentChannel().equals(channel) ? constructableData.getCurrentTier()
                     : 0;
-            String channelName = StringUtils.capitalize(StringUtils.abbreviate(channel, 20)) + ":";
             allButtons.add(
                     new GuiSlider(
-                            channelName,
+                            StringUtils.capitalize(channel),
                             0,
                             UNDER_PREVIEW_Y + (12 * (i + curSliders)),
                             SLIDER_WIDTH,

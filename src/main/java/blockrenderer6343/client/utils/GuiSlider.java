@@ -5,6 +5,7 @@ import static blockrenderer6343.integration.nei.GuiMultiblockHandler.SCENE_HEIGH
 import java.util.function.IntSupplier;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.util.MathHelper;
 
@@ -83,12 +84,11 @@ public class GuiSlider extends BRButton {
         super.drawButton(mc, mouseX, mouseY);
         float sliderValue = minValue == maxValue ? 1 : (float) (value - minValue) / (maxValue - minValue);
         int pos = MathHelper.clamp_int((int) (xPosition + sliderValue * (width - 8)), xPosition, xPosition + width - 8);
-        drawTexturedModalRect(pos, yPosition, 0, 66, 4, height);
         GuiUtils.drawContinuousTexturedBox(pos, yPosition, 0, 66, 8, height, 200, 20, 2, 3, 2, 2, 0);
         BRUtil.drawCenteredScaledString(
-                getText(),
+                getText(mc.fontRenderer),
                 xPosition + (double) width / 2,
-                yPosition - 1 + height - (Minecraft.getMinecraft().fontRenderer.FONT_HEIGHT * scale),
+                yPosition - 1 + height - (mc.fontRenderer.FONT_HEIGHT * scale),
                 isMouseOver(mouseX, mouseY) ? 0xFFFFA0 : 0xE0E0E0,
                 scale);
     }
@@ -106,8 +106,10 @@ public class GuiSlider extends BRButton {
         setValue(Math.round((maxValue - minValue) * (float) (mouseX - xPosition + 4) / (width - 4)));
     }
 
-    public String getText() {
-        return name + " " + (valueStringSupplier == null ? value + "" : valueStringSupplier.apply(value));
+    public String getText(FontRenderer font) {
+        String val = ": " + (valueStringSupplier == null ? value + "" : valueStringSupplier.apply(value));
+        String trimmed = font.trimStringToWidth(name, (int) (width / scale) - font.getStringWidth(val));
+        return trimmed + val;
     }
 
     @Override

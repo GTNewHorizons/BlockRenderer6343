@@ -545,13 +545,13 @@ public abstract class GuiMultiblockHandler {
     public void recalculateSearch(String searchText) {
         if (renderer == null) return;
         if (searchText.isEmpty() && !lastSearch.isEmpty()) {
-            renderer.renderedBlocks.clear();
+            renderer.resetRenderedBlocks();
             renderer.setRenderAllFaces(false);
             renderer.addRenderedBlocks(renderer.world.blockMap.keySet());
         }
 
         if (searchText.equals(lastSearch) || (lastSearch = searchText).isEmpty()) return;
-        renderer.renderedBlocks.clear();
+        renderer.resetRenderedBlocks();
         boolean foundAny = false;
         Long2BooleanMap checkedBlocks = new Long2BooleanOpenHashMap();
         for (Long2ObjectMap.Entry<Block> entry : renderer.world.blockMap.long2ObjectEntrySet()) {
@@ -564,10 +564,13 @@ public abstract class GuiMultiblockHandler {
             if (add) {
                 foundAny = true;
                 renderer.renderedBlocks.add(entry.getLongKey());
+            } else {
+                renderer.renderOpaqueBlocks.add(entry.getLongKey());
             }
         }
 
         if (!foundAny) {
+            renderer.renderOpaqueBlocks.clear();
             renderer.renderedBlocks.addAll(renderer.world.blockMap.keySet());
             renderer.setRenderAllFaces(false);
         } else {

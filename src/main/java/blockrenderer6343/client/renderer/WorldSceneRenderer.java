@@ -71,6 +71,7 @@ public abstract class WorldSceneRenderer {
     public final TrackedDummyWorld world;
     // the Blocks which this renderer needs to render
     public final LongSet renderedBlocks = new LongOpenHashSet();
+    public final LongSet renderOpaqueBlocks = new LongOpenHashSet();
     private Consumer<WorldSceneRenderer> beforeRender;
     private Consumer<WorldSceneRenderer> onRender;
     private Consumer<MovingObjectPosition> onLookingAt;
@@ -125,6 +126,11 @@ public abstract class WorldSceneRenderer {
 
     public MovingObjectPosition getLastTraceResult() {
         return lastTraceResult;
+    }
+
+    public void resetRenderedBlocks() {
+        renderedBlocks.clear();
+        renderOpaqueBlocks.clear();
     }
 
     /**
@@ -260,34 +266,9 @@ public abstract class WorldSceneRenderer {
         glEnable(GL_TEXTURE_2D);
         glEnable(GL_ALPHA_TEST);
 
-        final int savedAo = mc.gameSettings.ambientOcclusion;
-        mc.gameSettings.ambientOcclusion = 0;
         Tessellator tessellator = Tessellator.instance;
-        tessellator.startDrawingQuads();
-        try {
-            tessellator.setBrightness(15 << 20 | 15 << 4);
-            for (int i = 0; i < 2; i++) {
-                for (long pos : renderedBlocks) {
-                    int x = CoordinatePacker.unpackX(pos);
-                    int y = CoordinatePacker.unpackY(pos);
-                    int z = CoordinatePacker.unpackZ(pos);
-                    Block block = world.getBlock(x, y, z);
-                    if (block.equals(Blocks.air) || !block.canRenderInPass(i)) continue;
-
-                    bufferBuilder.blockAccess = world;
-                    bufferBuilder.setRenderBounds(0, 0, 0, 1, 1, 1);
-                    bufferBuilder.renderAllFaces = renderAllFaces;
-                    bufferBuilder.renderBlockByRenderType(block, x, y, z);
-                }
-            }
-            if (onRender != null) {
-                onRender.accept(this);
-            }
-        } finally {
-            mc.gameSettings.ambientOcclusion = savedAo;
-            tessellator.draw();
-            tessellator.setTranslation(0, 0, 0);
-        }
+        renderBlocks(tessellator, renderedBlocks, false);
+        renderBlocks(tessellator, renderOpaqueBlocks, true);
 
         if (onPostBlockRendered != null) {
             onPostBlockRendered.accept(this);
@@ -320,6 +301,42 @@ public abstract class WorldSceneRenderer {
         glDepthMask(true);
     }
 
+    public void renderBlocks(Tessellator tessellator, LongSet blocksToRender, boolean transparent) {
+        if (blocksToRender.isEmpty()) return;
+        Minecraft mc = Minecraft.getMinecraft();
+        final int savedAo = mc.gameSettings.ambientOcclusion;
+        mc.gameSettings.ambientOcclusion = 0;
+        tessellator.startDrawingQuads();
+        try {
+            if (transparent) {
+                tessellator.setColorRGBA_F(1f, 1f, 1f, 0.3f);
+                tessellator.disableColor();
+            }
+            tessellator.setBrightness(15 << 20 | 15 << 4);
+            for (int i = 0; i < 2; i++) {
+                for (long pos : blocksToRender) {
+                    int x = CoordinatePacker.unpackX(pos);
+                    int y = CoordinatePacker.unpackY(pos);
+                    int z = CoordinatePacker.unpackZ(pos);
+                    Block block = world.getBlock(x, y, z);
+                    if (block.equals(Blocks.air) || !block.canRenderInPass(i)) continue;
+
+                    bufferBuilder.blockAccess = world;
+                    bufferBuilder.setRenderBounds(0, 0, 0, 1, 1, 1);
+                    bufferBuilder.renderAllFaces = renderAllFaces;
+                    bufferBuilder.renderBlockByRenderType(block, x, y, z);
+                }
+            }
+            if (onRender != null) {
+                onRender.accept(this);
+            }
+        } finally {
+            mc.gameSettings.ambientOcclusion = savedAo;
+            tessellator.draw();
+            tessellator.setTranslation(0, 0, 0);
+        }
+    }
+
     public static void setDefaultPassRenderState(int pass) {
         glColor4f(1, 1, 1, 1);
         if (pass == 0) { // SOLID
@@ -344,6 +361,6 @@ public abstract class WorldSceneRenderer {
                 (lookVec.x + startPos.xCoord),
                 (lookVec.y + startPos.yCoord),
                 (lookVec.z + startPos.zCoord));
-        return this.world.rayTraceBlocksWithTargetMap(startPos, endPos, renderedBlocks);
+        return this.world.rayTraceBlocksWithTargetMap(startPos, endPos, world.blockMap.keySet());
     }
 }

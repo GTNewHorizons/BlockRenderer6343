@@ -35,14 +35,12 @@ import it.unimi.dsi.fastutil.objects.ObjectSet;
 
 public class ObserverWorld extends DummyWorld {
 
+    private static final int MAX_TRIES = 64;
     private final Long2ObjectMap<Block> blockMap = new Long2ObjectOpenHashMap<>();
     private final Long2ObjectMap<TileEntity> tileMap = new Long2ObjectOpenHashMap<>();
     private final Long2IntMap blockMetaMap = new Long2IntOpenHashMap();
     private final LongSet checkedBlocks = new LongOpenHashSet();
-    private IConstructable currentMulti;
-    private static final int MAX_TRIES = 64;
-    private static Consumer<ItemStack> stackConsumer;
-
+    private Consumer<ItemStack> stackConsumer;
     private boolean hasChanged = false;
 
     @Override
@@ -97,6 +95,16 @@ public class ObserverWorld extends DummyWorld {
         tile.zCoord = z;
         tile.validate();
         tileMap.put(CoordinatePacker.pack(x, y, z), tile);
+    }
+
+    @Override
+    public void removeTileEntity(int x, int y, int z) {
+        tileMap.remove(CoordinatePacker.pack(x, y, z)).invalidate();
+    }
+
+    @Override
+    public TileEntity getTileEntity(int x, int y, int z) {
+        return tileMap.get(CoordinatePacker.pack(x, y, z));
     }
 
     private void addBlockToResult(Block block, long pos) {
@@ -163,14 +171,13 @@ public class ObserverWorld extends DummyWorld {
     }
 
     private int estimateTier(IConstructable multi) {
-
-        currentMulti = multi;
         int tier = 0;
         ItemStack holo = HOLO_STACK.copy();
+
         do {
             holo.stackSize = tier + 1;
             hasChanged = false;
-            currentMulti.construct(holo, false);
+            multi.construct(holo, false);
 
         } while (tier++ < MAX_TRIES && hasChanged);
 
@@ -178,20 +185,9 @@ public class ObserverWorld extends DummyWorld {
     }
 
     public void reset() {
-        currentMulti = null;
         checkedBlocks.clear();
         blockMap.clear();
         tileMap.clear();
         blockMetaMap.clear();
-    }
-
-    @Override
-    public void removeTileEntity(int x, int y, int z) {
-        tileMap.remove(CoordinatePacker.pack(x, y, z)).invalidate();
-    }
-
-    @Override
-    public TileEntity getTileEntity(int x, int y, int z) {
-        return tileMap.get(CoordinatePacker.pack(x, y, z));
     }
 }

@@ -557,7 +557,10 @@ public abstract class GuiMultiblockHandler {
         for (Long2ObjectMap.Entry<Block> entry : renderer.world.blockMap.long2ObjectEntrySet()) {
             boolean add = checkedBlocks.computeIfAbsent(BRUtil.hashBlock(renderer.world, entry.getLongKey()), b -> {
                 Block block = entry.getValue();
-                ItemStack stack = new ItemStack(block, 1, getDamageValue(block, entry.getLongKey()));
+                ItemStack stack = new ItemStack(
+                        block,
+                        1,
+                        BRUtil.getDamageValue(renderer.world, block, entry.getLongKey()));
                 return matchesSearch(stack, searchText);
             });
 
@@ -576,14 +579,6 @@ public abstract class GuiMultiblockHandler {
         } else {
             renderer.setRenderAllFaces(true);
         }
-    }
-
-    public int getDamageValue(Block block, long pos) {
-        return block.getDamageValue(
-                renderer.world,
-                CoordinatePacker.unpackX(pos),
-                CoordinatePacker.unpackY(pos),
-                CoordinatePacker.unpackZ(pos));
     }
 
     public boolean matchesSearch(ItemStack stack, String searchText) {

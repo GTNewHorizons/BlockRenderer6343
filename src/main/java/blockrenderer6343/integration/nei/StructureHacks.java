@@ -8,29 +8,23 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.function.Predicate;
 
 import net.minecraft.item.ItemStack;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import com.google.common.collect.Iterables;
 import com.gtnewhorizon.structurelib.StructureLibAPI;
 import com.gtnewhorizon.structurelib.alignment.constructable.IConstructable;
 import com.gtnewhorizon.structurelib.structure.AutoPlaceEnvironment;
-import com.gtnewhorizon.structurelib.structure.IStructureDefinition;
 import com.gtnewhorizon.structurelib.structure.IStructureElement;
 import com.gtnewhorizon.structurelib.structure.IStructureElementChain;
-import com.gtnewhorizon.structurelib.structure.StructureDefinition;
 import com.gtnewhorizon.structurelib.structure.StructureUtility;
 
 import blockrenderer6343.client.utils.BRUtil;
 import blockrenderer6343.client.utils.ConstructableData;
 import blockrenderer6343.client.world.DummyWorld;
 import cpw.mods.fml.relauncher.ReflectionHelper;
-import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
-import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
 
@@ -75,32 +69,6 @@ public class StructureHacks {
 
     public static void addTieredElement(String className) {
         TIERED_ELEMENTS.add(className);
-    }
-
-    public static Long2ObjectMap<ObjectSet<IConstructable>> getComponentToConstructableMap(
-            Collection<IConstructable> constructables, Predicate<ItemStack> isValidItem) {
-        Long2ObjectMap<ObjectSet<IConstructable>> result = new Long2ObjectOpenHashMap<>();
-        for (IConstructable multi : constructables) {
-            IStructureDefinition<?> structure = multi.getStructureDefinition();
-            if (!(structure instanceof StructureDefinition)) continue;
-            StructureDefinition<IConstructable> structureDefinition = (StructureDefinition<IConstructable>) structure;
-
-            ObjectSet<IStructureElement<IConstructable>> checkedElements = new ObjectOpenHashSet<>();
-            for (IStructureElement<IConstructable>[] elementArray : structureDefinition.getStructures().values()) {
-                for (IStructureElement<IConstructable> element : elementArray) {
-                    if (!checkedElements.add(element)) continue;
-                    Iterable<ItemStack> stacks = StructureHacks.getStacksForElement(multi, element);
-                    if (stacks == null || Iterables.isEmpty(stacks)) continue;
-
-                    for (ItemStack stack : stacks) {
-                        if (!isSafeStack(stack) || !isValidItem.test(stack)) continue;
-                        result.computeIfAbsent(BRUtil.hashStack(stack), k -> new ObjectOpenHashSet<>()).add(multi);
-                    }
-                }
-            }
-        }
-
-        return result;
     }
 
     public static @Nullable Iterable<ItemStack> getStacksForElement(IConstructable multi,

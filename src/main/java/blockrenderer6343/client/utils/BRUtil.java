@@ -200,6 +200,14 @@ public class BRUtil {
         return block.hashCode() * 31L + block.getDamageValue(world, x, y, z) * 31L;
     }
 
+    public static int getDamageValue(World world, Block block, long pos) {
+        return block.getDamageValue(
+                world,
+                CoordinatePacker.unpackX(pos),
+                CoordinatePacker.unpackY(pos),
+                CoordinatePacker.unpackZ(pos));
+    }
+
     public static void renderOverlay(LongSet positions, long pos, int color, int alpha) {
         Tessellator t = Tessellator.instance;
         int posX = CoordinatePacker.unpackX(pos);

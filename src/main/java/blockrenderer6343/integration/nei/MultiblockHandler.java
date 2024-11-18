@@ -89,8 +89,6 @@ public abstract class MultiblockHandler extends TemplateRecipeHandler {
 
     protected abstract @NotNull ObjectSet<IConstructable> tryLoadingMultiblocks(ItemStack candidate);
 
-    protected abstract boolean isPotentialCandidate(ItemStack candidate);
-
     @Override
     public void loadCraftingRecipes(ItemStack result) {
         loadRecipes(result);
@@ -106,8 +104,6 @@ public abstract class MultiblockHandler extends TemplateRecipeHandler {
     private void loadRecipes(ItemStack stack) {
         currentMultiblocks = null;
         oldRecipe = -1;
-        if (!isPotentialCandidate(stack)) return;
-
         ObjectSet<IConstructable> multiblocks = tryLoadingMultiblocks(stack);
         if (multiblocks.isEmpty()) return;
         lastStack = stack;

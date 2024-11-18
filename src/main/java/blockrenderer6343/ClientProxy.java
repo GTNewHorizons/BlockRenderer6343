@@ -4,6 +4,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.IReloadableResourceManager;
 
 import blockrenderer6343.client.utils.GuiColor;
+import blockrenderer6343.client.world.ObserverWorld;
 import blockrenderer6343.client.world.TrackedDummyWorld;
 import blockrenderer6343.integration.nei.InputHandler;
 import codechicken.nei.guihook.GuiContainerManager;
@@ -22,6 +23,7 @@ public class ClientProxy extends CommonProxy {
         GuiContainerManager.addTooltipHandler(new InputHandler());
         if (BlockRenderer6343.isGTLoaded) {
             GregTechAPI.addDummyWorld(TrackedDummyWorld.class);
+            GregTechAPI.addDummyWorld(ObserverWorld.class);
         }
         ((IReloadableResourceManager) Minecraft.getMinecraft().getResourceManager())
                 .registerReloadListener(GuiColor.FontColor);

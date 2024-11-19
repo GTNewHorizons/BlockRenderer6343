@@ -616,7 +616,7 @@ public abstract class GuiMultiblockHandler {
     @SubscribeEvent
     @SuppressWarnings({ "unused", "unchecked" })
     public static void OnStructureEvent(StructureEvent.StructureElementVisitedEvent event) {
-        // TODO use instrument identifier when fix is merged
+        if (!BlockRenderer6343.MOD_ID.equals(event.getInstrumentIdentifier())) return;
         GuiMultiblockHandler handler = MultiblockHandler.getCurrentGuiHandler();
         if (handler == null) return;
         IStructureElement<IConstructable> element = (IStructureElement<IConstructable>) event.getElement();

@@ -80,11 +80,9 @@ public class MultiblockInfoContainerScan implements Runnable {
     @SubscribeEvent
     @SuppressWarnings({ "unused", "unchecked" })
     public void OnStructureEvent(StructureEvent.StructureElementVisitedEvent event) {
-        // TODO use instrument identifier when fix is merged
         // There is no way to get the structure definition of an IMultiblockInfoContainer so this is a hacky workaround
         // for that
-        if (!StructureLibAPI.isInstrumentEnabled() || currentConstructable == null
-                || !checkedElements.add(event.getElement())) {
+        if (!IDENTIFIER.equals(event.getInstrumentIdentifier()) || !checkedElements.add(event.getElement())) {
             return;
         }
 

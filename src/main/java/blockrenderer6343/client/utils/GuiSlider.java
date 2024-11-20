@@ -103,7 +103,7 @@ public class GuiSlider extends BRButton {
     }
 
     public void setValueFromMouse(int mouseX) {
-        setValue(Math.round((maxValue - minValue) * (float) (mouseX - xPosition + 4) / (width - 4)));
+        setValue(Math.round(minValue + (maxValue - minValue) * (float) (mouseX - xPosition + 4) / (width - 8)));
     }
 
     public String getText(FontRenderer font) {

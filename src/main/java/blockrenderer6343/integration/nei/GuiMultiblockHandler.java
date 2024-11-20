@@ -117,6 +117,7 @@ public abstract class GuiMultiblockHandler {
     public void loadMultiblock(IConstructable multiblock, ItemStack stackForm, @NotNull ConstructableData data) {
         renderingController = multiblock;
         constructableData = data;
+        recipeGui = (GuiRecipe<?>) NEIClientUtils.getGuiContainer();
 
         this.stackForm = stackForm;
         if (stackForm.stackSize == 0) stackForm.stackSize = 1;
@@ -202,7 +203,6 @@ public abstract class GuiMultiblockHandler {
     }
 
     protected void loadNewMultiblock() {
-        recipeGui = (GuiRecipe<?>) NEIClientUtils.getGuiContainer();
         trigger = DEFAULT_TRIGGER.copy();
         int tier = constructableData.getCurrentTier();
         String channel = constructableData.getCurrentChannel();

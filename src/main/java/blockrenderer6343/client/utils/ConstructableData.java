@@ -16,9 +16,10 @@ import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 
+@SuppressWarnings("BooleanMethodIsAlwaysInverted")
 public class ConstructableData {
 
-    private static final Object2ObjectMap<IConstructable, ConstructableData> tierDataMap = new Object2ObjectOpenHashMap<>();
+    private static final Object2ObjectMap<IConstructable, ConstructableData> constructableData = new Object2ObjectOpenHashMap<>();
     private static final ConstructableData EMPTY = new ConstructableData();
 
     private final Object2IntMap<String> channelMaxTierMap = new Object2IntOpenHashMap<>();
@@ -27,9 +28,21 @@ public class ConstructableData {
     private String currentChannel = "";
     private int maxTotalTier = 1;
     private int currentTier;
+    private boolean hasData = false;
+
+    public static @NotNull ConstructableData getTierData(IConstructable constructable) {
+        return constructableData.getOrDefault(constructable, EMPTY);
+    }
+
+    public static void addConstructableData(Object2ObjectMap<IConstructable, ConstructableData> data) {
+        synchronized (constructableData) {
+            constructableData.putAll(data);
+        }
+    }
 
     public boolean addItemTier(@NotNull ItemStack item, @NotNull String channel, int tier) {
-        if (!StructureHacks.isSafeStack(item)) return false;
+        if (this == EMPTY || !StructureHacks.isSafeStack(item)) return false;
+        hasData = true;
         long hash = BRUtil.hashStack(item);
         if (!channel.isEmpty()) {
             itemChannels.put(hash, channel);
@@ -38,15 +51,21 @@ public class ConstructableData {
     }
 
     public void setMaxTier(int tier, @NotNull String channel) {
+        if (this == EMPTY) return;
+        hasData = true;
         maxTotalTier = Math.max(maxTotalTier, tier);
         if (!channel.isEmpty() && channelMaxTierMap.getInt(channel) < tier) {
             channelMaxTierMap.put(channel, tier);
         }
     }
 
+    public boolean hasData() {
+        return hasData;
+    }
+
     public ConstructableData setTierFromStack(ItemStack stack) {
         long hash = BRUtil.hashStack(stack);
-        currentTier = itemTiers.getOrDefault(hash, 0);
+        currentTier = itemTiers.getOrDefault(hash, 1);
         currentChannel = itemChannels.getOrDefault(hash, "");
         return this;
     }
@@ -66,13 +85,4 @@ public class ConstructableData {
     public Object2IntMap<String> getChannelData() {
         return channelMaxTierMap;
     }
-
-    public static @NotNull ConstructableData getTierData(IConstructable constructable) {
-        return tierDataMap.getOrDefault(constructable, EMPTY);
-    }
-
-    public static Object2ObjectMap<IConstructable, ConstructableData> getTierDataMap() {
-        return tierDataMap;
-    }
-
 }

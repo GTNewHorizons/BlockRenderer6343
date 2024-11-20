@@ -21,7 +21,6 @@ import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 
-import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL11;
 
 import com.github.vfyjxf.nee.network.NEENetworkHandler;
@@ -30,7 +29,6 @@ import com.gtnewhorizon.gtnhlib.blockpos.BlockPos;
 import com.gtnewhorizon.gtnhlib.util.CoordinatePacker;
 import com.gtnewhorizon.structurelib.StructureLib;
 import com.gtnewhorizon.structurelib.alignment.constructable.ConstructableUtility;
-import com.gtnewhorizon.structurelib.alignment.constructable.IConstructable;
 import com.gtnewhorizon.structurelib.item.ItemConstructableTrigger;
 import com.gtnewhorizon.structurelib.structure.AutoPlaceEnvironment;
 import com.gtnewhorizon.structurelib.structure.IStructureElement;
@@ -149,8 +147,8 @@ public class BRUtil {
         return ingredients;
     }
 
-    public static List<List<ItemStack>> scanCandidates(IConstructable multi,
-            @Nullable IStructureElement<IConstructable> element, ItemStack buildStack, BlockPos block) {
+    public static List<List<ItemStack>> scanCandidates(Object multi, IStructureElement<Object> element,
+            ItemStack buildStack, BlockPos block) {
         if (element == null) return Collections.emptyList();
         IStructureElement.BlocksToPlace blocksToPlace = element.getBlocksToPlace(
                 multi,

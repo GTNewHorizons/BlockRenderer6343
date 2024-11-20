@@ -35,7 +35,9 @@ public class MultiblockInfoContainerScan implements Runnable {
     private final Map<String, IMultiblockInfoContainer<TileEntity>> infoContainers;
     private final Long2ObjectMap<ObjectSet<IConstructable>> result = new Long2ObjectOpenHashMap<>();
     private final ObjectSet<IStructureElement<?>> checkedElements = new ObjectOpenHashSet<>();
+    private final ObserverWorld world = new ObserverWorld();
     private IConstructable currentConstructable;
+    private ConstructableData currentData = new ConstructableData();
 
     public MultiblockInfoContainerScan(Consumer<Long2ObjectMap<ObjectSet<IConstructable>>> resultCallback,
             Consumer<Object2ObjectMap<IConstructable, ItemStack>> stackCallback,
@@ -50,31 +52,37 @@ public class MultiblockInfoContainerScan implements Runnable {
 
     @Override
     public void run() {
+        MinecraftForge.EVENT_BUS.register(this);
         if (!StructureLibAPI.isInstrumentEnabled()) {
             StructureLibAPI.enableInstrument(IDENTIFIER);
         }
 
         Object2ObjectMap<IConstructable, ItemStack> stacks = new Object2ObjectOpenHashMap<>();
-        MinecraftForge.EVENT_BUS.register(this);
-        ObserverWorld world = new ObserverWorld();
+        Object2ObjectMap<IConstructable, ConstructableData> constructableData = new Object2ObjectOpenHashMap<>();
+
         for (Map.Entry<String, IMultiblockInfoContainer<TileEntity>> entry : infoContainers.entrySet()) {
             currentConstructable = world.getConstructableFromContainer(entry.getKey(), entry.getValue());
             int tier = world.estimateTierFromInfoContainer(result, stacks, currentConstructable);
             if (tier > 1) {
-                ConstructableData data = ConstructableData.getTierDataMap()
-                        .computeIfAbsent(currentConstructable, k -> new ConstructableData());
-                data.setMaxTier(tier, "");
+                currentData.setMaxTier(tier, "");
+            }
+
+            if (currentData.hasData()) {
+                constructableData.put(currentConstructable, currentData);
+                currentData = new ConstructableData();
             }
         }
+
+        ConstructableData.addConstructableData(constructableData);
 
         stackCallback.accept(stacks);
         resultCallback.accept(result);
 
-        MinecraftForge.EVENT_BUS.unregister(this);
-
         if (StructureLibAPI.isInstrumentEnabled()) {
             StructureLibAPI.disableInstrument();
         }
+
+        MinecraftForge.EVENT_BUS.unregister(this);
     }
 
     @SubscribeEvent
@@ -86,8 +94,9 @@ public class MultiblockInfoContainerScan implements Runnable {
             return;
         }
 
+        TileEntity tile = world.getTileEntity(0, 64, 0);
         Iterable<ItemStack> stacks = StructureHacks
-                .getStacksForElement(currentConstructable, (IStructureElement<IConstructable>) event.getElement());
+                .getStacksForElement(tile, (IStructureElement<Object>) event.getElement(), currentData);
         if (stacks == null || Iterables.isEmpty(stacks)) return;
         for (ItemStack stack : stacks) {
             if (!StructureHacks.isSafeStack(stack)) continue;

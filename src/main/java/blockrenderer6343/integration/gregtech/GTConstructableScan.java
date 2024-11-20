@@ -18,6 +18,8 @@ import blockrenderer6343.integration.nei.StructureHacks;
 import it.unimi.dsi.fastutil.Pair;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
 
@@ -52,13 +54,18 @@ public class GTConstructableScan implements Runnable {
     public void run() {
         Long2ObjectMap<ObjectSet<IConstructable>> result = new Long2ObjectOpenHashMap<>();
         ObjectSet<IConstructable> secondScan = new ObjectOpenHashSet<>();
-        constructables.forEach(pair -> {
-            ObjectSet<IStructureElement<IConstructable>> checkedElements = new ObjectOpenHashSet<>();
+        Object2ObjectMap<IConstructable, ConstructableData> constructableData = new Object2ObjectOpenHashMap<>();
+        ConstructableData data = new ConstructableData();
+
+        for (Pair<IConstructable, Collection<IStructureElement<IConstructable>[]>> pair : constructables) {
             IConstructable multi = pair.left();
-            for (IStructureElement<IConstructable>[] elementArray : pair.right()) {
+            Collection<IStructureElement<IConstructable>[]> structures = pair.right();
+            ObjectSet<IStructureElement<IConstructable>> checkedElements = new ObjectOpenHashSet<>();
+
+            for (IStructureElement<IConstructable>[] elementArray : structures) {
                 for (IStructureElement<IConstructable> element : elementArray) {
                     if (!checkedElements.add(element)) continue;
-                    Iterable<ItemStack> stacks = StructureHacks.getStacksForElement(multi, element);
+                    Iterable<ItemStack> stacks = StructureHacks.getStacksForElement(multi, element, data);
                     if (stacks == null || Iterables.isEmpty(stacks)) continue;
 
                     for (ItemStack stack : stacks) {
@@ -68,11 +75,13 @@ public class GTConstructableScan implements Runnable {
                 }
             }
 
-            if (pair.right().size() > 1) {
-                ConstructableData data = ConstructableData.getTierData(multi);
-                if (data.getMaxTotalTier() == 1) secondScan.add(multi);
+            if (data.hasData()) {
+                constructableData.put(multi, data);
+                data = new ConstructableData();
+            } else if (structures.size() > 1) {
+                secondScan.add(multi);
             }
-        });
+        }
 
         ObserverWorld world = new ObserverWorld();
         for (IConstructable multi : secondScan) {
@@ -80,12 +89,13 @@ public class GTConstructableScan implements Runnable {
                     stack -> result.computeIfAbsent(BRUtil.hashStack(stack), k -> new ObjectOpenHashSet<>()).add(multi),
                     multi);
             if (tier > 1) {
-                ConstructableData data = ConstructableData.getTierDataMap()
-                        .computeIfAbsent(multi, k -> new ConstructableData());
                 data.setMaxTier(tier, "");
+                constructableData.put(multi, data);
+                data = new ConstructableData();
             }
         }
 
+        ConstructableData.addConstructableData(constructableData);
         resultCallback.accept(result);
     }
 }

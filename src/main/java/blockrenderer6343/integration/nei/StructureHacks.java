@@ -15,7 +15,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import com.gtnewhorizon.structurelib.StructureLibAPI;
-import com.gtnewhorizon.structurelib.alignment.constructable.IConstructable;
 import com.gtnewhorizon.structurelib.structure.AutoPlaceEnvironment;
 import com.gtnewhorizon.structurelib.structure.IStructureElement;
 import com.gtnewhorizon.structurelib.structure.IStructureElementChain;
@@ -71,8 +70,8 @@ public class StructureHacks {
         TIERED_ELEMENTS.add(className);
     }
 
-    public static @Nullable Iterable<ItemStack> getStacksForElement(IConstructable multi,
-            IStructureElement<IConstructable> element) {
+    public static <T> @Nullable Iterable<ItemStack> getStacksForElement(T multi, IStructureElement<T> element,
+            ConstructableData data) {
         String name = element.getClass().getName();
         if (name.equals(LAZY_ELEMENT)) {
             element = getUnderlyingElement(multi, element);
@@ -83,11 +82,11 @@ public class StructureHacks {
         if (SKIP_ELEMENTS.contains(name)) return Collections.emptyList();
 
         if (element instanceof IStructureElementChain) {
-            IStructureElement<IConstructable>[] elements = unwrapChainElement(element);
+            IStructureElement<T>[] elements = unwrapChainElement(element);
             if (elements == null) return Collections.emptyList();
             ObjectSet<ItemStack> chainStacks = new ObjectOpenHashSet<>();
-            for (IStructureElement<IConstructable> e : elements) {
-                Iterable<ItemStack> stacks = getStacksForElement(multi, e);
+            for (IStructureElement<T> e : elements) {
+                Iterable<ItemStack> stacks = getStacksForElement(multi, e, data);
                 if (stacks != null) {
                     stacks.forEach(chainStacks::add);
                 }
@@ -99,7 +98,7 @@ public class StructureHacks {
         IStructureElement.BlocksToPlace blocks = element
                 .getBlocksToPlace(multi, DummyWorld.INSTANCE, 0, 0, 0, HOLO_STACK, env);
         if (TIERED_ELEMENTS.contains(name)) {
-            return extractTieredBlocks(multi, element, env, getChannel(name, element));
+            return extractTieredBlocks(multi, element, data, env, getChannel(name, element));
         }
 
         if (blocks == null) return Collections.emptyList();
@@ -107,14 +106,12 @@ public class StructureHacks {
         return blocks.getStacks();
     }
 
-    private static ObjectSet<ItemStack> extractTieredBlocks(IConstructable multi,
-            IStructureElement<IConstructable> element, AutoPlaceEnvironment env, String channel) {
+    private static <T> ObjectSet<ItemStack> extractTieredBlocks(T multi, IStructureElement<T> element,
+            ConstructableData data, AutoPlaceEnvironment env, String channel) {
         ObjectSet<ItemStack> result = new ObjectOpenHashSet<>();
-
-        int tier = 0;
-        ConstructableData data = ConstructableData.getTierDataMap()
-                .computeIfAbsent(multi, k -> new ConstructableData());
         ItemStack holo = HOLO_STACK.copy();
+        int tier = 0;
+
         do {
             holo.stackSize = tier++ + 1;
             IStructureElement.BlocksToPlace toPlace = element
@@ -150,8 +147,8 @@ public class StructureHacks {
         return "";
     }
 
-    public static boolean anyElementMatches(@NotNull Collection<String> elementsToFind, @NotNull IConstructable multi,
-            @Nullable IStructureElement<IConstructable> element) {
+    public static <T> boolean anyElementMatches(@NotNull Collection<String> elementsToFind, @NotNull T multi,
+            @Nullable IStructureElement<T> element) {
         if (element == null) return false;
         String name = element.getClass().getName();
 
@@ -169,8 +166,8 @@ public class StructureHacks {
         return false;
     }
 
-    public static @Nullable IStructureElement<IConstructable> getFirstMatchingElement(String elementToFind,
-            IConstructable multi, IStructureElement<IConstructable> element) {
+    public static <T> @Nullable IStructureElement<T> getFirstMatchingElement(String elementToFind, T multi,
+            IStructureElement<T> element) {
         if (element == null) return null;
         String name = element.getClass().getName();
         if (elementToFind.equals(name)) {
@@ -182,10 +179,10 @@ public class StructureHacks {
         }
 
         if (element instanceof IStructureElementChain) {
-            IStructureElement<IConstructable>[] elements = StructureHacks.unwrapChainElement(element);
+            IStructureElement<T>[] elements = StructureHacks.unwrapChainElement(element);
             if (elements == null) return null;
-            for (IStructureElement<IConstructable> e : elements) {
-                IStructureElement<IConstructable> result = getFirstMatchingElement(elementToFind, multi, e);
+            for (IStructureElement<T> e : elements) {
+                IStructureElement<T> result = getFirstMatchingElement(elementToFind, multi, e);
                 if (result != null) {
                     return result;
                 }
@@ -195,21 +192,20 @@ public class StructureHacks {
         return null;
     }
 
-    public static @Nullable IStructureElement<IConstructable>[] unwrapChainElement(IStructureElement<?> element) {
+    public static <T> @Nullable IStructureElement<T>[] unwrapChainElement(IStructureElement<T> element) {
         if (!(element instanceof IStructureElementChain)) return null;
 
         try {
-            return (IStructureElement<IConstructable>[]) CHAIN_GETTER.invokeWithArguments(element);
+            return (IStructureElement<T>[]) CHAIN_GETTER.invokeWithArguments(element);
         } catch (Throwable e) {
             throw new RuntimeException(e);
         }
     }
 
-    public static IStructureElement<IConstructable> getUnderlyingElement(IConstructable multi,
-            IStructureElement<?> element) {
-        if (!LAZY_ELEMENT.equals(element.getClass().getName())) return (IStructureElement<IConstructable>) element;
+    public static <T> IStructureElement<T> getUnderlyingElement(T multi, IStructureElement<?> element) {
+        if (!LAZY_ELEMENT.equals(element.getClass().getName())) return (IStructureElement<T>) element;
         try {
-            return (IStructureElement<IConstructable>) LAZY_ELEMENT_GETTER.invokeWithArguments(element, multi);
+            return (IStructureElement<T>) LAZY_ELEMENT_GETTER.invokeWithArguments(element, multi);
         } catch (Throwable ignored) {
             // This should never happen
             throw new RuntimeException();

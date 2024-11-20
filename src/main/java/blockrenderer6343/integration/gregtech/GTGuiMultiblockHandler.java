@@ -4,7 +4,6 @@ import static blockrenderer6343.client.utils.BRUtil.FAKE_PLAYER;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
-import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -60,7 +59,6 @@ public class GTGuiMultiblockHandler extends GuiMultiblockHandler {
     private static final Int2ObjectMap<String> hintForDot = new Int2ObjectOpenHashMap<>();
     private static final Long2IntMap dotForPos = new Long2IntOpenHashMap();
     private static final List<String> hatchElements;
-    private static final String GT_WATER_ELEMENT = GTStructureUtility.ofAnyWater(true).getClass().getName();
     private static final String HATCH_ELEMENT;
     private static final MethodHandle DOT_GETTER, HINT_FALLBACK;
     private static final Pattern hintPattern = Pattern.compile("Hint \\d+ dot:");
@@ -199,18 +197,12 @@ public class GTGuiMultiblockHandler extends GuiMultiblockHandler {
     }
 
     @Override
-    protected void onElementAdded(@NotNull IStructureElement<IConstructable> element, long pos) {
-        String name = element.getClass().getName();
-
+    protected void onElementAdded(@NotNull IStructureElement<Object> element, long pos) {
         if (StructureHacks.anyElementMatches(hatchElements, renderingController, element)) {
             int dot = getDotForElement(element);
             if (dot == dotForPos.defaultReturnValue()) return;
             hatchGroupPositions.computeIfAbsent(dot, k -> new LongOpenHashSet()).add(pos);
             dotForPos.put(pos, dot);
-        }
-
-        if (StructureHacks.anyElementMatches(Collections.singleton(GT_WATER_ELEMENT), renderingController, element)) {
-            name.toLowerCase();
         }
     }
 
@@ -225,7 +217,7 @@ public class GTGuiMultiblockHandler extends GuiMultiblockHandler {
             }
         }
 
-        if (hintForDot.keySet().size() != hatchGroupPositions.keySet().size()) {
+        if (hintForDot.size() != hatchGroupPositions.size()) {
             IntList missing = new IntArrayList(hatchGroupPositions.keySet());
             missing.removeAll(hintForDot.keySet());
 
@@ -239,8 +231,8 @@ public class GTGuiMultiblockHandler extends GuiMultiblockHandler {
         }
     }
 
-    private int getDotForElement(IStructureElement<IConstructable> element) {
-        return cachedDots.computeIfAbsent(element, (a) -> {
+    private int getDotForElement(IStructureElement<Object> element) {
+        return cachedDots.computeIfAbsent(element, a -> {
             IStructureElement<?> match = StructureHacks
                     .getFirstMatchingElement(HATCH_ELEMENT, renderingController, element);
             if (match == null) return dotForPos.defaultReturnValue();
@@ -253,8 +245,8 @@ public class GTGuiMultiblockHandler extends GuiMultiblockHandler {
         });
     }
 
-    private String getFallbackHint(@Nullable IStructureElement<IConstructable> element) {
-        IStructureElement<IConstructable> hatchEle = StructureHacks
+    private String getFallbackHint(@Nullable IStructureElement<Object> element) {
+        IStructureElement<Object> hatchEle = StructureHacks
                 .getFirstMatchingElement(HATCH_ELEMENT, renderingController, element);
         if (hatchEle == null) return "";
         try {

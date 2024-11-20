@@ -73,7 +73,7 @@ public abstract class GuiMultiblockHandler {
     public static final int RECIPE_LAYOUT_Y = 33;
     public static final int RECIPE_WIDTH = 163;
     public static final int SCENE_HEIGHT = RECIPE_WIDTH - 10;
-    public static final Long2ObjectMap<IStructureElement<IConstructable>> structureElementMap = new Long2ObjectOpenHashMap<>();
+    public static final Long2ObjectMap<IStructureElement<Object>> structureElementMap = new Long2ObjectOpenHashMap<>();
 
     protected static final int BETWEEN_BUTTON_X = ICON_SIZE_X + 2;
     protected static final int SLIDER_WIDTH = BUTTON_RIGHT - BETWEEN_BUTTON_X - 2;
@@ -504,7 +504,7 @@ public abstract class GuiMultiblockHandler {
             long pos = CoordinatePacker.pack(rayTrace.blockX, rayTrace.blockY, rayTrace.blockZ);
             onCandidateChanged.accept(
                     BRUtil.scanCandidates(
-                            renderingController,
+                            getContextObject(),
                             structureElementMap.get(pos),
                             getOriginalTriggerStack(),
                             SELECTED_BLOCK.set(pos)));
@@ -609,9 +609,13 @@ public abstract class GuiMultiblockHandler {
         return Collections.emptyList();
     }
 
+    protected Object getContextObject() {
+        return renderingController;
+    }
+
     protected void onPostBlocksRendered(WorldSceneRenderer renderer) {}
 
-    protected void onElementAdded(@NotNull IStructureElement<IConstructable> element, long pos) {}
+    protected void onElementAdded(@NotNull IStructureElement<Object> element, long pos) {}
 
     @SubscribeEvent
     @SuppressWarnings({ "unused", "unchecked" })
@@ -619,7 +623,7 @@ public abstract class GuiMultiblockHandler {
         if (!BlockRenderer6343.MOD_ID.equals(event.getInstrumentIdentifier())) return;
         GuiMultiblockHandler handler = MultiblockHandler.getCurrentGuiHandler();
         if (handler == null) return;
-        IStructureElement<IConstructable> element = (IStructureElement<IConstructable>) event.getElement();
+        IStructureElement<Object> element = (IStructureElement<Object>) event.getElement();
         long pos = CoordinatePacker.pack(event.getX(), event.getY(), event.getZ());
         handler.onElementAdded(element, pos);
         structureElementMap.put(pos, element);

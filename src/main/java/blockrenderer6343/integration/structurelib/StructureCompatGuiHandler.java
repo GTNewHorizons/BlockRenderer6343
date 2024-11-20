@@ -49,4 +49,9 @@ public class StructureCompatGuiHandler extends GuiMultiblockHandler {
         // A single tick is needed for some non GT multiblocks to complete
         renderer.world.updateEntitiesForNEI();
     }
+
+    @Override
+    protected Object getContextObject() {
+        return renderer.world.getTileEntity(MB_PLACE_POS.x, MB_PLACE_POS.y, MB_PLACE_POS.z);
+    }
 }

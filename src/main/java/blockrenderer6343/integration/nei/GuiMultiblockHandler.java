@@ -126,7 +126,7 @@ public abstract class GuiMultiblockHandler {
     protected IConstructable renderingController, lastRenderingController;
     protected ItemStack stackForm;
 
-    public static final Long2ObjectMap<IStructureElement<IConstructable>> structureElementMap = new Long2ObjectOpenHashMap<>();
+    public static final Long2ObjectMap<IStructureElement<Object>> structureElementMap = new Long2ObjectOpenHashMap<>();
     protected Consumer<List<List<ItemStack>>> onCandidateChanged;
     protected static int tierIndex = 1;
     protected static EntityPlayer fakeMultiblockBuilder;
@@ -853,7 +853,7 @@ public abstract class GuiMultiblockHandler {
         for (long pos : structureElementMap.keySet()) {
             if (pos == SELECTED_BLOCK.asLong()) {
                 IStructureElement.BlocksToPlace blocksToPlace = structureElementMap.get(pos).getBlocksToPlace(
-                        renderingController,
+                        getContextObject(),
                         renderer.world,
                         SELECTED_BLOCK.x,
                         SELECTED_BLOCK.y,
@@ -893,6 +893,10 @@ public abstract class GuiMultiblockHandler {
         }
     }
 
+    protected Object getContextObject() {
+        return renderingController;
+    }
+
     public void setOnCandidateChanged(Consumer<List<List<ItemStack>>> callback) {
         onCandidateChanged = callback;
     }
@@ -912,6 +916,6 @@ public abstract class GuiMultiblockHandler {
     public static void OnStructureEvent(StructureEvent.StructureElementVisitedEvent event) {
         structureElementMap.put(
                 CoordinatePacker.pack(event.getX(), event.getY(), event.getZ()),
-                (IStructureElement<IConstructable>) event.getElement());
+                (IStructureElement<Object>) event.getElement());
     }
 }

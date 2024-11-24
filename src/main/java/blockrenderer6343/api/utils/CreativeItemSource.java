@@ -14,7 +14,7 @@ import codechicken.nei.ItemList;
 
 public class CreativeItemSource implements IItemSource {
 
-    public static CreativeItemSource instance;
+    public static final CreativeItemSource instance;
 
     static {
         instance = new CreativeItemSource();

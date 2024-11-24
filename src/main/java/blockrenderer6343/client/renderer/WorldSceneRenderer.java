@@ -31,9 +31,6 @@ import static org.lwjgl.opengl.GL11.glPushClientAttrib;
 import static org.lwjgl.opengl.GL11.glPushMatrix;
 import static org.lwjgl.opengl.GL11.glViewport;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.function.Consumer;
 
 import net.minecraft.block.Block;
@@ -47,16 +44,16 @@ import net.minecraft.init.Blocks;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
-import net.minecraft.world.World;
 import net.minecraftforge.client.ForgeHooksClient;
 
 import org.lwjgl.opengl.GL12;
 import org.lwjgl.util.glu.GLU;
 import org.lwjgl.util.vector.Vector3f;
 
+import com.gtnewhorizon.gtnhlib.util.CoordinatePacker;
+
 import bartworks.common.blocks.BWBlocksGlass;
 import blockrenderer6343.BlockRenderer6343;
-import blockrenderer6343.api.utils.BlockPosition;
 import blockrenderer6343.api.utils.Position;
 import blockrenderer6343.api.utils.PositionedRect;
 import blockrenderer6343.api.utils.Size;
@@ -64,6 +61,8 @@ import blockrenderer6343.client.utils.ProjectionUtils;
 import blockrenderer6343.client.world.TrackedDummyWorld;
 import codechicken.lib.vec.Vector3;
 import gregtech.common.render.GTRendererBlock;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
+import it.unimi.dsi.fastutil.longs.LongSet;
 
 /**
  * Created with IntelliJ IDEA.
@@ -75,9 +74,9 @@ import gregtech.common.render.GTRendererBlock;
 public abstract class WorldSceneRenderer {
 
     // you have to place blocks in the world before use
-    public final World world;
+    public final TrackedDummyWorld world;
     // the Blocks which this renderer needs to render
-    public final Set<BlockPosition> renderedBlocks = new HashSet<>();
+    public final LongSet renderedBlocks = new LongOpenHashSet();
     private Consumer<WorldSceneRenderer> beforeRender;
     private Consumer<WorldSceneRenderer> onRender;
     private Consumer<MovingObjectPosition> onLookingAt;
@@ -88,7 +87,7 @@ public abstract class WorldSceneRenderer {
     private Vector3f worldUp = new Vector3f(0, 1, 0);
     private boolean renderAllFaces = false;
 
-    public WorldSceneRenderer(World world) {
+    public WorldSceneRenderer(TrackedDummyWorld world) {
         this.world = world;
     }
 
@@ -102,7 +101,7 @@ public abstract class WorldSceneRenderer {
         return this;
     }
 
-    public WorldSceneRenderer addRenderedBlocks(Collection<BlockPosition> blocks) {
+    public WorldSceneRenderer addRenderedBlocks(LongSet blocks) {
         if (blocks != null) {
             this.renderedBlocks.addAll(blocks);
         }
@@ -277,8 +276,11 @@ public abstract class WorldSceneRenderer {
         tessellator.startDrawingQuads();
         try {
             tessellator.setBrightness(15 << 20 | 15 << 4);
-            for (BlockPosition pos : renderedBlocks) {
-                Block block = world.getBlock(pos.x, pos.y, pos.z);
+            for (long pos : renderedBlocks) {
+                int x = CoordinatePacker.unpackX(pos);
+                int y = CoordinatePacker.unpackY(pos);
+                int z = CoordinatePacker.unpackZ(pos);
+                Block block = world.getBlock(x, y, z);
                 if (block.equals(Blocks.air)) continue;
 
                 RenderBlocks bufferBuilder = new RenderBlocks();
@@ -289,25 +291,19 @@ public abstract class WorldSceneRenderer {
                     // this mod cannot render renderpass = 1 blocks for now
                     bufferBuilder.renderStandardBlockWithColorMultiplier(
                             block,
-                            pos.x,
-                            pos.y,
-                            pos.z,
-                            bwGlass.getColor(world.getBlockMetadata(pos.x, pos.y, pos.z))[0] / 255f,
-                            bwGlass.getColor(world.getBlockMetadata(pos.x, pos.y, pos.z))[1] / 255f,
-                            bwGlass.getColor(world.getBlockMetadata(pos.x, pos.y, pos.z))[2] / 255f);
+                            x,
+                            y,
+                            z,
+                            bwGlass.getColor(world.getBlockMetadata(x, y, z))[0] / 255f,
+                            bwGlass.getColor(world.getBlockMetadata(x, y, z))[1] / 255f,
+                            bwGlass.getColor(world.getBlockMetadata(x, y, z))[2] / 255f);
                 } else if (BlockRenderer6343.isGTLoaded) {
-                    if (!GTRendererBlock.INSTANCE.renderWorldBlock(
-                            world,
-                            pos.x,
-                            pos.y,
-                            pos.z,
-                            block,
-                            block.getRenderType(),
-                            bufferBuilder)) {
-                        bufferBuilder.renderBlockByRenderType(block, pos.x, pos.y, pos.z);
+                    if (!GTRendererBlock.INSTANCE
+                            .renderWorldBlock(world, x, y, z, block, block.getRenderType(), bufferBuilder)) {
+                        bufferBuilder.renderBlockByRenderType(block, x, y, z);
                     }
                 } else {
-                    bufferBuilder.renderBlockByRenderType(block, pos.x, pos.y, pos.z);
+                    bufferBuilder.renderBlockByRenderType(block, x, y, z);
                 }
             }
             if (onRender != null) {
@@ -327,12 +323,15 @@ public abstract class WorldSceneRenderer {
         for (int pass = 0; pass < 2; pass++) {
             ForgeHooksClient.setRenderPass(pass);
             int finalPass = pass;
-            renderedBlocks.forEach(blockPosition -> {
+            renderedBlocks.forEach(pos -> {
+                int x = CoordinatePacker.unpackX(pos);
+                int y = CoordinatePacker.unpackY(pos);
+                int z = CoordinatePacker.unpackZ(pos);
                 setDefaultPassRenderState(finalPass);
-                TileEntity tile = world.getTileEntity(blockPosition.x, blockPosition.y, blockPosition.z);
+                TileEntity tile = world.getTileEntity(x, y, z);
                 if (tile != null && tesr.hasSpecialRenderer(tile)) {
                     if (tile.shouldRenderInPass(finalPass)) {
-                        tesr.renderTileEntityAt(tile, blockPosition.x, blockPosition.y, blockPosition.z, 0);
+                        tesr.renderTileEntityAt(tile, x, y, z, 0);
                     }
                 }
             });
@@ -363,6 +362,6 @@ public abstract class WorldSceneRenderer {
                 (lookVec.x + startPos.xCoord),
                 (lookVec.y + startPos.yCoord),
                 (lookVec.z + startPos.zCoord));
-        return ((TrackedDummyWorld) this.world).rayTraceBlockswithTargetMap(startPos, endPos, renderedBlocks);
+        return this.world.rayTraceBlocksWithTargetMap(startPos, endPos, renderedBlocks);
     }
 }

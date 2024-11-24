@@ -1,62 +1,93 @@
 package blockrenderer6343.integration.nei;
 
-import static blockrenderer6343.integration.nei.GUI_MultiblockHandler.SLOT_SIZE;
+import static blockrenderer6343.integration.nei.GuiMultiblockHandler.SLOT_SIZE;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.StatCollector;
 
+import org.jetbrains.annotations.NotNull;
+
+import com.gtnewhorizon.structurelib.alignment.constructable.IConstructable;
+
 import codechicken.nei.PositionedStack;
 import codechicken.nei.recipe.GuiRecipeCatalyst;
 import codechicken.nei.recipe.RecipeCatalysts;
 import codechicken.nei.recipe.TemplateRecipeHandler;
+import it.unimi.dsi.fastutil.objects.ObjectSet;
 
 public abstract class MultiblockHandler extends TemplateRecipeHandler {
 
     public static final int CANDIDATE_SLOTS_X = 150;
     public static final int CANDIDATE_SLOTS_Y = 20;
     public static final int CANDIDATE_IN_COlUMN = 6;
-
     protected List<ItemStack> ingredients = new ArrayList<>();
     protected final List<PositionedStack> positionedIngredients = new ArrayList<>();
     protected int lastRecipeHeight;
     protected RecipeCacher recipeCacher = new RecipeCacher();
-    protected GUI_MultiblockHandler<?> guiHandler;
+    protected GuiMultiblockHandler guiHandler;
+    protected IConstructable[] currentMultiblocks;
+    protected int oldRecipe;
 
-    public MultiblockHandler(GUI_MultiblockHandler<?> guiHandler) {
-        super();
+    public MultiblockHandler(GuiMultiblockHandler guiHandler) {
         this.guiHandler = guiHandler;
+        guiHandler.setOnIngredientChanged(this::resetPositionedIngredients);
+        guiHandler.setOnCandidateChanged(this::setResults);
     }
 
-    @Override
-    public void loadCraftingRecipes(String outputId, Object... results) {
-        super.loadCraftingRecipes(outputId, results);
-    }
+    public abstract @NotNull ItemStack getConstructableStack(IConstructable multiblock);
+
+    protected abstract @NotNull ObjectSet<IConstructable> tryLoadingMultiblocks(ItemStack candidate);
+
+    protected abstract boolean isPotentialCandidate(ItemStack candidate);
 
     @Override
     public void loadCraftingRecipes(ItemStack result) {
-        tryLoadingMultiblock(result);
+        loadRecipes(result);
         super.loadCraftingRecipes(result);
     }
 
     @Override
     public void loadUsageRecipes(ItemStack ingredient) {
-        tryLoadingMultiblock(ingredient);
+        loadRecipes(ingredient);
         super.loadUsageRecipes(ingredient);
+    }
+
+    private void loadRecipes(ItemStack stack) {
+        currentMultiblocks = null;
+        oldRecipe = -1;
+        if (!isPotentialCandidate(stack)) return;
+
+        ObjectSet<IConstructable> multiblocks = tryLoadingMultiblocks(stack);
+        if (multiblocks.isEmpty()) return;
+        currentMultiblocks = multiblocks.toArray(new IConstructable[0]);
     }
 
     @Override
     public void drawBackground(int recipe) {
         super.drawBackground(recipe);
+        if (currentMultiblocks == null) return;
+        if (oldRecipe != recipe) {
+            oldRecipe = recipe;
+            IConstructable multi = currentMultiblocks[recipe];
+            guiHandler.loadMultiblock(multi, getConstructableStack(multi));
+        }
+
         guiHandler.drawMultiblock();
 
         if (lastRecipeHeight != RecipeCatalysts.getHeight()) {
-            resetPositionedIngredients();
+            resetPositionedIngredients(ingredients);
             lastRecipeHeight = RecipeCatalysts.getHeight();
         }
+    }
+
+    @Override
+    public int numRecipes() {
+        return currentMultiblocks == null ? 0 : currentMultiblocks.length;
     }
 
     @Override
@@ -69,13 +100,27 @@ public abstract class MultiblockHandler extends TemplateRecipeHandler {
         return StatCollector.translateToLocal("blockrenderer6343.multiblock.structure");
     }
 
-    protected abstract void tryLoadingMultiblock(ItemStack candidate);
-
-    protected GUI_MultiblockHandler<?> getGuiHandler() {
+    protected GuiMultiblockHandler getGuiHandler() {
         return guiHandler;
     }
 
-    public void resetPositionedIngredients() {
+    @Override
+    public List<PositionedStack> getIngredientStacks(int recipe) {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public PositionedStack getResultStack(int recipe) {
+        return null;
+    }
+
+    @Override
+    public List<PositionedStack> getOtherStacks(int recipe) {
+        return arecipes.isEmpty() ? Collections.emptyList() : arecipes.get(0).getOtherStacks();
+    }
+
+    public void resetPositionedIngredients(List<ItemStack> ingredients) {
+        this.ingredients = ingredients;
         positionedIngredients.clear();
         int rowCount = RecipeCatalysts.getRowCount(RecipeCatalysts.getHeight(), ingredients.size());
 

@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
@@ -27,11 +28,15 @@ import blockrenderer6343.client.world.DummyWorld;
 import blockrenderer6343.integration.nei.MultiblockHandler;
 import codechicken.nei.NEIClientUtils;
 import codechicken.nei.recipe.TemplateRecipeHandler;
+import goodgenerator.items.GGItemBlocks;
 import gregtech.api.interfaces.metatileentity.IMetaTileEntity;
 import gregtech.common.blocks.ItemCasingsAbstract;
 import gregtech.common.blocks.ItemFrames;
 import gregtech.common.blocks.ItemMachines;
 import gtPlusPlus.xmod.gregtech.common.blocks.GregtechMetaItemCasingsAbstract;
+import gtnhlanth.common.block.BlockAntennaCasing;
+import gtnhlanth.common.block.BlockCasing;
+import gtnhlanth.common.block.BlockShieldedAccGlass;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
 import it.unimi.dsi.fastutil.objects.ObjectSets;
@@ -136,8 +141,13 @@ public class GTNEIMultiblockHandler extends MultiblockHandler {
 
     static boolean isValidItem(Item candidate) {
         if (!(candidate instanceof ItemBlock)) return false;
-        return candidate instanceof ItemCasingsAbstract || candidate instanceof ItemFrames
+        if (candidate instanceof ItemCasingsAbstract || candidate instanceof ItemFrames
                 || candidate instanceof GregtechMetaItemCasingsAbstract
-                || StructureHacks.validGlass.contains(candidate);
+                || candidate instanceof GGItemBlocks
+                || StructureHacks.validGlass.contains(candidate))
+            return true;
+        Block candidateBlock = Block.getBlockFromItem(candidate);
+        return candidateBlock instanceof BlockCasing || candidateBlock instanceof BlockShieldedAccGlass
+                || candidateBlock instanceof BlockAntennaCasing;
     }
 }

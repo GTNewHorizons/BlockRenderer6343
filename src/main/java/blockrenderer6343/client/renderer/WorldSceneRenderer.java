@@ -67,6 +67,7 @@ import it.unimi.dsi.fastutil.longs.LongSet;
  */
 public abstract class WorldSceneRenderer {
 
+    public static int backgroundColor = 0xC6C6C6;
     // you have to place blocks in the world before use
     public final TrackedDummyWorld world;
     // the Blocks which this renderer needs to render
@@ -76,7 +77,6 @@ public abstract class WorldSceneRenderer {
     private Consumer<WorldSceneRenderer> onRender;
     private Consumer<MovingObjectPosition> onLookingAt;
     private Consumer<WorldSceneRenderer> onPostBlockRendered;
-    private int clearColor;
     private MovingObjectPosition lastTraceResult;
     private final Vector3f eyePos = new Vector3f(0, 0, -10f);
     private final Vector3f lookAt = new Vector3f(0, 0, 0);
@@ -118,10 +118,6 @@ public abstract class WorldSceneRenderer {
 
     public void setRenderAllFaces(boolean renderAllFaces) {
         this.renderAllFaces = renderAllFaces;
-    }
-
-    public void setClearColor(int clearColor) {
-        this.clearColor = clearColor;
     }
 
     public MovingObjectPosition getLastTraceResult() {
@@ -227,7 +223,7 @@ public abstract class WorldSceneRenderer {
     }
 
     protected void clearView(int x, int y, int width, int height) {
-        setGlClearColorFromInt(clearColor, clearColor >> 24);
+        setGlClearColorFromInt(backgroundColor, backgroundColor >> 24);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     }
 

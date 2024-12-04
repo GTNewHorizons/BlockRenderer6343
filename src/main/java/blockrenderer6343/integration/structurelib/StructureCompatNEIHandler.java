@@ -22,7 +22,6 @@ public class StructureCompatNEIHandler extends MultiblockHandler {
     private static Object2ObjectMap<IConstructable, ItemStack> stacks;
 
     static {
-
         new Thread(
                 new MultiblockInfoContainerScan(
                         e -> multiBlockComponents = e,

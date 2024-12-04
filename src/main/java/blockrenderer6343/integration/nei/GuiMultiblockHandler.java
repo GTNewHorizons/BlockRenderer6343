@@ -38,7 +38,6 @@ import blockrenderer6343.client.renderer.WorldSceneRenderer;
 import blockrenderer6343.client.utils.BRButton;
 import blockrenderer6343.client.utils.BRUtil;
 import blockrenderer6343.client.utils.ConstructableData;
-import blockrenderer6343.client.utils.GuiColor;
 import blockrenderer6343.client.utils.GuiSlider;
 import blockrenderer6343.client.world.TrackedDummyWorld;
 import codechicken.lib.gui.GuiDraw;
@@ -395,7 +394,6 @@ public abstract class GuiMultiblockHandler {
 
         renderer = new ImmediateWorldSceneRenderer(new TrackedDummyWorld());
         renderer.world.updateEntitiesForNEI();
-        renderer.setClearColor(GuiColor.BgColor.getColor());
 
         FAKE_PLAYER.setWorld(renderer.world);
         renderer.world.unloadEntities(Collections.singletonList(FAKE_PLAYER));

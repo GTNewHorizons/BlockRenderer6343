@@ -87,10 +87,10 @@ public abstract class GuiMultiblockHandler {
     protected static Vector3f center = new Vector3f();
     protected static float rotationYaw, rotationPitch;
     protected static float zoom;
+    protected static IConstructable renderingController, lastRenderingController;
 
     protected ItemStack tooltipBlockStack;
 
-    protected IConstructable renderingController, lastRenderingController;
     protected ConstructableData constructableData;
     protected ItemStack stackForm;
 

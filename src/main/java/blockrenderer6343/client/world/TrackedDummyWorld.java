@@ -34,6 +34,7 @@ public class TrackedDummyWorld extends DummyWorld {
         long pos = CoordinatePacker.pack(x, y, z);
         if (block == Blocks.air) {
             blockMap.remove(pos);
+            blockMetaMap.remove(pos);
             if (block.hasTileEntity(meta)) {
                 removeTileEntity(x, y, z);
             }
@@ -46,6 +47,7 @@ public class TrackedDummyWorld extends DummyWorld {
                     setTileEntity(x, y, z, tile);
                 }
             }
+            block.onBlockAdded(this, x, y, z);
         }
 
         minPos.x = Math.min(minPos.x, x);
@@ -70,6 +72,21 @@ public class TrackedDummyWorld extends DummyWorld {
     }
 
     @Override
+    public boolean setBlockMetadataWithNotify(int x, int y, int z, int meta, int flag) {
+        long pos = CoordinatePacker.pack(x, y, z);
+        if (!blockMap.containsKey(pos)) return false;
+        blockMetaMap.put(pos, meta);
+
+        TileEntity tile = tileMap.get(pos);
+        if (tile != null) {
+            tile.updateContainingBlockInfo();
+            tile.blockMetadata = meta;
+        }
+
+        return true;
+    }
+
+    @Override
     public void setTileEntity(int x, int y, int z, TileEntity tile) {
         tile.setWorldObj(this);
         tile.xCoord = x;
@@ -87,6 +104,15 @@ public class TrackedDummyWorld extends DummyWorld {
     @Override
     public TileEntity getTileEntity(int x, int y, int z) {
         return tileMap.get(CoordinatePacker.pack(x, y, z));
+    }
+
+    @Override
+    public void updateEntitiesForNEI() {
+        for (TileEntity tile : tileMap.values()) {
+            if (tile.canUpdate()) {
+                tile.updateEntity();
+            }
+        }
     }
 
     /**

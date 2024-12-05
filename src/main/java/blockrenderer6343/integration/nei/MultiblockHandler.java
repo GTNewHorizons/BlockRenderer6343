@@ -7,24 +7,44 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.StatCollector;
 
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import com.gtnewhorizon.gtnhlib.eventbus.EventBusSubscriber;
 import com.gtnewhorizon.structurelib.alignment.constructable.IConstructable;
 
+import blockrenderer6343.client.utils.ConstructableData;
+import codechicken.nei.LayoutManager;
 import codechicken.nei.PositionedStack;
+import codechicken.nei.RecipeSearchField;
+import codechicken.nei.SearchField;
+import codechicken.nei.SearchTokenParser;
+import codechicken.nei.api.API;
+import codechicken.nei.api.ItemFilter;
+import codechicken.nei.recipe.GuiOverlayButton.UpdateOverlayButtonsEvent;
+import codechicken.nei.recipe.GuiRecipe;
 import codechicken.nei.recipe.GuiRecipeCatalyst;
 import codechicken.nei.recipe.RecipeCatalysts;
 import codechicken.nei.recipe.TemplateRecipeHandler;
+import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+import cpw.mods.fml.relauncher.ReflectionHelper;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
 
+@EventBusSubscriber
 public abstract class MultiblockHandler extends TemplateRecipeHandler {
 
     public static final int CANDIDATE_SLOTS_X = 150;
     public static final int CANDIDATE_SLOTS_Y = 20;
     public static final int CANDIDATE_IN_COlUMN = 6;
+    private static ItemStack lastStack;
     protected List<ItemStack> ingredients = new ArrayList<>();
     protected final List<PositionedStack> positionedIngredients = new ArrayList<>();
     protected int lastRecipeHeight;
@@ -32,6 +52,32 @@ public abstract class MultiblockHandler extends TemplateRecipeHandler {
     protected GuiMultiblockHandler guiHandler;
     protected IConstructable[] currentMultiblocks;
     protected int oldRecipe;
+    protected static RecipeSearchField recipeSearchField;
+    protected static final PositionedStack DUMMY_STACK = new PositionedStack(
+            new ItemStack(Items.poisonous_potato),
+            0,
+            9999,
+            false);
+
+    static {
+        // this is a hack to let us hijack the "in recipe search" field while in the preview
+        API.addSearchProvider(
+                new SearchField.SearchParserProvider(
+                        '䌡',
+                        "inpreview",
+                        EnumChatFormatting.RESET,
+                        a -> new InPreviewFilter()) {
+
+                    @Override
+                    public SearchTokenParser.SearchMode getSearchMode() {
+                        return SearchTokenParser.SearchMode.ALWAYS;
+                    }
+                });
+        try {
+            recipeSearchField = (RecipeSearchField) ReflectionHelper.findField(GuiRecipe.class, "searchField")
+                    .get(null);
+        } catch (Exception ignored) {}
+    }
 
     public MultiblockHandler(GuiMultiblockHandler guiHandler) {
         this.guiHandler = guiHandler;
@@ -42,8 +88,6 @@ public abstract class MultiblockHandler extends TemplateRecipeHandler {
     public abstract @NotNull ItemStack getConstructableStack(IConstructable multiblock);
 
     protected abstract @NotNull ObjectSet<IConstructable> tryLoadingMultiblocks(ItemStack candidate);
-
-    protected abstract boolean isPotentialCandidate(ItemStack candidate);
 
     @Override
     public void loadCraftingRecipes(ItemStack result) {
@@ -60,10 +104,9 @@ public abstract class MultiblockHandler extends TemplateRecipeHandler {
     private void loadRecipes(ItemStack stack) {
         currentMultiblocks = null;
         oldRecipe = -1;
-        if (!isPotentialCandidate(stack)) return;
-
         ObjectSet<IConstructable> multiblocks = tryLoadingMultiblocks(stack);
         if (multiblocks.isEmpty()) return;
+        lastStack = stack;
         currentMultiblocks = multiblocks.toArray(new IConstructable[0]);
     }
 
@@ -74,15 +117,41 @@ public abstract class MultiblockHandler extends TemplateRecipeHandler {
         if (oldRecipe != recipe) {
             oldRecipe = recipe;
             IConstructable multi = currentMultiblocks[recipe];
-            guiHandler.loadMultiblock(multi, getConstructableStack(multi));
+            guiHandler.loadMultiblock(
+                    multi,
+                    getConstructableStack(multi),
+                    ConstructableData.getTierData(multi).setTierFromStack(lastStack));
         }
 
+        guiHandler.recalculateSearch(recipeSearchField.text());
         guiHandler.drawMultiblock();
 
         if (lastRecipeHeight != RecipeCatalysts.getHeight()) {
             resetPositionedIngredients(ingredients);
             lastRecipeHeight = RecipeCatalysts.getHeight();
         }
+    }
+
+    public static @Nullable MultiblockHandler getHandlerFromGui(GuiScreen gui) {
+        // noinspection rawtypes
+        if (!(gui instanceof GuiRecipe recipe)) return null;
+        if (recipe.getHandler() instanceof MultiblockHandler handler) {
+            return handler;
+        }
+        return null;
+    }
+
+    public static @Nullable GuiMultiblockHandler getCurrentGuiHandler() {
+        MultiblockHandler handler = getHandlerFromGui(Minecraft.getMinecraft().currentScreen);
+        if (handler != null) {
+            return handler.getGuiHandler();
+        }
+        return null;
+    }
+
+    @Override
+    public String getOverlayIdentifier() {
+        return getClass().getName();
     }
 
     @Override
@@ -97,10 +166,15 @@ public abstract class MultiblockHandler extends TemplateRecipeHandler {
 
     @Override
     public String getRecipeName() {
+        return StringUtils.abbreviate(guiHandler.getMultiblockName(), 25);
+    }
+
+    @Override
+    public String getRecipeTabName() {
         return StatCollector.translateToLocal("blockrenderer6343.multiblock.structure");
     }
 
-    protected GuiMultiblockHandler getGuiHandler() {
+    protected @NotNull GuiMultiblockHandler getGuiHandler() {
         return guiHandler;
     }
 
@@ -111,7 +185,8 @@ public abstract class MultiblockHandler extends TemplateRecipeHandler {
 
     @Override
     public PositionedStack getResultStack(int recipe) {
-        return null;
+        // There needs to be some sort of result stack for the in recipe search to work
+        return DUMMY_STACK;
     }
 
     @Override
@@ -172,6 +247,28 @@ public abstract class MultiblockHandler extends TemplateRecipeHandler {
         @Override
         public List<PositionedStack> getOtherStacks() {
             return getCycledIngredients(cycleticks / 20, positionedResults);
+        }
+    }
+
+    public static class InPreviewFilter implements ItemFilter {
+
+        @Override
+        public boolean matches(ItemStack item) {
+            GuiMultiblockHandler handler = getCurrentGuiHandler();
+            if (handler != null && !LayoutManager.searchField.focused()) {
+                return recipeSearchField.isVisible() && recipeSearchField.focused()
+                        && !recipeSearchField.text().isEmpty();
+            }
+            return false;
+        }
+    }
+
+    @SubscribeEvent
+    @SuppressWarnings({ "unused", "rawtypes" })
+    public static void onPostOverlay(UpdateOverlayButtonsEvent.Post event) {
+        if (event.gui instanceof GuiRecipe recipe && recipe.getHandler() instanceof MultiblockHandler) {
+            // We have to remove the recipe overlay now that this handler has a result stack
+            event.buttonList.clear();
         }
     }
 }

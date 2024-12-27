@@ -65,6 +65,12 @@ public class StructureHacks {
         }
     }
 
+    /**
+     * Add a tiered element that should be checked in
+     * {@link #extractTieredBlocks(Object, IStructureElement, ConstructableData, String)}
+     * 
+     * @param className The class name of the element
+     */
     public static void addTieredElement(String className) {
         TIERED_ELEMENTS.add(className);
     }

@@ -52,10 +52,6 @@ public class BRUtil {
     public static final AutoPlaceEnvironment AUTO_PLACE_ENVIRONMENT = AutoPlaceEnvironment
             .fromLegacy(CreativeItemSource.instance, FAKE_PLAYER, a -> {});
 
-    public static AutoPlaceEnvironment getBuildEnvironment() {
-        return AUTO_PLACE_ENVIRONMENT;
-    }
-
     public static void projectMultiblock(ItemStack buildStack, ItemStack multiStack, int blocksBelowController) {
         EntityPlayer player = Minecraft.getMinecraft().thePlayer;
         World baseWorld = Minecraft.getMinecraft().theWorld;
@@ -157,7 +153,7 @@ public class BRUtil {
                 block.y,
                 block.z,
                 buildStack,
-                getBuildEnvironment());
+                AUTO_PLACE_ENVIRONMENT);
         if (blocksToPlace == null) return Collections.emptyList();
 
         Set<ItemStack> rawCandidates = CreativeItemSource.instance

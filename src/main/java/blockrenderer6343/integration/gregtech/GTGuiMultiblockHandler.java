@@ -128,7 +128,7 @@ public class GTGuiMultiblockHandler extends GuiMultiblockHandler {
     protected void onPostBlocksRendered(WorldSceneRenderer renderer) {
         if (!highlightHatch || hatchGroupPositions.isEmpty()) return;
         GL11.glPushMatrix();
-        GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
+        GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_DEPTH_BUFFER_BIT);
 
         GL11.glDisable(GL11.GL_DEPTH_TEST);
         GL11.glDisable(GL11.GL_TEXTURE_2D);
@@ -226,6 +226,7 @@ public class GTGuiMultiblockHandler extends GuiMultiblockHandler {
                     String hint = getFallbackHint(structureElementMap.get(pos));
                     if (hint.isEmpty()) continue;
                     hintForDot.put(dot, hint);
+                    break;
                 }
             }
         }

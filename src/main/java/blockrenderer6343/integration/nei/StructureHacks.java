@@ -1,5 +1,7 @@
 package blockrenderer6343.integration.nei;
 
+import static blockrenderer6343.client.utils.BRUtil.AUTO_PLACE_ENVIRONMENT;
+
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
@@ -15,12 +17,10 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import com.gtnewhorizon.structurelib.StructureLibAPI;
-import com.gtnewhorizon.structurelib.structure.AutoPlaceEnvironment;
 import com.gtnewhorizon.structurelib.structure.IStructureElement;
 import com.gtnewhorizon.structurelib.structure.IStructureElementChain;
 import com.gtnewhorizon.structurelib.structure.StructureUtility;
 
-import blockrenderer6343.client.utils.BRUtil;
 import blockrenderer6343.client.utils.ConstructableData;
 import blockrenderer6343.client.world.DummyWorld;
 import cpw.mods.fml.relauncher.ReflectionHelper;
@@ -42,8 +42,7 @@ public class StructureHacks {
             StructureUtility.error());
 
     static {
-        // This is so dumb but all elements are anonymous classes so this is the best way to only check the necessary
-        // ones
+        // This is so dumb but all elements are anonymous classes so we have to get the classes through "creative" means
         addTieredElement(
                 StructureUtility.ofBlocksTiered((a, b) -> 0, null, Collections.emptyList(), (c, d) -> {}, e -> -1)
                         .getClass().getName());
@@ -94,11 +93,10 @@ public class StructureHacks {
             return chainStacks;
         }
 
-        AutoPlaceEnvironment env = BRUtil.getBuildEnvironment();
         IStructureElement.BlocksToPlace blocks = element
-                .getBlocksToPlace(multi, DummyWorld.INSTANCE, 0, 0, 0, HOLO_STACK, env);
+                .getBlocksToPlace(multi, DummyWorld.INSTANCE, 0, 0, 0, HOLO_STACK, AUTO_PLACE_ENVIRONMENT);
         if (TIERED_ELEMENTS.contains(name)) {
-            return extractTieredBlocks(multi, element, data, env, getChannel(name, element));
+            return extractTieredBlocks(multi, element, data, getChannel(name, element));
         }
 
         if (blocks == null) return Collections.emptyList();
@@ -107,7 +105,7 @@ public class StructureHacks {
     }
 
     private static <T> ObjectSet<ItemStack> extractTieredBlocks(T multi, IStructureElement<T> element,
-            ConstructableData data, AutoPlaceEnvironment env, String channel) {
+            ConstructableData data, String channel) {
         ObjectSet<ItemStack> result = new ObjectOpenHashSet<>();
         ItemStack holo = HOLO_STACK.copy();
         int tier = 0;
@@ -115,7 +113,7 @@ public class StructureHacks {
         do {
             holo.stackSize = tier++ + 1;
             IStructureElement.BlocksToPlace toPlace = element
-                    .getBlocksToPlace(multi, DummyWorld.INSTANCE, 0, 0, 0, holo, env);
+                    .getBlocksToPlace(multi, DummyWorld.INSTANCE, 0, 0, 0, holo, AUTO_PLACE_ENVIRONMENT);
             if (toPlace == null || toPlace.getStacks() == null) break;
             Iterator<ItemStack> iterator = toPlace.getStacks().iterator();
             if (!iterator.hasNext()) break;

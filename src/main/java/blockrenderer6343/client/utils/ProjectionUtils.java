@@ -1,52 +1,40 @@
 package blockrenderer6343.client.utils;
 
-import org.lwjgl.util.vector.Matrix4f;
-import org.lwjgl.util.vector.Vector3f;
-import org.lwjgl.util.vector.Vector4f;
-
-import blockrenderer6343.api.utils.PositionedRect;
+import org.joml.Matrix4f;
+import org.joml.Vector3f;
+import org.joml.Vector4i;
 
 public class ProjectionUtils {
 
-    public static Vector3f unProject(PositionedRect rect, Vector3f eyePos, Vector3f lookat, int mouseX, int mouseY) {
-        int width = rect.size.width;
-        int height = rect.size.height;
+    private static final Matrix4f ROT = new Matrix4f();
+    private static final Vector3f MUT_3F = new Vector3f();
+    private static final Vector3f RESULT = new Vector3f();
+
+    public static Vector3f unProject(Vector4i rect, Vector3f eyePos, Vector3f lookat, int mouseX, int mouseY) {
+        int width = rect.z();
+        int height = rect.w();
 
         double aspectRatio = ((double) width / (double) height);
-        double fov = ((60 / 2d)) * (Math.PI / 180);
+        double fov = Math.toRadians(30);
 
-        double a = -((double) (mouseX - rect.position.x) / (double) width - 0.5) * 2;
-        double b = -((double) (height - (mouseY - rect.position.y)) / (double) height - 0.5) * 2;
+        double a = -((double) (mouseX - rect.x()) / (double) width - 0.5) * 2;
+        double b = -((double) (height - (mouseY - rect.y())) / (double) height - 0.5) * 2;
         double tanf = Math.tan(fov);
 
-        Vector3f lookVec = new Vector3f();
-        Vector3f.sub(eyePos, lookat, lookVec);
-        float yawn = (float) Math.atan2(lookVec.x, -lookVec.z);
-        float pitch = (float) Math.atan2(lookVec.y, Math.sqrt(lookVec.x * lookVec.x + lookVec.z * lookVec.z));
+        eyePos.sub(lookat, MUT_3F);
+        float yawn = (float) Math.atan2(MUT_3F.x, -MUT_3F.z);
+        float pitch = (float) Math.atan2(MUT_3F.y, Math.sqrt(MUT_3F.x * MUT_3F.x + MUT_3F.z * MUT_3F.z));
 
-        Matrix4f rot = new Matrix4f();
-        rot.rotate(yawn, new Vector3f(0, -1, 0));
-        rot.rotate(pitch, new Vector3f(1, 0, 0));
-        Vector4f foward = new Vector4f(0, 0, 1, 0);
-        Vector4f up = new Vector4f(0, 1, 0, 0);
-        Vector4f left = new Vector4f(1, 0, 0, 0);
-        Matrix4f.transform(rot, foward, foward);
-        Matrix4f.transform(rot, up, up);
-        Matrix4f.transform(rot, left, left);
-
-        Vector3f result = new Vector3f(foward.x, foward.y, foward.z);
-        Vector3f.add(
-                result,
-                new Vector3f(
-                        (float) (left.x * tanf * aspectRatio * a),
-                        (float) (left.y * tanf * aspectRatio * a),
-                        (float) (left.z * tanf * aspectRatio * a)),
-                result);
-        Vector3f.add(
-                result,
-                new Vector3f((float) (up.x * tanf * b), (float) (up.y * tanf * b), (float) (up.z * tanf * b)),
-                result);
-        return normalize(result);
+        ROT.identity().rotate(yawn, 0, -1, 0).rotate(pitch, 1, 0, 0);
+        RESULT.set(ROT.transformPosition(MUT_3F.set(0, 0, 1)));
+        ROT.transformPosition(MUT_3F.set(1, 0, 0));
+        RESULT.add(
+                (float) (MUT_3F.x * tanf * aspectRatio * a),
+                (float) (MUT_3F.y * tanf * aspectRatio * a),
+                (float) (MUT_3F.z * tanf * aspectRatio * a));
+        ROT.transformPosition(MUT_3F.set(0, 1, 0));
+        RESULT.add((float) (MUT_3F.x * tanf * b), (float) (MUT_3F.y * tanf * b), (float) (MUT_3F.z * tanf * b));
+        return normalize(RESULT);
     }
 
     public static Vector3f normalize(Vector3f vec) {

@@ -1,5 +1,7 @@
 package blockrenderer6343.integration.structurelib;
 
+import static blockrenderer6343.client.utils.BRUtil.FAKE_PLAYER;
+
 import net.minecraft.block.Block;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.tileentity.TileEntity;
@@ -13,10 +15,6 @@ import blockrenderer6343.api.utils.CreativeItemSource;
 import blockrenderer6343.integration.nei.GuiMultiblockHandler;
 
 public class StructureCompatGuiHandler extends GuiMultiblockHandler {
-
-    public StructureCompatGuiHandler() {
-        super();
-    }
 
     @Override
     protected void placeMultiblock() {
@@ -34,7 +32,7 @@ public class StructureCompatGuiHandler extends GuiMultiblockHandler {
             result = multi.survivalConstruct(
                     getBuildTriggerStack(),
                     Integer.MAX_VALUE,
-                    ISurvivalBuildEnvironment.create(CreativeItemSource.instance, fakeMultiblockBuilder));
+                    ISurvivalBuildEnvironment.create(CreativeItemSource.instance, FAKE_PLAYER));
             iterations++;
             if (result == -2) {
                 tryConstruct = true;

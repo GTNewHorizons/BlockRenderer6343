@@ -38,7 +38,7 @@ public class StructureCompatGuiHandler extends GuiMultiblockHandler {
                 tryConstruct = true;
                 break;
             }
-        } while (result > 0 && iterations < MAX_PLACE_ROUNDS);
+        } while (renderer.world.hasChanged() && iterations < MAX_PLACE_ROUNDS);
 
         if (tryConstruct) {
             multi.construct(getBuildTriggerStack(), false);

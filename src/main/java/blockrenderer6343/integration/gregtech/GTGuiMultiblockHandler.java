@@ -174,14 +174,14 @@ public class GTGuiMultiblockHandler extends GuiMultiblockHandler {
         IMetaTileEntity mte = ((IGregTechTileEntity) tTileEntity).getMetaTileEntity();
 
         if (mte instanceof ISurvivalConstructable survivalConstructable) {
-            int result, iterations = 0;
+            int iterations = 0;
             do {
-                result = survivalConstructable.survivalConstruct(
+                survivalConstructable.survivalConstruct(
                         getBuildTriggerStack(),
                         Integer.MAX_VALUE,
                         ISurvivalBuildEnvironment.create(CreativeItemSource.instance, FAKE_PLAYER));
                 iterations++;
-            } while (result > 0 && iterations < MAX_PLACE_ROUNDS);
+            } while (renderer.world.hasChanged() && iterations < MAX_PLACE_ROUNDS);
         } else if (tTileEntity instanceof IConstructableProvider iConstructableProvider) {
             constructable = iConstructableProvider.getConstructable();
         } else if (tTileEntity instanceof IConstructable iConstructable) {

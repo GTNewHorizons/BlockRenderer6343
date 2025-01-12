@@ -28,6 +28,7 @@ public class TrackedDummyWorld extends DummyWorld {
     private final Vector3f minPos = new Vector3f(Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE);
     private final Vector3f maxPos = new Vector3f(Integer.MIN_VALUE, Integer.MIN_VALUE, Integer.MIN_VALUE);
     private final Vector3f size = new Vector3f();
+    private boolean hasChanged;
 
     @Override
     public boolean setBlock(int x, int y, int z, Block block, int meta, int flags) {
@@ -50,6 +51,7 @@ public class TrackedDummyWorld extends DummyWorld {
             block.onBlockAdded(this, x, y, z);
         }
 
+        hasChanged = true;
         minPos.x = Math.min(minPos.x, x);
         minPos.y = Math.min(minPos.y, y);
         minPos.z = Math.min(minPos.z, z);
@@ -311,5 +313,11 @@ public class TrackedDummyWorld extends DummyWorld {
 
     private boolean isBlockTargeted(MovingObjectPosition result, LongSet targetedBlocks) {
         return targetedBlocks.contains(CoordinatePacker.pack(result.blockX, result.blockY, result.blockZ));
+    }
+
+    public boolean hasChanged() {
+        boolean changed = hasChanged;
+        hasChanged = false;
+        return changed;
     }
 }

@@ -34,6 +34,7 @@ import blockrenderer6343.client.utils.EnumColor;
 import blockrenderer6343.integration.nei.GuiMultiblockHandler;
 import blockrenderer6343.integration.nei.StructureHacks;
 import cpw.mods.fml.relauncher.ReflectionHelper;
+import gregtech.api.interfaces.INEIPreviewModifier;
 import gregtech.api.interfaces.metatileentity.IMetaTileEntity;
 import gregtech.api.interfaces.tileentity.IGregTechTileEntity;
 import gregtech.api.interfaces.tileentity.ITurnable;
@@ -173,6 +174,10 @@ public class GTGuiMultiblockHandler extends GuiMultiblockHandler {
         ((ITurnable) tTileEntity).setFrontFacing(ForgeDirection.SOUTH);
         IMetaTileEntity mte = ((IGregTechTileEntity) tTileEntity).getMetaTileEntity();
 
+        if (mte instanceof INEIPreviewModifier modifier) {
+            modifier.onPreviewConstruct(getBuildTriggerStack());
+        }
+
         if (mte instanceof ISurvivalConstructable survivalConstructable) {
             int iterations = 0;
             do {
@@ -187,8 +192,13 @@ public class GTGuiMultiblockHandler extends GuiMultiblockHandler {
         } else if (tTileEntity instanceof IConstructable iConstructable) {
             constructable = iConstructable;
         }
+
         if (constructable != null) {
             constructable.construct(getBuildTriggerStack(), false);
+        }
+
+        if (mte instanceof INEIPreviewModifier modifier) {
+            modifier.onPreviewStructureComplete(getBuildTriggerStack());
         }
 
         if (!RunnableMachineUpdate.isCurrentThreadEnabled()) {

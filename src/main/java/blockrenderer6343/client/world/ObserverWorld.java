@@ -20,6 +20,7 @@ import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
 
 import blockrenderer6343.BlockRenderer6343;
 import blockrenderer6343.client.utils.BRUtil;
+import gregtech.api.interfaces.INEIPreviewModifier;
 import gregtech.api.interfaces.metatileentity.IMetaTileEntity;
 import gregtech.api.interfaces.tileentity.IGregTechTileEntity;
 import gregtech.api.threads.RunnableMachineUpdate;
@@ -177,6 +178,9 @@ public class ObserverWorld extends DummyWorld {
         do {
             holo.stackSize = tier + 1;
             hasChanged = false;
+            if (multi instanceof INEIPreviewModifier modifier) {
+                modifier.onPreviewConstruct(holo);
+            }
             multi.construct(holo, false);
 
         } while (tier++ < MAX_TRIES && hasChanged);

@@ -178,7 +178,7 @@ public class ObserverWorld extends DummyWorld {
         do {
             holo.stackSize = tier + 1;
             hasChanged = false;
-            if (multi instanceof INEIPreviewModifier modifier) {
+            if (BlockRenderer6343.isGTLoaded && multi instanceof INEIPreviewModifier modifier) {
                 modifier.onPreviewConstruct(holo);
             }
             multi.construct(holo, false);

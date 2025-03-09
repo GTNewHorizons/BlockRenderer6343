@@ -136,7 +136,7 @@ public class StructureHacks {
             }
         } while (!doBreak && tier < MAX_TIERS_TO_CHECK);
 
-        data.setMaxTier(tier, channel);
+        data.setMaxTier(tier - 1, channel);
         return result;
     }
 

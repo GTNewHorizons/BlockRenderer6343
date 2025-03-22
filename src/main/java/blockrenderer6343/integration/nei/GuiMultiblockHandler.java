@@ -222,6 +222,9 @@ public abstract class GuiMultiblockHandler {
         if (tier <= 0) {
             tier = 1;
         }
+
+        if (renderer != null && tier == trigger.stackSize) return;
+
         trigger.stackSize = tier;
         initializeSceneRenderer(false);
     }
@@ -249,13 +252,21 @@ public abstract class GuiMultiblockHandler {
             // to display all layers
             newLayer = -1;
         }
+
+        if (newLayer == layerIndex) return;
+
         layerIndex = newLayer;
+
         if (renderer == null) return;
 
         TrackedDummyWorld world = renderer.world;
+
         resetCenter();
         renderer.renderedBlocks.clear();
         int minY = (int) world.getMinPos().y();
+
+        world.setVisibleYLevel(layerIndex == -1 ? -1 : minY + layerIndex);
+
         LongSet renderBlocks;
         if (newLayer == -1) {
             renderBlocks = world.blockMap.keySet();

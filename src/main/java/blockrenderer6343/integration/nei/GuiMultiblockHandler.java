@@ -149,7 +149,9 @@ public abstract class GuiMultiblockHandler {
                         SLIDER_WIDTH,
                         16,
                         -1,
-                        -1).setTextSupplier(value -> value == -1 ? "All" : String.valueOf(value + 1))
+                        -1).setTextSupplier(
+                                value -> value == -1 ? I18n.format("blockrenderer6343.nei.all")
+                                        : String.valueOf(value + 1))
                                 .setMaxValueSupplier(
                                         () -> (int) (renderer.world.getMaxPos().y - renderer.world.getMinPos().y))
                                 .setValueListener(this::setNextLayer).setIndex(1));
@@ -194,8 +196,11 @@ public abstract class GuiMultiblockHandler {
                             16,
                             startVal,
                             0,
-                            entry.getIntValue()).setValueListener(val -> setChannelTier(channel, val))
-                                    .setTextSupplier(value -> value == 0 ? "Not set" : String.valueOf(value))
+                            entry.getIntValue())
+                                    .setValueListener(val -> setChannelTier(channel, val))
+                                    .setTextSupplier(
+                                            value -> value == 0 ? I18n.format("blockrenderer6343.nei.not_set")
+                                                    : String.valueOf(value))
                                     .setIndex(i + curSliders));
             i++;
         }

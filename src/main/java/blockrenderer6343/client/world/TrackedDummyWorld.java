@@ -30,6 +30,8 @@ public class TrackedDummyWorld extends DummyWorld {
     private final Vector3f size = new Vector3f();
     private boolean hasChanged;
 
+    private int visibleYLevel = -1;
+
     @Override
     public boolean setBlock(int x, int y, int z, Block block, int meta, int flags) {
         long pos = CoordinatePacker.pack(x, y, z);
@@ -138,6 +140,10 @@ public class TrackedDummyWorld extends DummyWorld {
         return maxPos;
     }
 
+    public void setVisibleYLevel(int visibleYLevel) {
+        this.visibleYLevel = visibleYLevel;
+    }
+
     public MovingObjectPosition rayTraceBlocksWithTargetMap(Vec3 start, Vec3 end, LongSet targetedBlocks) {
         return rayTraceBlocksWithTargetMap(start, end, targetedBlocks, false, false, false);
     }
@@ -155,12 +161,16 @@ public class TrackedDummyWorld extends DummyWorld {
                 Block block = this.getBlock(l, i1, j1);
                 int k1 = this.getBlockMetadata(l, i1, j1);
 
-                if ((!ignoreBlockWithoutBoundingBox || block.getCollisionBoundingBoxFromPool(this, l, i1, j1) != null)
-                        && block.canCollideCheck(k1, stopOnLiquid)) {
-                    MovingObjectPosition movingobjectposition = block.collisionRayTrace(this, l, i1, j1, start, end);
+                if (!ignoreBlockWithoutBoundingBox || block.getCollisionBoundingBoxFromPool(this, l, i1, j1) != null) {
+                    if (block.canCollideCheck(k1, stopOnLiquid)) {
+                        if (visibleYLevel == -1 || visibleYLevel == i1) {
+                            MovingObjectPosition movingobjectposition = block
+                                    .collisionRayTrace(this, l, i1, j1, start, end);
 
-                    if (movingobjectposition != null && isBlockTargeted(movingobjectposition, targetedBlocks)) {
-                        return movingobjectposition;
+                            if (movingobjectposition != null && isBlockTargeted(movingobjectposition, targetedBlocks)) {
+                                return movingobjectposition;
+                            }
+                        }
                     }
                 }
 
@@ -289,12 +299,14 @@ public class TrackedDummyWorld extends DummyWorld {
                     if (!ignoreBlockWithoutBoundingBox
                             || block1.getCollisionBoundingBoxFromPool(this, l, i1, j1) != null) {
                         if (block1.canCollideCheck(l1, stopOnLiquid)) {
-                            MovingObjectPosition movingobjectposition1 = block1
-                                    .collisionRayTrace(this, l, i1, j1, start, end);
+                            if (visibleYLevel == -1 || visibleYLevel == i1) {
+                                MovingObjectPosition movingobjectposition1 = block1
+                                        .collisionRayTrace(this, l, i1, j1, start, end);
 
-                            if (movingobjectposition1 != null
-                                    && isBlockTargeted(movingobjectposition1, targetedBlocks)) {
-                                return movingobjectposition1;
+                                if (movingobjectposition1 != null
+                                        && isBlockTargeted(movingobjectposition1, targetedBlocks)) {
+                                    return movingobjectposition1;
+                                }
                             }
                         } else {
                             movingobjectposition2 = new MovingObjectPosition(l, i1, j1, b0, start, false);

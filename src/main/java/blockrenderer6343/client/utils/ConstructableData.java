@@ -47,7 +47,7 @@ public class ConstructableData {
         if (!channel.isEmpty()) {
             itemChannels.put(hash, channel);
         }
-        return itemTiers.putIfAbsent(hash, tier) == itemTiers.defaultReturnValue();
+        return itemTiers.put(hash, tier) == itemTiers.defaultReturnValue();
     }
 
     public void setMaxTier(int tier, @NotNull String channel) {

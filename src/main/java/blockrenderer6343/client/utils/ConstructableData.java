@@ -41,13 +41,22 @@ public class ConstructableData {
     }
 
     public boolean addItemTier(@NotNull ItemStack item, @NotNull String channel, int tier) {
+        return addItemTier(item, null, channel, tier);
+    }
+
+    public boolean addItemTier(@NotNull ItemStack item, ItemStack lastItem, @NotNull String channel, int tier) {
         if (this == EMPTY || !StructureHacks.isSafeStack(item)) return false;
         hasData = true;
         long hash = BRUtil.hashStack(item);
+        if (lastItem != null) {
+            long lastHash = BRUtil.hashStack(lastItem);
+            if (lastHash == hash) return false;
+        }
         if (!channel.isEmpty()) {
             itemChannels.put(hash, channel);
         }
-        return itemTiers.put(hash, tier) == itemTiers.defaultReturnValue();
+        itemTiers.put(hash, tier);
+        return true;
     }
 
     public void setMaxTier(int tier, @NotNull String channel) {

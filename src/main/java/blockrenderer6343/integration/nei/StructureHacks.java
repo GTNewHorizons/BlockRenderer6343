@@ -115,7 +115,7 @@ public class StructureHacks {
         ObjectSet<ItemStack> result = new ObjectOpenHashSet<>();
         ItemStack holo = HOLO_STACK.copy();
         int tier = 0;
-        boolean doBreak = false;
+        ItemStack lastStack = null;
 
         do {
             holo.stackSize = tier++ + 1;
@@ -126,17 +126,18 @@ public class StructureHacks {
             if (!iterator.hasNext()) break;
             ItemStack firstStack = iterator.next();
 
-            if (!data.addItemTier(firstStack, channel, tier)) doBreak = true;
+            if (!data.addItemTier(firstStack, lastStack, channel, tier)) break;
             result.add(firstStack);
+            lastStack = firstStack.copy();
 
             while (iterator.hasNext()) {
                 ItemStack stack = iterator.next();
                 data.addItemTier(stack, channel, tier);
                 result.add(stack);
             }
-        } while (!doBreak && tier < MAX_TIERS_TO_CHECK);
+        } while (tier < MAX_TIERS_TO_CHECK);
 
-        data.setMaxTier(tier, channel);
+        data.setMaxTier(tier - 1, channel);
         return result;
     }
 

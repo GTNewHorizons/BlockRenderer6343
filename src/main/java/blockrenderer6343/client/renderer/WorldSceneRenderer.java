@@ -55,6 +55,8 @@ import com.gtnewhorizon.gtnhlib.util.CoordinatePacker;
 
 import blockrenderer6343.client.utils.ProjectionUtils;
 import blockrenderer6343.client.world.TrackedDummyWorld;
+import it.unimi.dsi.fastutil.longs.LongArrayList;
+import it.unimi.dsi.fastutil.longs.LongCollection;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
 
@@ -72,7 +74,7 @@ public abstract class WorldSceneRenderer {
     public final TrackedDummyWorld world;
     // the Blocks which this renderer needs to render
     public final LongSet renderedBlocks = new LongOpenHashSet();
-    public final LongSet renderOpaqueBlocks = new LongOpenHashSet();
+    public final LongArrayList renderTranslucentBlocks = new LongArrayList();
     private Consumer<WorldSceneRenderer> beforeRender;
     private Consumer<WorldSceneRenderer> onRender;
     private Consumer<MovingObjectPosition> onLookingAt;
@@ -104,11 +106,25 @@ public abstract class WorldSceneRenderer {
         return this;
     }
 
-    public WorldSceneRenderer addRenderedBlocks(LongSet blocks) {
-        if (blocks != null) {
-            this.renderedBlocks.addAll(blocks);
+    public void setRenderAllBlocks() {
+        resetRenderedBlocks();
+        setRenderAllFaces(false);
+        this.renderedBlocks.addAll(world.blockMap.keySet());
+        world.setVisibleYLevel(-1);
+    }
+
+    public void setRenderYLayer(int layer) {
+        resetRenderedBlocks();
+        setRenderAllFaces(true);
+
+        int minY = (int) world.getMinPos().y();
+        world.setVisibleYLevel(minY + layer);
+
+        for (long pos : world.blockMap.keySet()) {
+            if (CoordinatePacker.unpackY(pos) - minY == layer) {
+                this.renderedBlocks.add(pos);
+            }
         }
-        return this;
     }
 
     public WorldSceneRenderer setOnLookingAt(Consumer<MovingObjectPosition> onLookingAt) {
@@ -126,7 +142,7 @@ public abstract class WorldSceneRenderer {
 
     public void resetRenderedBlocks() {
         renderedBlocks.clear();
-        renderOpaqueBlocks.clear();
+        renderTranslucentBlocks.clear();
     }
 
     /**
@@ -247,6 +263,18 @@ public abstract class WorldSceneRenderer {
         glPopAttrib();
     }
 
+    private double getDistanceSq(long coord) {
+        int x = CoordinatePacker.unpackX(coord);
+        int y = CoordinatePacker.unpackY(coord);
+        int z = CoordinatePacker.unpackZ(coord);
+
+        double xd = eyePos.x - x;
+        double yd = eyePos.y - y;
+        double zd = eyePos.z - z;
+
+        return xd * xd + yd * yd + zd * zd;
+    }
+
     protected void drawWorld() {
         if (beforeRender != null) {
             beforeRender.accept(this);
@@ -262,9 +290,13 @@ public abstract class WorldSceneRenderer {
         glEnable(GL_TEXTURE_2D);
         glEnable(GL_ALPHA_TEST);
 
+        if (!renderTranslucentBlocks.isEmpty()) {
+            renderTranslucentBlocks.sort((a, b) -> -Double.compare(getDistanceSq(a), getDistanceSq(b)));
+        }
+
         Tessellator tessellator = Tessellator.instance;
         renderBlocks(tessellator, renderedBlocks, false);
-        renderBlocks(tessellator, renderOpaqueBlocks, true);
+        renderBlocks(tessellator, renderTranslucentBlocks, true);
 
         if (onPostBlockRendered != null) {
             onPostBlockRendered.accept(this);
@@ -297,7 +329,7 @@ public abstract class WorldSceneRenderer {
         glDepthMask(true);
     }
 
-    public void renderBlocks(Tessellator tessellator, LongSet blocksToRender, boolean transparent) {
+    public void renderBlocks(Tessellator tessellator, LongCollection blocksToRender, boolean transparent) {
         if (blocksToRender.isEmpty()) return;
         Minecraft mc = Minecraft.getMinecraft();
         final int savedAo = mc.gameSettings.ambientOcclusion;

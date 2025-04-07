@@ -68,7 +68,7 @@ public class StructureHacks {
     /**
      * Add a tiered element that should be checked in
      * {@link #extractTieredBlocks(Object, IStructureElement, ConstructableData, String)}
-     * 
+     *
      * @param className The class name of the element
      */
     public static void addTieredElement(String className) {
@@ -115,6 +115,7 @@ public class StructureHacks {
         ObjectSet<ItemStack> result = new ObjectOpenHashSet<>();
         ItemStack holo = HOLO_STACK.copy();
         int tier = 0;
+        ItemStack lastStack = null;
 
         do {
             holo.stackSize = tier++ + 1;
@@ -125,12 +126,13 @@ public class StructureHacks {
             if (!iterator.hasNext()) break;
             ItemStack firstStack = iterator.next();
 
-            if (!data.addItemTier(firstStack, channel, tier)) break;
+            if (!data.addItemTier(firstStack, lastStack, channel, tier)) break;
             result.add(firstStack);
+            lastStack = firstStack.copy();
 
             while (iterator.hasNext()) {
                 ItemStack stack = iterator.next();
-                if (!data.addItemTier(stack, channel, tier)) break;
+                data.addItemTier(stack, channel, tier);
                 result.add(stack);
             }
         } while (tier < MAX_TIERS_TO_CHECK);

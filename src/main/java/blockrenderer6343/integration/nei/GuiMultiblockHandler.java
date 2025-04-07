@@ -50,8 +50,7 @@ import it.unimi.dsi.fastutil.longs.Long2BooleanMap;
 import it.unimi.dsi.fastutil.longs.Long2BooleanOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
-import it.unimi.dsi.fastutil.longs.LongSet;
+import it.unimi.dsi.fastutil.longs.LongIterator;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectList;
@@ -88,6 +87,7 @@ public abstract class GuiMultiblockHandler {
     protected static float rotationYaw, rotationPitch;
     protected static float zoom;
     protected static IConstructable renderingController, lastRenderingController;
+    protected static int layerIndex = -1;
 
     protected ItemStack tooltipBlockStack;
 
@@ -96,7 +96,6 @@ public abstract class GuiMultiblockHandler {
 
     protected Consumer<List<List<ItemStack>>> onCandidateChanged;
     protected Consumer<List<ItemStack>> onIngredientChanged;
-    protected static int layerIndex = -1;
 
     protected int scrolled = 0;
     protected float scaleFactor;
@@ -154,7 +153,7 @@ public abstract class GuiMultiblockHandler {
                                         : String.valueOf(value + 1))
                                 .setMaxValueSupplier(
                                         () -> (int) (renderer.world.getMaxPos().y - renderer.world.getMinPos().y))
-                                .setValueListener(this::setNextLayer).setIndex(1));
+                                .setValueListener(this::setActiveLayer).setIndex(1));
         loadChannels();
         addButtonInRow("P").setTooltip(I18n.format("blockrenderer6343.multiblock.project")).setClickAction(
                 () -> BRUtil.projectMultiblock(
@@ -227,6 +226,9 @@ public abstract class GuiMultiblockHandler {
         if (tier <= 0) {
             tier = 1;
         }
+
+        if (renderer != null && tier == trigger.stackSize) return;
+
         trigger.stackSize = tier;
         initializeSceneRenderer(false);
     }
@@ -237,48 +239,87 @@ public abstract class GuiMultiblockHandler {
 
     private void setChannelTier(String channel, int tier, boolean rebuild) {
         if (tier < 0) return;
+
+        int current = ChannelDataAccessor.hasSubChannel(trigger, channel)
+                ? ChannelDataAccessor.getChannelData(trigger, channel)
+                : 0;
+
         if (tier > 0) {
             ChannelDataAccessor.setChannelData(trigger, channel, tier);
         } else {
             ChannelDataAccessor.unsetChannelData(trigger, channel);
         }
-        if (rebuild) {
+
+        if (current != tier && rebuild) {
             initializeSceneRenderer(false);
         }
     }
 
-    private void setNextLayer(int newLayer) {
+    private void setActiveLayer(int newLayer) {
         int height = (int) renderer.world.getSize().y() - 1;
         if (newLayer < 0 || newLayer > height) {
             // if current layer index is more than max height, reset it
             // to display all layers
             newLayer = -1;
         }
-        layerIndex = newLayer;
-        if (renderer == null) return;
 
-        TrackedDummyWorld world = renderer.world;
-        resetCenter();
-        renderer.renderedBlocks.clear();
-        int minY = (int) world.getMinPos().y();
-        LongSet renderBlocks;
-        if (newLayer == -1) {
-            renderBlocks = world.blockMap.keySet();
-            renderer.setRenderAllFaces(false);
-        } else {
-            renderBlocks = new LongOpenHashSet();
-            for (long pos : world.blockMap.keySet()) {
-                if (CoordinatePacker.unpackY(pos) - minY == newLayer) {
-                    renderBlocks.add(pos);
-                }
-            }
-            renderer.setRenderAllFaces(true);
-        }
-        renderer.addRenderedBlocks(renderBlocks);
-        onIngredientChanged.accept(BRUtil.getIngredients(renderer));
+        if (newLayer == layerIndex) return;
+
+        layerIndex = newLayer;
+
+        updateRenderer();
     }
 
-    private void resetCenter() {
+    private void updateRenderer() {
+        if (renderer == null) return;
+
+        updateCamera();
+
+        if (layerIndex > -1) {
+            renderer.setRenderYLayer(layerIndex);
+        } else {
+            renderer.setRenderAllBlocks();
+        }
+
+        onIngredientChanged.accept(BRUtil.getIngredients(renderer));
+
+        if (lastSearch != null && !lastSearch.isEmpty()) {
+            Long2BooleanMap checkedBlocks = new Long2BooleanOpenHashMap();
+
+            boolean foundMatch = false;
+
+            LongIterator iter = renderer.renderedBlocks.longIterator();
+
+            while (iter.hasNext()) {
+                long coord = iter.nextLong();
+
+                boolean matches = checkedBlocks.computeIfAbsent(BRUtil.hashBlock(renderer.world, coord), b -> {
+                    int x = CoordinatePacker.unpackX(coord);
+                    int y = CoordinatePacker.unpackY(coord);
+                    int z = CoordinatePacker.unpackZ(coord);
+
+                    Block block = renderer.world.getBlock(x, y, z);
+
+                    ItemStack stack = new ItemStack(block, 1, BRUtil.getDamageValue(renderer.world, block, coord));
+
+                    return matchesSearch(stack, lastSearch);
+                });
+
+                foundMatch |= matches;
+
+                if (!matches) {
+                    renderer.renderTranslucentBlocks.add(coord);
+                    iter.remove();
+                }
+            }
+
+            if (foundMatch) {
+                renderer.setRenderAllFaces(true);
+            }
+        }
+    }
+
+    private void updateCamera() {
         TrackedDummyWorld world = renderer.world;
         Vector3f size = world.getSize();
         Vector3f minPos = world.getMinPos();
@@ -387,6 +428,7 @@ public abstract class GuiMultiblockHandler {
 
     protected void initializeSceneRenderer(boolean resetCamera) {
         Vector3f eyePos = new Vector3f(), lookAt = new Vector3f(), worldUp = new Vector3f();
+
         if (!resetCamera) {
             try {
                 eyePos = renderer.getEyePos();
@@ -418,8 +460,8 @@ public abstract class GuiMultiblockHandler {
         Vector3f minPos = renderer.world.getMinPos();
         center = new Vector3f(minPos.x + size.x / 2, minPos.y + size.y / 2, minPos.z + size.z / 2);
 
-        renderer.renderedBlocks.clear();
-        renderer.addRenderedBlocks(renderer.world.blockMap.keySet());
+        renderer.setRenderAllBlocks();
+
         renderer.setOnLookingAt(ray -> {});
 
         renderer.setOnWorldRender(this::onRendererRender);
@@ -427,7 +469,9 @@ public abstract class GuiMultiblockHandler {
 
         SELECTED_BLOCK.set(NO_SELECTED_BLOCK);
         onCandidateChanged.accept(Collections.emptyList());
-        setNextLayer(layerIndex);
+
+        setActiveLayer(layerIndex);
+        updateRenderer();
 
         if (resetCamera) {
             float max = Math.max(Math.max(size.x, size.y), size.z);
@@ -437,9 +481,8 @@ public abstract class GuiMultiblockHandler {
             zoom = baseZoom * sizeFactor / 1.5f;
             rotationYaw = 20.0f;
             rotationPitch = 50f;
-            if (renderer != null) {
-                resetCenter();
-            }
+
+            updateCamera();
         } else {
             renderer.setCameraLookAt(eyePos, lookAt, worldUp);
         }
@@ -547,41 +590,11 @@ public abstract class GuiMultiblockHandler {
 
     public void recalculateSearch(String searchText) {
         if (renderer == null) return;
-        if (searchText.isEmpty() && !lastSearch.isEmpty()) {
-            renderer.resetRenderedBlocks();
-            renderer.setRenderAllFaces(false);
-            renderer.addRenderedBlocks(renderer.world.blockMap.keySet());
-        }
 
-        if (searchText.equals(lastSearch) || (lastSearch = searchText).isEmpty()) return;
-        renderer.resetRenderedBlocks();
-        boolean foundAny = false;
-        Long2BooleanMap checkedBlocks = new Long2BooleanOpenHashMap();
-        for (Long2ObjectMap.Entry<Block> entry : renderer.world.blockMap.long2ObjectEntrySet()) {
-            boolean add = checkedBlocks.computeIfAbsent(BRUtil.hashBlock(renderer.world, entry.getLongKey()), b -> {
-                Block block = entry.getValue();
-                ItemStack stack = new ItemStack(
-                        block,
-                        1,
-                        BRUtil.getDamageValue(renderer.world, block, entry.getLongKey()));
-                return matchesSearch(stack, searchText);
-            });
+        if (searchText.equals(lastSearch)) return;
+        lastSearch = searchText;
 
-            if (add) {
-                foundAny = true;
-                renderer.renderedBlocks.add(entry.getLongKey());
-            } else {
-                renderer.renderOpaqueBlocks.add(entry.getLongKey());
-            }
-        }
-
-        if (!foundAny) {
-            renderer.renderOpaqueBlocks.clear();
-            renderer.renderedBlocks.addAll(renderer.world.blockMap.keySet());
-            renderer.setRenderAllFaces(false);
-        } else {
-            renderer.setRenderAllFaces(true);
-        }
+        updateRenderer();
     }
 
     public boolean matchesSearch(ItemStack stack, String searchText) {

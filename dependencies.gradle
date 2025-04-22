@@ -2,8 +2,8 @@
 
 dependencies {
     api('com.github.GTNewHorizons:StructureLib:1.4.6:dev')
-    api('com.github.GTNewHorizons:GTNHLib:0.6.18:dev')
-    implementation("com.github.GTNewHorizons:GT5-Unofficial:5.09.51.216:dev")
+    api('com.github.GTNewHorizons:GTNHLib:0.6.20:dev')
+    implementation("com.github.GTNewHorizons:GT5-Unofficial:5.09.51.248:dev")
     compileOnly("com.github.GTNewHorizons:NotEnoughEnergistics:1.7.0:dev")
 
     runtimeOnlyNonPublishable("com.github.GTNewHorizons:StructureCompat:0.6.5:dev")

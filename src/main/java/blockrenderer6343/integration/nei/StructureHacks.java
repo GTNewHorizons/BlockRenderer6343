@@ -4,7 +4,6 @@ import static blockrenderer6343.client.utils.BRUtil.AUTO_PLACE_ENVIRONMENT;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
-import java.lang.invoke.MethodType;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -34,7 +33,8 @@ public class StructureHacks {
     private static final List<String> TIERED_ELEMENTS = new ArrayList<>();
     private static final String CHANNEL_ELEMENT;
     public static final String LAZY_ELEMENT = "com.gtnewhorizon.structurelib.structure.LazyStructureElement";
-    private static final MethodHandle CHAIN_GETTER, CHANNEL_GETTER, LAZY_ELEMENT_GETTER;
+    private static final MethodHandle CHANNEL_GETTER;
+    private static final MethodHandle LAZY_ELEMENT_GETTER;
     public static final ItemStack HOLO_STACK = new ItemStack(StructureLibAPI.getDefaultHologramItem());
     public static final Collection<String> SKIP_ELEMENTS = getClassNames(
             StructureUtility.isAir(),
@@ -55,12 +55,8 @@ public class StructureHacks {
             LAZY_ELEMENT_GETTER = lookup.unreflect(
                     ReflectionHelper
                             .findMethod(Class.forName(LAZY_ELEMENT), null, new String[] { "get" }, Object.class));
-            CHAIN_GETTER = lookup.findVirtual(
-                    IStructureElementChain.class,
-                    "fallbacks",
-                    MethodType.methodType(IStructureElement[].class));
             CHANNEL_GETTER = lookup.unreflectGetter(ReflectionHelper.findField(channelElem.getClass(), "val$channel"));
-        } catch (ClassNotFoundException | IllegalAccessException | NoSuchMethodException e) {
+        } catch (ClassNotFoundException | IllegalAccessException e) {
             throw new RuntimeException(e);
         }
     }
@@ -86,8 +82,8 @@ public class StructureHacks {
 
         if (SKIP_ELEMENTS.contains(name)) return Collections.emptyList();
 
-        if (element instanceof IStructureElementChain) {
-            IStructureElement<T>[] elements = unwrapChainElement(element);
+        if (element instanceof IStructureElementChain chain) {
+            IStructureElement<T>[] elements = chain.fallbacks();
             if (elements == null) return Collections.emptyList();
             ObjectSet<ItemStack> chainStacks = new ObjectOpenHashSet<>();
             for (IStructureElement<T> e : elements) {
@@ -184,8 +180,8 @@ public class StructureHacks {
             return getFirstMatchingElement(elementToFind, multi, getUnderlyingElement(multi, element));
         }
 
-        if (element instanceof IStructureElementChain) {
-            IStructureElement<T>[] elements = StructureHacks.unwrapChainElement(element);
+        if (element instanceof IStructureElementChain chain) {
+            IStructureElement<T>[] elements = chain.fallbacks();
             if (elements == null) return null;
             for (IStructureElement<T> e : elements) {
                 IStructureElement<T> result = getFirstMatchingElement(elementToFind, multi, e);
@@ -196,16 +192,6 @@ public class StructureHacks {
         }
 
         return null;
-    }
-
-    public static <T> @Nullable IStructureElement<T>[] unwrapChainElement(IStructureElement<T> element) {
-        if (!(element instanceof IStructureElementChain)) return null;
-
-        try {
-            return (IStructureElement<T>[]) CHAIN_GETTER.invokeWithArguments(element);
-        } catch (Throwable e) {
-            throw new RuntimeException(e);
-        }
     }
 
     public static <T> IStructureElement<T> getUnderlyingElement(T multi, IStructureElement<?> element) {

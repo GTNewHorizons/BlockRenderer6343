@@ -10,6 +10,7 @@ import net.minecraft.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
 import com.gtnewhorizon.structurelib.alignment.constructable.IConstructable;
+import com.gtnewhorizon.structurelib.structure.IStructureElement;
 
 import blockrenderer6343.client.utils.BRUtil;
 import blockrenderer6343.integration.nei.MultiblockHandler;
@@ -18,6 +19,7 @@ import codechicken.nei.NEIClientUtils;
 import codechicken.nei.recipe.TemplateRecipeHandler;
 import gregtech.api.enums.HeatingCoilLevel;
 import gregtech.api.interfaces.metatileentity.IMetaTileEntity;
+import gregtech.api.metatileentity.implementations.MTEMultiBlockBase;
 import gregtech.api.util.GTStructureUtility;
 import gregtech.common.blocks.ItemMachines;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
@@ -31,8 +33,10 @@ public class GTNEIMultiblockHandler extends MultiblockHandler {
     private static final GTGuiMultiblockHandler baseHandler = new GTGuiMultiblockHandler();
 
     static {
-        StructureHacks.addTieredElement(
-                GTStructureUtility.ofCoil((a, c) -> true, b -> HeatingCoilLevel.LV).getClass().getName());
+        IStructureElement<MTEMultiBlockBase> coilElem = GTStructureUtility
+                .ofCoil((a, c) -> true, b -> HeatingCoilLevel.LV);
+        StructureHacks.addTieredElement(coilElem.getClass().getName());
+        StructureHacks.addTieredElement(GTStructureUtility.activeCoils(coilElem).getClass().getName());
         for (IMetaTileEntity mte : METATILEENTITIES) {
             if (mte instanceof IConstructable constructable) {
                 multiblocksList.add(constructable);

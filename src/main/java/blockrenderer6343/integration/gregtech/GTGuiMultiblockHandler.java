@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import blockrenderer6343.client.world.TrackedDummyWorld;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
@@ -186,7 +187,7 @@ public class GTGuiMultiblockHandler extends GuiMultiblockHandler {
                         Integer.MAX_VALUE,
                         ISurvivalBuildEnvironment.create(CreativeItemSource.instance, FAKE_PLAYER));
                 iterations++;
-            } while (renderer.world.hasChanged() && iterations < MAX_PLACE_ROUNDS);
+            } while (((TrackedDummyWorld) renderer.world).hasChanged() && iterations < MAX_PLACE_ROUNDS);
         } else if (tTileEntity instanceof IConstructableProvider iConstructableProvider) {
             constructable = iConstructableProvider.getConstructable();
         } else if (tTileEntity instanceof IConstructable iConstructable) {

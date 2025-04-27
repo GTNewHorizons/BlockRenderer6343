@@ -2,6 +2,7 @@ package blockrenderer6343.integration.structurelib;
 
 import static blockrenderer6343.client.utils.BRUtil.FAKE_PLAYER;
 
+import blockrenderer6343.client.world.TrackedDummyWorld;
 import net.minecraft.block.Block;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.tileentity.TileEntity;
@@ -38,14 +39,14 @@ public class StructureCompatGuiHandler extends GuiMultiblockHandler {
                 tryConstruct = true;
                 break;
             }
-        } while (renderer.world.hasChanged() && iterations < MAX_PLACE_ROUNDS);
+        } while (((TrackedDummyWorld) renderer.world).hasChanged() && iterations < MAX_PLACE_ROUNDS);
 
         if (tryConstruct) {
             multi.construct(getBuildTriggerStack(), false);
         }
 
         // A single tick is needed for some non GT multiblocks to complete
-        renderer.world.updateEntitiesForNEI();
+        ((TrackedDummyWorld) renderer.world).updateEntitiesForNEI();
     }
 
     @Override

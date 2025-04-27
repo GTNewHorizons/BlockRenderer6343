@@ -152,14 +152,14 @@ public abstract class GuiMultiblockHandler {
                                 value -> value == -1 ? I18n.format("blockrenderer6343.nei.all")
                                         : String.valueOf(value + 1))
                                 .setMaxValueSupplier(
-                                        () -> (int) (renderer.world.getMaxPos().y - renderer.world.getMinPos().y))
+                                        () -> (int) (((TrackedDummyWorld) renderer.world).getMaxPos().y - ((TrackedDummyWorld) renderer.world).getMinPos().y))
                                 .setValueListener(this::setActiveLayer).setIndex(1));
         loadChannels();
         addButtonInRow("P").setTooltip(I18n.format("blockrenderer6343.multiblock.project")).setClickAction(
                 () -> BRUtil.projectMultiblock(
                         getBuildTriggerStack(),
                         stackForm,
-                        MathHelper.floor_double(MB_PLACE_POS.y - renderer.world.getMinPos().y)));
+                        MathHelper.floor_double(MB_PLACE_POS.y - ((TrackedDummyWorld) renderer.world).getMinPos().y)));
         addButtonInRow("?").setTooltip(I18n.format("blockrenderer6343.multiblock.overlay"))
                 .setClickAction(() -> BRUtil.neiOverlay(renderer));
         if (!constructableData.getChannelData().isEmpty()) {
@@ -256,7 +256,7 @@ public abstract class GuiMultiblockHandler {
     }
 
     private void setActiveLayer(int newLayer) {
-        int height = (int) renderer.world.getSize().y() - 1;
+        int height = (int) ((TrackedDummyWorld) renderer.world).getSize().y() - 1;
         if (newLayer < 0 || newLayer > height) {
             // if current layer index is more than max height, reset it
             // to display all layers
@@ -320,7 +320,7 @@ public abstract class GuiMultiblockHandler {
     }
 
     private void updateCamera() {
-        TrackedDummyWorld world = renderer.world;
+        TrackedDummyWorld world = ((TrackedDummyWorld) renderer.world);
         Vector3f size = world.getSize();
         Vector3f minPos = world.getMinPos();
         center.set(minPos.x + size.x / 2, minPos.y + size.y / 2, minPos.z + size.z / 2);
@@ -440,7 +440,7 @@ public abstract class GuiMultiblockHandler {
         }
 
         renderer = new ImmediateWorldSceneRenderer(new TrackedDummyWorld());
-        renderer.world.updateEntitiesForNEI();
+        ((TrackedDummyWorld) renderer.world).updateEntitiesForNEI();
 
         FAKE_PLAYER.setWorld(renderer.world);
         renderer.world.unloadEntities(Collections.singletonList(FAKE_PLAYER));
@@ -456,8 +456,8 @@ public abstract class GuiMultiblockHandler {
             StructureLibAPI.disableInstrument();
         }
 
-        Vector3f size = renderer.world.getSize();
-        Vector3f minPos = renderer.world.getMinPos();
+        Vector3f size = ((TrackedDummyWorld) renderer.world).getSize();
+        Vector3f minPos = ((TrackedDummyWorld) renderer.world).getMinPos();
         center = new Vector3f(minPos.x + size.x / 2, minPos.y + size.y / 2, minPos.z + size.z / 2);
 
         renderer.setRenderAllBlocks();

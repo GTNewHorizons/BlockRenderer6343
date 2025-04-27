@@ -1,6 +1,7 @@
 package blockrenderer6343.integration.wdmla;
 
 import blockrenderer6343.client.renderer.ImmediateWorldSceneRenderer;
+import blockrenderer6343.client.renderer.WorldSceneRenderer;
 import com.gtnewhorizon.gtnhlib.eventbus.EventBusSubscriber;
 import com.gtnewhorizon.gtnhlib.util.CoordinatePacker;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
@@ -17,7 +18,7 @@ import org.lwjgl.opengl.GL11;
 @EventBusSubscriber(side = Side.CLIENT)
 public class HUDBlockHandler {
 
-    protected static ImmediateWorldSceneRenderer renderer;
+    protected static WorldSceneRenderer renderer;
     protected static final float DEFAULT_RANGE_MULTIPLIER = 3.5f;
 
     protected static Vector3f center = new Vector3f();
@@ -27,7 +28,7 @@ public class HUDBlockHandler {
     //test code
     @SubscribeEvent
     @SideOnly(Side.CLIENT)
-    public static void onRenderWorldLast(RenderGameOverlayEvent.Post event) {
+    public static void onRenderGameOverlay(RenderGameOverlayEvent.Post event) {
         if(Minecraft.getMinecraft().thePlayer == null || Minecraft.getMinecraft().theWorld == null
             || Minecraft.getMinecraft().currentScreen != null) {
             return;

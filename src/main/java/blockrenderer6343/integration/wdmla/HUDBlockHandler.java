@@ -21,17 +21,13 @@ import cpw.mods.fml.relauncher.SideOnly;
 // @EventBusSubscriber(side = Side.CLIENT)
 public class HUDBlockHandler {
 
-    public static final HUDBlockHandler INSTANCE = new HUDBlockHandler();
+    private static final HUDBlockHandler DEMO_INSTANCE = new HUDBlockHandler();
 
     protected float rotationSpeed = 1;
-    protected WorldSceneRenderer renderer;
-    protected final float DEFAULT_RANGE_MULTIPLIER = 3.5f;
+    protected static WorldSceneRenderer renderer;
+    protected static final float DEFAULT_RANGE_MULTIPLIER = 3.5f;
     protected float rotationYaw = 30f, rotationPitch = 45f, max = 1f;
     protected long lastTime;
-
-    private HUDBlockHandler() {
-
-    }
 
     public void drawWorldBlock(int x, int y, int width, int height, int blockX, int blockY, int blockZ) {
         World world = Minecraft.getMinecraft().theWorld;
@@ -88,7 +84,7 @@ public class HUDBlockHandler {
             return;
         }
 
-        HUDBlockHandler.INSTANCE.drawWorldBlock(100, 100, 100, 100, target.blockX, target.blockY, target.blockZ);
+        HUDBlockHandler.DEMO_INSTANCE.drawWorldBlock(100, 100, 100, 100, target.blockX, target.blockY, target.blockZ);
     }
 
     public static MovingObjectPosition rayTrace(EntityLivingBase entity, double par1, float par3) {

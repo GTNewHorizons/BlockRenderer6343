@@ -21,15 +21,15 @@ import cpw.mods.fml.relauncher.SideOnly;
 // @EventBusSubscriber(side = Side.CLIENT)
 public class HUDBlockHandler {
 
-    private static final HUDBlockHandler DEMO_INSTANCE = new HUDBlockHandler();
-
-    protected float rotationSpeed = 1;
     protected static WorldSceneRenderer renderer;
     protected static final float DEFAULT_RANGE_MULTIPLIER = 3.5f;
-    protected float rotationYaw = 30f, rotationPitch = 45f, max = 1f;
-    protected long lastTime;
+    protected static final float max = 1f;
 
-    public void drawWorldBlock(int x, int y, int width, int height, int blockX, int blockY, int blockZ) {
+    protected static float demoRotationPitch = 30f;
+    protected static long demoLastTime;
+
+    public static void drawWorldBlock(int x, int y, int width, int height, int blockX, int blockY, int blockZ,
+            float rotationYaw, float rotationPitch) {
         World world = Minecraft.getMinecraft().theWorld;
         if (renderer == null || renderer.world != world) {
             renderer = new ImmediateWorldSceneRenderer(world) {
@@ -54,18 +54,9 @@ public class HUDBlockHandler {
         float sizeFactor = (float) (1.0f + Math.log(max) / Math.log(10));
         float zoom = baseZoom * sizeFactor / 1.5f;
 
-        rotationPitch += (world.getTotalWorldTime() - lastTime) * rotationSpeed;
         renderer.setCameraLookAt(center, zoom, Math.toRadians(rotationPitch), Math.toRadians(rotationYaw));
 
         renderer.render(x, y, width, height, 0, 0);
-        lastTime = world.getTotalWorldTime();
-    }
-
-    public void setRotationSpeed(float rotationSpeed) {
-        if (this.rotationSpeed != rotationSpeed) {
-            this.rotationSpeed = rotationSpeed;
-            rotationPitch = 45f;
-        }
     }
 
     @SubscribeEvent
@@ -84,7 +75,18 @@ public class HUDBlockHandler {
             return;
         }
 
-        HUDBlockHandler.DEMO_INSTANCE.drawWorldBlock(100, 100, 100, 100, target.blockX, target.blockY, target.blockZ);
+        demoRotationPitch += (Minecraft.getMinecraft().theWorld.getTotalWorldTime() - demoLastTime) * 1.0f;
+        HUDBlockHandler.drawWorldBlock(
+                100,
+                100,
+                100,
+                100,
+                target.blockX,
+                target.blockY,
+                target.blockZ,
+                30f,
+                demoRotationPitch);
+        demoLastTime = Minecraft.getMinecraft().theWorld.getTotalWorldTime();
     }
 
     public static MovingObjectPosition rayTrace(EntityLivingBase entity, double par1, float par3) {

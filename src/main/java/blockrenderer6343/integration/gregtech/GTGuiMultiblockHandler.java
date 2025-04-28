@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import blockrenderer6343.client.world.TrackedDummyWorld;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
@@ -32,6 +31,7 @@ import blockrenderer6343.api.utils.CreativeItemSource;
 import blockrenderer6343.client.renderer.WorldSceneRenderer;
 import blockrenderer6343.client.utils.BRUtil;
 import blockrenderer6343.client.utils.EnumColor;
+import blockrenderer6343.client.world.TrackedDummyWorld;
 import blockrenderer6343.integration.nei.GuiMultiblockHandler;
 import blockrenderer6343.integration.nei.StructureHacks;
 import cpw.mods.fml.relauncher.ReflectionHelper;

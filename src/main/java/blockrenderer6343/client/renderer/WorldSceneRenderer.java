@@ -108,17 +108,17 @@ public abstract class WorldSceneRenderer {
     }
 
     public void setRenderAllBlocks() {
-        if(world instanceof TrackedDummyWorld dummyWorld) {
+        if (world instanceof TrackedDummyWorld dummyWorld) {
             resetRenderedBlocks();
             setRenderAllFaces(false);
             this.renderedBlocks.addAll(dummyWorld.blockMap.keySet());
             dummyWorld.setVisibleYLevel(-1);
         }
-        //else undefined
+        // else undefined
     }
 
     public void setRenderYLayer(int layer) {
-        if(world instanceof TrackedDummyWorld dummyWorld) {
+        if (world instanceof TrackedDummyWorld dummyWorld) {
             resetRenderedBlocks();
             setRenderAllFaces(true);
 
@@ -131,7 +131,7 @@ public abstract class WorldSceneRenderer {
                 }
             }
         }
-        //else undefined
+        // else undefined
     }
 
     public WorldSceneRenderer setOnLookingAt(Consumer<MovingObjectPosition> onLookingAt) {
@@ -396,11 +396,10 @@ public abstract class WorldSceneRenderer {
                 (lookVec.x + startPos.xCoord),
                 (lookVec.y + startPos.yCoord),
                 (lookVec.z + startPos.zCoord));
-        if(world instanceof TrackedDummyWorld dummyWorld) {
+        if (world instanceof TrackedDummyWorld dummyWorld) {
             return dummyWorld.rayTraceBlocksWithTargetMap(startPos, endPos, dummyWorld.blockMap.keySet());
-        }
-        else {
-            return null; //undefined
+        } else {
+            return null; // undefined
         }
     }
 }

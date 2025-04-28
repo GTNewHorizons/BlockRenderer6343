@@ -1,8 +1,7 @@
 package blockrenderer6343.client.renderer;
 
-import blockrenderer6343.BlockRenderer6343;
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
+import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
 
 import net.minecraft.client.renderer.GLAllocation;
 import net.minecraft.client.renderer.OpenGlHelper;
@@ -14,19 +13,19 @@ import net.minecraft.world.World;
 import org.lwjgl.opengl.EXTFramebufferObject;
 import org.lwjgl.opengl.GL11;
 
-import java.nio.ByteBuffer;
-import java.nio.IntBuffer;
+import blockrenderer6343.BlockRenderer6343;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 
 /**
  * Created with IntelliJ IDEA.
  *
  * @Author: KilaBash, backported by Quarri6343
  * @Date: 2021/08/23
- * @Description: It looks similar to {@link ImmediateWorldSceneRenderer}, but totally different.
- *               It uses FBO and is more universality and efficient(X).
- *               FBO can be rendered anywhere more flexibly, not just in the GUI.
- *               If you have scene rendering needs, you will love this FBO renderer.
- *               TODO OP_LIST might be used in the future to further improve performance.
+ * @Description: It looks similar to {@link ImmediateWorldSceneRenderer}, but totally different. It uses FBO and is more
+ *               universality and efficient(X). FBO can be rendered anywhere more flexibly, not just in the GUI. If you
+ *               have scene rendering needs, you will love this FBO renderer. TODO OP_LIST might be used in the future
+ *               to further improve performance.
  */
 @SideOnly(Side.CLIENT)
 public class FBOWorldSceneRenderer extends WorldSceneRenderer {
@@ -63,9 +62,10 @@ public class FBOWorldSceneRenderer extends WorldSceneRenderer {
         releaseFBO();
         try {
             fbo = new Framebuffer(resolutionWidth, resolutionHeight, true) {
+
                 @Override
                 public void createFramebuffer(int p_147605_1_, int p_147605_2_) {
-                    //fight with MixinFrameBuffer swapping depth buffer when Angelica is present
+                    // fight with MixinFrameBuffer swapping depth buffer when Angelica is present
                     // by re-overwriting method with Vanilla FBO
                     useDepth = true;
                     this.framebufferWidth = p_147605_1_;
@@ -73,39 +73,65 @@ public class FBOWorldSceneRenderer extends WorldSceneRenderer {
                     this.framebufferTextureWidth = p_147605_1_;
                     this.framebufferTextureHeight = p_147605_2_;
 
-                    if (!OpenGlHelper.isFramebufferEnabled())
-                    {
+                    if (!OpenGlHelper.isFramebufferEnabled()) {
                         this.framebufferClear();
-                    }
-                    else
-                    {
+                    } else {
                         this.framebufferObject = OpenGlHelper.func_153165_e();
                         this.framebufferTexture = TextureUtil.glGenTextures();
 
-                        if (this.useDepth)
-                        {
+                        if (this.useDepth) {
                             this.depthBuffer = OpenGlHelper.func_153185_f();
                         }
 
                         this.setFramebufferFilter(9728);
                         GL11.glBindTexture(GL11.GL_TEXTURE_2D, this.framebufferTexture);
-                        GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA8, this.framebufferTextureWidth, this.framebufferTextureHeight, 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, (ByteBuffer)null);
+                        GL11.glTexImage2D(
+                                GL11.GL_TEXTURE_2D,
+                                0,
+                                GL11.GL_RGBA8,
+                                this.framebufferTextureWidth,
+                                this.framebufferTextureHeight,
+                                0,
+                                GL11.GL_RGBA,
+                                GL11.GL_UNSIGNED_BYTE,
+                                (ByteBuffer) null);
                         OpenGlHelper.func_153171_g(OpenGlHelper.field_153198_e, this.framebufferObject);
-                        OpenGlHelper.func_153188_a(OpenGlHelper.field_153198_e, OpenGlHelper.field_153200_g, 3553, this.framebufferTexture, 0);
+                        OpenGlHelper.func_153188_a(
+                                OpenGlHelper.field_153198_e,
+                                OpenGlHelper.field_153200_g,
+                                3553,
+                                this.framebufferTexture,
+                                0);
 
-                        if (this.useDepth)
-                        {
+                        if (this.useDepth) {
                             OpenGlHelper.func_153176_h(OpenGlHelper.field_153199_f, this.depthBuffer);
-                            if (net.minecraftforge.client.MinecraftForgeClient.getStencilBits() == 0)
-                            {
-                                OpenGlHelper.func_153186_a(OpenGlHelper.field_153199_f, 33190, this.framebufferTextureWidth, this.framebufferTextureHeight);
-                                OpenGlHelper.func_153190_b(OpenGlHelper.field_153198_e, OpenGlHelper.field_153201_h, OpenGlHelper.field_153199_f, this.depthBuffer);
-                            }
-                            else
-                            {
-                                OpenGlHelper.func_153186_a(OpenGlHelper.field_153199_f, org.lwjgl.opengl.EXTPackedDepthStencil.GL_DEPTH24_STENCIL8_EXT, this.framebufferTextureWidth, this.framebufferTextureHeight);
-                                OpenGlHelper.func_153190_b(OpenGlHelper.field_153198_e, org.lwjgl.opengl.EXTFramebufferObject.GL_DEPTH_ATTACHMENT_EXT, OpenGlHelper.field_153199_f, this.depthBuffer);
-                                OpenGlHelper.func_153190_b(OpenGlHelper.field_153198_e, org.lwjgl.opengl.EXTFramebufferObject.GL_STENCIL_ATTACHMENT_EXT, OpenGlHelper.field_153199_f, this.depthBuffer);
+                            if (net.minecraftforge.client.MinecraftForgeClient.getStencilBits() == 0) {
+                                OpenGlHelper.func_153186_a(
+                                        OpenGlHelper.field_153199_f,
+                                        33190,
+                                        this.framebufferTextureWidth,
+                                        this.framebufferTextureHeight);
+                                OpenGlHelper.func_153190_b(
+                                        OpenGlHelper.field_153198_e,
+                                        OpenGlHelper.field_153201_h,
+                                        OpenGlHelper.field_153199_f,
+                                        this.depthBuffer);
+                            } else {
+                                OpenGlHelper.func_153186_a(
+                                        OpenGlHelper.field_153199_f,
+                                        org.lwjgl.opengl.EXTPackedDepthStencil.GL_DEPTH24_STENCIL8_EXT,
+                                        this.framebufferTextureWidth,
+                                        this.framebufferTextureHeight);
+                                OpenGlHelper.func_153190_b(
+                                        OpenGlHelper.field_153198_e,
+                                        org.lwjgl.opengl.EXTFramebufferObject.GL_DEPTH_ATTACHMENT_EXT,
+                                        OpenGlHelper.field_153199_f,
+                                        this.depthBuffer);
+                                OpenGlHelper.func_153190_b(
+                                        OpenGlHelper.field_153198_e,
+                                        org.lwjgl.opengl.EXTFramebufferObject.GL_STENCIL_ATTACHMENT_EXT,
+                                        OpenGlHelper.field_153199_f,
+                                        this.depthBuffer);
                             }
                         }
 
@@ -122,7 +148,12 @@ public class FBOWorldSceneRenderer extends WorldSceneRenderer {
     public void render(float x, float y, float width, float height, float mouseX, float mouseY) {
         // bind to FBO
         int lastID = bindFBO();
-        super.render(0, 0, this.resolutionWidth, this.resolutionHeight, (int) (this.resolutionWidth * mouseX / width),
+        super.render(
+                0,
+                0,
+                this.resolutionWidth,
+                this.resolutionHeight,
+                (int) (this.resolutionWidth * mouseX / width),
                 (int) (this.resolutionHeight * (1 - mouseY / height)));
         // unbind FBO
         unbindFBO(lastID);

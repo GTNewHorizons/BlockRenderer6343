@@ -152,7 +152,8 @@ public abstract class GuiMultiblockHandler {
                                 value -> value == -1 ? I18n.format("blockrenderer6343.nei.all")
                                         : String.valueOf(value + 1))
                                 .setMaxValueSupplier(
-                                        () -> (int) (((TrackedDummyWorld) renderer.world).getMaxPos().y - ((TrackedDummyWorld) renderer.world).getMinPos().y))
+                                        () -> (int) (((TrackedDummyWorld) renderer.world).getMaxPos().y
+                                                - ((TrackedDummyWorld) renderer.world).getMinPos().y))
                                 .setValueListener(this::setActiveLayer).setIndex(1));
         loadChannels();
         addButtonInRow("P").setTooltip(I18n.format("blockrenderer6343.multiblock.project")).setClickAction(

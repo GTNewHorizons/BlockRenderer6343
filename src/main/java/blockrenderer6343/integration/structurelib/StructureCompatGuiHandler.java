@@ -2,7 +2,6 @@ package blockrenderer6343.integration.structurelib;
 
 import static blockrenderer6343.client.utils.BRUtil.FAKE_PLAYER;
 
-import blockrenderer6343.client.world.TrackedDummyWorld;
 import net.minecraft.block.Block;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.tileentity.TileEntity;
@@ -13,6 +12,7 @@ import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
 import com.gtnewhorizon.structurelib.structure.ISurvivalBuildEnvironment;
 
 import blockrenderer6343.api.utils.CreativeItemSource;
+import blockrenderer6343.client.world.TrackedDummyWorld;
 import blockrenderer6343.integration.nei.GuiMultiblockHandler;
 
 public class StructureCompatGuiHandler extends GuiMultiblockHandler {

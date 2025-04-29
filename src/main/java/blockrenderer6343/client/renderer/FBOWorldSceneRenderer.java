@@ -145,7 +145,10 @@ public class FBOWorldSceneRenderer extends WorldSceneRenderer {
         }
     }
 
-    public void render(float x, float y, float width, float height, float mouseX, float mouseY) {
+    public void render(float x, float y, float width, float height, float mouseX, float mouseY, boolean flip) {
+        float lastBrightnessX = OpenGlHelper.lastBrightnessX;
+        float lastBrightnessY = OpenGlHelper.lastBrightnessY;
+
         // bind to FBO
         int lastID = bindFBO();
         super.render(
@@ -161,26 +164,36 @@ public class FBOWorldSceneRenderer extends WorldSceneRenderer {
         // bind FBO as texture
         GL11.glEnable(GL11.GL_TEXTURE_2D);
         GL11.glDisable(GL11.GL_LIGHTING);
-        lastID = GL11.glGetInteger(GL11.GL_TEXTURE_2D);
+        lastID = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, fbo.framebufferTexture);
         GL11.glColor4f(1, 1, 1, 1);
+
+        OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240, 240);
 
         // render rect with FBO texture
         Tessellator tessellator = Tessellator.instance;
         tessellator.startDrawingQuads();
 
-        tessellator.addVertexWithUV(x + width, y + height, 0, 1, 0);
-        tessellator.addVertexWithUV(x + width, y, 0, 1, 1);
-        tessellator.addVertexWithUV(x, y, 0, 0, 1);
-        tessellator.addVertexWithUV(x, y + height, 0, 0, 0);
+        float minV = flip ? 1.0f : 0.0F;
+        float maxV = flip ? 0.0F : 1.0f;
+        //in world or ui
+        tessellator.addVertexWithUV(x + width, y + height, 0, 1, minV);
+        tessellator.addVertexWithUV(x + width, y, 0, 1, maxV);
+        tessellator.addVertexWithUV(x, y, 0, 0, maxV);
+        tessellator.addVertexWithUV(x, y + height, 0, 0, minV);
         tessellator.draw();
 
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, lastID);
+        OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lastBrightnessX, lastBrightnessY);
     }
 
     @Override
     public void render(int x, int y, int width, int height, int mouseX, int mouseY) {
-        render(x, y, width, height, (float) mouseX, (float) mouseY);
+        render(x, y, width, height, (float) mouseX, (float) mouseY, false);
+    }
+
+    public void render(int x, int y, int width, int height, int mouseX, int mouseY, boolean flip) {
+        render(x, y, width, height, (float) mouseX, (float) mouseY, flip);
     }
 
     private int bindFBO() {
@@ -206,5 +219,11 @@ public class FBOWorldSceneRenderer extends WorldSceneRenderer {
             fbo.deleteFramebuffer();
         }
         fbo = null;
+    }
+
+    //does not work for in world rendering
+    @Override
+    protected void clearView(int x, int y, int width, int height) {
+
     }
 }

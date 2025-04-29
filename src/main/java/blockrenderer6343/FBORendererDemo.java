@@ -12,7 +12,7 @@ import com.gtnewhorizon.gtnhlib.util.CoordinatePacker;
 import blockrenderer6343.client.renderer.FBOWorldSceneRenderer;
 import cpw.mods.fml.client.registry.ClientRegistry;
 
-//put new FBORendererDemo(); in FMLInitializationEvent to use
+// put new FBORendererDemo(); in FMLInitializationEvent to use
 public class FBORendererDemo extends TileEntitySpecialRenderer {
 
     protected static FBOWorldSceneRenderer renderer;

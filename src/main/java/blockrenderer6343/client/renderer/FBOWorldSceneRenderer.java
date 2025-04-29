@@ -176,7 +176,7 @@ public class FBOWorldSceneRenderer extends WorldSceneRenderer {
 
         float minV = flip ? 1.0f : 0.0F;
         float maxV = flip ? 0.0F : 1.0f;
-        //in world or ui
+        // in world or ui
         tessellator.addVertexWithUV(x + width, y + height, 0, 1, minV);
         tessellator.addVertexWithUV(x + width, y, 0, 1, maxV);
         tessellator.addVertexWithUV(x, y, 0, 0, maxV);
@@ -221,7 +221,7 @@ public class FBOWorldSceneRenderer extends WorldSceneRenderer {
         fbo = null;
     }
 
-    //does not work for in world rendering
+    // does not work for in world rendering
     @Override
     protected void clearView(int x, int y, int width, int height) {
 

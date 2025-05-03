@@ -29,8 +29,8 @@ import codechicken.nei.SearchField;
 import codechicken.nei.SearchTokenParser;
 import codechicken.nei.api.API;
 import codechicken.nei.api.ItemFilter;
-import codechicken.nei.recipe.GuiOverlayButton.UpdateOverlayButtonsEvent;
 import codechicken.nei.recipe.GuiRecipe;
+import codechicken.nei.recipe.GuiRecipeButton.UpdateRecipeButtonsEvent;
 import codechicken.nei.recipe.GuiRecipeCatalyst;
 import codechicken.nei.recipe.RecipeCatalysts;
 import codechicken.nei.recipe.TemplateRecipeHandler;
@@ -265,7 +265,7 @@ public abstract class MultiblockHandler extends TemplateRecipeHandler {
 
     @SubscribeEvent
     @SuppressWarnings({ "unused", "rawtypes" })
-    public static void onPostOverlay(UpdateOverlayButtonsEvent.Post event) {
+    public static void onPostOverlay(UpdateRecipeButtonsEvent.Post event) {
         if (event.gui instanceof GuiRecipe recipe && recipe.getHandler() instanceof MultiblockHandler) {
             // We have to remove the recipe overlay now that this handler has a result stack
             event.buttonList.clear();

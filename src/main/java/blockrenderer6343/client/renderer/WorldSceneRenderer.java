@@ -44,6 +44,7 @@ import net.minecraft.init.Blocks;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
+import net.minecraft.world.World;
 import net.minecraftforge.client.ForgeHooksClient;
 
 import org.joml.Vector3f;
@@ -71,7 +72,7 @@ public abstract class WorldSceneRenderer {
 
     public static int backgroundColor = 0xC6C6C6;
     // you have to place blocks in the world before use
-    public final TrackedDummyWorld world;
+    public final World world;
     // the Blocks which this renderer needs to render
     public final LongSet renderedBlocks = new LongOpenHashSet();
     public final LongArrayList renderTranslucentBlocks = new LongArrayList();
@@ -87,7 +88,7 @@ public abstract class WorldSceneRenderer {
     private boolean renderAllFaces = false;
     private final RenderBlocks bufferBuilder = new RenderBlocks();
 
-    public WorldSceneRenderer(TrackedDummyWorld world) {
+    public WorldSceneRenderer(World world) {
         this.world = world;
     }
 
@@ -107,24 +108,30 @@ public abstract class WorldSceneRenderer {
     }
 
     public void setRenderAllBlocks() {
-        resetRenderedBlocks();
-        setRenderAllFaces(false);
-        this.renderedBlocks.addAll(world.blockMap.keySet());
-        world.setVisibleYLevel(-1);
+        if (world instanceof TrackedDummyWorld dummyWorld) {
+            resetRenderedBlocks();
+            setRenderAllFaces(false);
+            this.renderedBlocks.addAll(dummyWorld.blockMap.keySet());
+            dummyWorld.setVisibleYLevel(-1);
+        }
+        // else undefined
     }
 
     public void setRenderYLayer(int layer) {
-        resetRenderedBlocks();
-        setRenderAllFaces(true);
+        if (world instanceof TrackedDummyWorld dummyWorld) {
+            resetRenderedBlocks();
+            setRenderAllFaces(true);
 
-        int minY = (int) world.getMinPos().y();
-        world.setVisibleYLevel(minY + layer);
+            int minY = (int) dummyWorld.getMinPos().y();
+            dummyWorld.setVisibleYLevel(minY + layer);
 
-        for (long pos : world.blockMap.keySet()) {
-            if (CoordinatePacker.unpackY(pos) - minY == layer) {
-                this.renderedBlocks.add(pos);
+            for (long pos : dummyWorld.blockMap.keySet()) {
+                if (CoordinatePacker.unpackY(pos) - minY == layer) {
+                    this.renderedBlocks.add(pos);
+                }
             }
         }
+        // else undefined
     }
 
     public WorldSceneRenderer setOnLookingAt(Consumer<MovingObjectPosition> onLookingAt) {
@@ -155,7 +162,7 @@ public abstract class WorldSceneRenderer {
         // setupCamera
         setupCamera();
 
-        // render TrackedDummyWorld
+        // render World
         drawWorld();
 
         // check lookingAt
@@ -389,6 +396,10 @@ public abstract class WorldSceneRenderer {
                 (lookVec.x + startPos.xCoord),
                 (lookVec.y + startPos.yCoord),
                 (lookVec.z + startPos.zCoord));
-        return this.world.rayTraceBlocksWithTargetMap(startPos, endPos, world.blockMap.keySet());
+        if (world instanceof TrackedDummyWorld dummyWorld) {
+            return dummyWorld.rayTraceBlocksWithTargetMap(startPos, endPos, dummyWorld.blockMap.keySet());
+        } else {
+            return null; // undefined
+        }
     }
 }

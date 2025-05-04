@@ -2,10 +2,10 @@ package blockrenderer6343.client.renderer;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ScaledResolution;
+import net.minecraft.world.World;
 
 import org.lwjgl.opengl.GL11;
 
-import blockrenderer6343.client.world.TrackedDummyWorld;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
@@ -20,7 +20,7 @@ import cpw.mods.fml.relauncher.SideOnly;
 @SideOnly(Side.CLIENT)
 public class ImmediateWorldSceneRenderer extends WorldSceneRenderer {
 
-    public ImmediateWorldSceneRenderer(TrackedDummyWorld world) {
+    public ImmediateWorldSceneRenderer(World world) {
         super(world);
     }
 

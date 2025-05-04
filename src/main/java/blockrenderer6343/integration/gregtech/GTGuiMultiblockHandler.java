@@ -31,6 +31,7 @@ import blockrenderer6343.api.utils.CreativeItemSource;
 import blockrenderer6343.client.renderer.WorldSceneRenderer;
 import blockrenderer6343.client.utils.BRUtil;
 import blockrenderer6343.client.utils.EnumColor;
+import blockrenderer6343.client.world.TrackedDummyWorld;
 import blockrenderer6343.integration.nei.GuiMultiblockHandler;
 import blockrenderer6343.integration.nei.StructureHacks;
 import cpw.mods.fml.relauncher.ReflectionHelper;
@@ -186,7 +187,7 @@ public class GTGuiMultiblockHandler extends GuiMultiblockHandler {
                         Integer.MAX_VALUE,
                         ISurvivalBuildEnvironment.create(CreativeItemSource.instance, FAKE_PLAYER));
                 iterations++;
-            } while (renderer.world.hasChanged() && iterations < MAX_PLACE_ROUNDS);
+            } while (((TrackedDummyWorld) renderer.world).hasChanged() && iterations < MAX_PLACE_ROUNDS);
         } else if (tTileEntity instanceof IConstructableProvider iConstructableProvider) {
             constructable = iConstructableProvider.getConstructable();
         } else if (tTileEntity instanceof IConstructable iConstructable) {

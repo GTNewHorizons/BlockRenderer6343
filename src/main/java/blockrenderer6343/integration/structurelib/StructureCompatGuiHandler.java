@@ -12,6 +12,7 @@ import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
 import com.gtnewhorizon.structurelib.structure.ISurvivalBuildEnvironment;
 
 import blockrenderer6343.api.utils.CreativeItemSource;
+import blockrenderer6343.client.world.TrackedDummyWorld;
 import blockrenderer6343.integration.nei.GuiMultiblockHandler;
 
 public class StructureCompatGuiHandler extends GuiMultiblockHandler {
@@ -38,14 +39,14 @@ public class StructureCompatGuiHandler extends GuiMultiblockHandler {
                 tryConstruct = true;
                 break;
             }
-        } while (renderer.world.hasChanged() && iterations < MAX_PLACE_ROUNDS);
+        } while (((TrackedDummyWorld) renderer.world).hasChanged() && iterations < MAX_PLACE_ROUNDS);
 
         if (tryConstruct) {
             multi.construct(getBuildTriggerStack(), false);
         }
 
         // A single tick is needed for some non GT multiblocks to complete
-        renderer.world.updateEntitiesForNEI();
+        ((TrackedDummyWorld) renderer.world).updateEntitiesForNEI();
     }
 
     @Override

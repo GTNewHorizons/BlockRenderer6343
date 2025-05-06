@@ -31,10 +31,9 @@ public class StructureHacks {
 
     private static final int MAX_TIERS_TO_CHECK = 50;
     private static final List<String> TIERED_ELEMENTS = new ArrayList<>();
-    private static final String CHANNEL_ELEMENT;
+    private static final String CHANNEL_ELEMENT, ON_ELEMENT_PASS;
     public static final String LAZY_ELEMENT = "com.gtnewhorizon.structurelib.structure.LazyStructureElement";
-    private static final MethodHandle CHANNEL_GETTER;
-    private static final MethodHandle LAZY_ELEMENT_GETTER;
+    private static final MethodHandle CHANNEL_GETTER, LAZY_ELEMENT_GETTER, ON_ELEMENT_PASS_GETTER;
     public static final ItemStack HOLO_STACK = new ItemStack(StructureLibAPI.getDefaultHologramItem());
     public static final Collection<String> SKIP_ELEMENTS = getClassNames(
             StructureUtility.isAir(),
@@ -50,12 +49,17 @@ public class StructureHacks {
         addTieredElement(elem.getClass().getName());
         IStructureElement<?> channelElem = StructureUtility.withChannel("blah", elem);
         addTieredElement(CHANNEL_ELEMENT = channelElem.getClass().getName());
+        IStructureElement<?> onElementPassElem = StructureUtility.onElementPass(o -> {}, elem);
+        ON_ELEMENT_PASS = onElementPassElem.getClass().getName();
+
         try {
             MethodHandles.Lookup lookup = MethodHandles.lookup();
             LAZY_ELEMENT_GETTER = lookup.unreflect(
                     ReflectionHelper
                             .findMethod(Class.forName(LAZY_ELEMENT), null, new String[] { "get" }, Object.class));
             CHANNEL_GETTER = lookup.unreflectGetter(ReflectionHelper.findField(channelElem.getClass(), "val$channel"));
+            ON_ELEMENT_PASS_GETTER = lookup
+                    .unreflectGetter(ReflectionHelper.findField(onElementPassElem.getClass(), "val$element"));
         } catch (ClassNotFoundException | IllegalAccessException e) {
             throw new RuntimeException(e);
         }
@@ -74,7 +78,7 @@ public class StructureHacks {
     public static <T> @Nullable Iterable<ItemStack> getStacksForElement(T multi, IStructureElement<T> element,
             ConstructableData data) {
         String name = element.getClass().getName();
-        if (name.equals(LAZY_ELEMENT)) {
+        if (name.equals(LAZY_ELEMENT) || name.equals(ON_ELEMENT_PASS)) {
             element = getUnderlyingElement(multi, element);
             if (element == null) return Collections.emptyList();
             name = element.getClass().getName();
@@ -195,9 +199,15 @@ public class StructureHacks {
     }
 
     public static <T> IStructureElement<T> getUnderlyingElement(T multi, IStructureElement<?> element) {
-        if (!LAZY_ELEMENT.equals(element.getClass().getName())) return (IStructureElement<T>) element;
         try {
-            return (IStructureElement<T>) LAZY_ELEMENT_GETTER.invokeWithArguments(element, multi);
+            if (LAZY_ELEMENT.equals(element.getClass().getName())) {
+                return (IStructureElement<T>) LAZY_ELEMENT_GETTER.invokeWithArguments(element, multi);
+            }
+
+            if (ON_ELEMENT_PASS.equals(element.getClass().getName())) {
+                return (IStructureElement<T>) ON_ELEMENT_PASS_GETTER.invokeWithArguments(element);
+            }
+            return (IStructureElement<T>) element;
         } catch (Throwable ignored) {
             // This should never happen
             throw new RuntimeException();

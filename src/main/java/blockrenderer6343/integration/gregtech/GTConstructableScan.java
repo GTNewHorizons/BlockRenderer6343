@@ -66,7 +66,7 @@ public class GTConstructableScan implements Runnable {
             Collection<IStructureElement<IConstructable>[]> structures = pair.right();
             ObjectSet<IStructureElement<IConstructable>> checkedElements = new ObjectOpenHashSet<>();
 
-            if(structures.isEmpty()) {
+            if (structures.isEmpty()) {
                 secondScan.add(multi);
                 continue;
             }

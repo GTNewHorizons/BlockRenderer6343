@@ -1,6 +1,7 @@
 package blockrenderer6343.integration.gregtech;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.function.Consumer;
 
 import net.minecraft.item.ItemStack;
@@ -43,8 +44,11 @@ public class GTConstructableScan implements Runnable {
             // noinspection unchecked
             IStructureDefinition<IConstructable> structure = (IStructureDefinition<IConstructable>) multi
                     .getStructureDefinition();
-            if (!(structure instanceof StructureDefinition)) continue;
-            result.add(Pair.of(multi, ((StructureDefinition<IConstructable>) structure).getStructures().values()));
+            if (structure instanceof StructureDefinition) {
+                result.add(Pair.of(multi, ((StructureDefinition<IConstructable>) structure).getStructures().values()));
+            } else {
+                result.add(Pair.of(multi, Collections.emptySet()));
+            }
         }
 
         return result;
@@ -61,6 +65,11 @@ public class GTConstructableScan implements Runnable {
             IConstructable multi = pair.left();
             Collection<IStructureElement<IConstructable>[]> structures = pair.right();
             ObjectSet<IStructureElement<IConstructable>> checkedElements = new ObjectOpenHashSet<>();
+
+            if(structures.isEmpty()) {
+                secondScan.add(multi);
+                continue;
+            }
 
             for (IStructureElement<IConstructable>[] elementArray : structures) {
                 for (IStructureElement<IConstructable> element : elementArray) {

@@ -13,3 +13,4 @@ blockrenderer6343.nei.hint_dot=Hint dot: %s
 blockrenderer6343.nei.valid_hatches=Valid hatches:%s
 blockrenderer6343.nei.all=All
 blockrenderer6343.nei.not_set=Not set
+blockrenderer6343.no_controller_found=Unable to find the controller of this Multiblock

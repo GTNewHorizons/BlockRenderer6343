@@ -157,18 +157,20 @@ public class GTGuiMultiblockHandler extends GuiMultiblockHandler {
         }
 
         IConstructable constructable = null;
-        ItemStack copy = stackForm.copy();
-        copy.getItem().onItemUse(
-                copy,
-                FAKE_PLAYER,
-                renderer.world,
-                MB_PLACE_POS.x,
-                MB_PLACE_POS.y,
-                MB_PLACE_POS.z,
-                0,
-                MB_PLACE_POS.x,
-                MB_PLACE_POS.y,
-                MB_PLACE_POS.z);
+        if (stackForm.getItem() != null) {
+            ItemStack copy = stackForm.copy();
+            copy.getItem().onItemUse(
+                    copy,
+                    FAKE_PLAYER,
+                    renderer.world,
+                    MB_PLACE_POS.x,
+                    MB_PLACE_POS.y,
+                    MB_PLACE_POS.z,
+                    0,
+                    MB_PLACE_POS.x,
+                    MB_PLACE_POS.y,
+                    MB_PLACE_POS.z);
+        }
 
         TileEntity tTileEntity = renderer.world.getTileEntity(MB_PLACE_POS.x, MB_PLACE_POS.y, MB_PLACE_POS.z);
         ((ITurnable) tTileEntity).setFrontFacing(ForgeDirection.SOUTH);

@@ -13,8 +13,11 @@ import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.ChatComponentText;
+import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.IIcon;
 import net.minecraft.util.MovingObjectPosition;
+import net.minecraft.util.StatCollector;
 
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
@@ -40,6 +43,7 @@ import blockrenderer6343.client.utils.BRUtil;
 import blockrenderer6343.client.utils.ConstructableData;
 import blockrenderer6343.client.utils.GuiSlider;
 import blockrenderer6343.client.world.TrackedDummyWorld;
+import blockrenderer6343.integration.nei.faceless.FacelessMultiblocks;
 import codechicken.lib.gui.GuiDraw;
 import codechicken.lib.math.MathHelper;
 import codechicken.nei.NEIClientUtils;
@@ -92,7 +96,12 @@ public abstract class GuiMultiblockHandler {
     protected ItemStack tooltipBlockStack;
 
     protected ConstructableData constructableData;
+    // Note: stackForm.getItem() returns null for any faceless multiblock.
     protected ItemStack stackForm;
+
+    // Since ItemStack is final and not designed to work with null items, I need to store the variables here.
+    protected String multiblockName;
+    protected boolean is_faceless;
 
     protected Consumer<List<List<ItemStack>>> onCandidateChanged;
     protected Consumer<List<ItemStack>> onIngredientChanged;
@@ -117,7 +126,22 @@ public abstract class GuiMultiblockHandler {
         constructableData = data;
         recipeGui = (GuiRecipe<?>) NEIClientUtils.getGuiContainer();
 
+        // Check if something went wrong during the multiblock process
+        if (stackForm == null
+                || (stackForm.getItem() == null && FacelessMultiblocks.getFromItemStack(stackForm) == null)) {
+            mc.thePlayer.addChatMessage(
+                    new ChatComponentText(
+                            EnumChatFormatting.RED
+                                    + StatCollector.translateToLocal("blockrenderer6343.no_controller_found")));
+            return;
+        }
+
         this.stackForm = stackForm;
+        this.is_faceless = stackForm.getItem() == null;
+
+        this.multiblockName = is_faceless ? FacelessMultiblocks.getDisplayName(stackForm)
+                : I18n.format(stackForm.getDisplayName());
+
         if (stackForm.stackSize == 0) stackForm.stackSize = 1;
         if (lastRenderingController != renderingController) {
             initGui();
@@ -423,7 +447,7 @@ public abstract class GuiMultiblockHandler {
     }
 
     protected @NotNull String getMultiblockName() {
-        return stackForm == null ? "" : I18n.format(stackForm.getDisplayName());
+        return multiblockName;
     }
 
     protected void initializeSceneRenderer(boolean resetCamera) {

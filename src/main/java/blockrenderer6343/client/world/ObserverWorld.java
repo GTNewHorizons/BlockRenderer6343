@@ -3,7 +3,6 @@ package blockrenderer6343.client.world;
 import static blockrenderer6343.client.utils.BRUtil.FAKE_PLAYER;
 import static blockrenderer6343.integration.nei.StructureHacks.HOLO_STACK;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.function.Consumer;
 
 import javax.annotation.Nullable;
@@ -20,10 +19,12 @@ import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
 
 import blockrenderer6343.BlockRenderer6343;
 import blockrenderer6343.client.utils.BRUtil;
+import blockrenderer6343.integration.nei.faceless.FacelessMultiblocks;
 import gregtech.api.interfaces.INEIPreviewModifier;
 import gregtech.api.interfaces.metatileentity.IMetaTileEntity;
 import gregtech.api.interfaces.tileentity.IGregTechTileEntity;
 import gregtech.api.threads.RunnableMachineUpdate;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2IntMap;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
@@ -118,30 +119,26 @@ public class ObserverWorld extends DummyWorld {
 
     public @Nullable IConstructable getConstructableFromContainer(String className,
             IMultiblockInfoContainer<TileEntity> container) {
-        TileEntity tile = getUnsafeTile(className);
+        TileEntity tile = BRUtil.getUnsafeTile(className);
         if (tile == null) return null;
         setTileEntity(0, 64, 0, tile);
         return container.toConstructable(tile, ExtendedFacing.DEFAULT);
     }
 
-    private static @Nullable TileEntity getUnsafeTile(String className) {
-        try {
-            Class<?> clazz = Class.forName(className);
-            return (TileEntity) clazz.getDeclaredConstructor().newInstance();
-        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | InvocationTargetException
-                | NoSuchMethodException e) {
-            return null;
-        }
-    }
-
-    public int estimateTierFromInfoContainer(Long2ObjectMap<ObjectSet<IConstructable>> result,
-            Object2ObjectMap<IConstructable, ItemStack> multiBlockStack, IConstructable constructable) {
+    public int estimateTierFromInfoContainer(String tileEntityClass, Long2ObjectMap<ObjectSet<IConstructable>> result,
+            Object2ObjectMap<IConstructable, ItemStack> multiBlockStack, Int2ObjectMap<String> facelessStacks,
+            IConstructable constructable) {
         stackConsumer = e -> result.computeIfAbsent(BRUtil.hashStack(e), k -> new ObjectOpenHashSet<>())
                 .add(constructable);
         int tier = estimateTier(constructable);
         Block block = getBlock(0, 64, 0);
-        long pos = CoordinatePacker.pack(0, 64, 0);
-        ItemStack stack = new ItemStack(block, 1, BRUtil.getDamageValue(this, block, pos));
+        ItemStack stack;
+        if (block == Blocks.air) { // Only happens for Multiblocks without a controller block
+            stack = FacelessMultiblocks.registerFacelessMultiblock(tileEntityClass, facelessStacks);
+        } else {
+            long pos = CoordinatePacker.pack(0, 64, 0);
+            stack = new ItemStack(block, 1, BRUtil.getDamageValue(this, block, pos));
+        }
         multiBlockStack.put(constructable, stack);
         reset();
         return tier;

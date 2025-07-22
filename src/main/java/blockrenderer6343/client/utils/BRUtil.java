@@ -1,10 +1,14 @@
 package blockrenderer6343.client.utils;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+
 
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
@@ -14,6 +18,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.StatCollector;
@@ -67,7 +72,6 @@ public class BRUtil {
             blockY = lookingPos.blockY + blocksBelowController + 1;
             blockZ = lookingPos.blockZ;
         }
-        ItemStack copy = multiStack.copy();
 
         if (!baseWorld.isAirBlock(blockX, blockY, blockZ)) {
             player.addChatMessage(new ChatComponentText(StatCollector.translateToLocal("blockrenderer6343.no_space")));
@@ -75,9 +79,14 @@ public class BRUtil {
         }
 
         // noinspection ConstantConditions
-        if (!copy.getItem().onItemUse(copy, player, baseWorld, blockX, blockY, blockZ, 0, blockX, blockY - 1, blockZ)) {
-            player.addChatMessage(new ChatComponentText(StatCollector.translateToLocal("blockrenderer6343.no_block")));
-            return;
+        if (multiStack.getItem() != null) {
+            ItemStack copy = multiStack.copy();
+            if (!copy.getItem()
+                    .onItemUse(copy, player, baseWorld, blockX, blockY, blockZ, 0, blockX, blockY - 1, blockZ)) {
+                player.addChatMessage(
+                        new ChatComponentText(StatCollector.translateToLocal("blockrenderer6343.no_block")));
+                return;
+            }
         }
         ConstructableUtility.handle(buildStack, player, baseWorld, blockX, blockY, blockZ, 0);
         baseWorld.setBlockToAir(blockX, blockY, blockZ);
@@ -304,5 +313,26 @@ public class BRUtil {
                     fontColor);
         }
         GL11.glPopMatrix();
+    }
+
+    public static @Nullable TileEntity getUnsafeTile(String className) {
+        try {
+            Class<?> clazz = Class.forName(className);
+            return (TileEntity) clazz.getDeclaredConstructor().newInstance();
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | InvocationTargetException
+                | NoSuchMethodException e) {
+            return null;
+        }
+    }
+
+    // Moved from ObserverWorld
+    public static Map<?, ?> getClassToNameMap() throws IllegalAccessException {
+        for (Field f : TileEntity.class.getDeclaredFields()) {
+            if (f.getName().equals("classToNameMap") || f.getName().equals("field_145853_j")) {
+                f.setAccessible(true);
+                return (Map<?, ?>) f.get(null);
+            }
+        }
+        return null;
     }
 }

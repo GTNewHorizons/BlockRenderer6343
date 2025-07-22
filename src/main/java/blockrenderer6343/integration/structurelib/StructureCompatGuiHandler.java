@@ -13,16 +13,25 @@ import com.gtnewhorizon.structurelib.structure.ISurvivalBuildEnvironment;
 
 import blockrenderer6343.api.utils.CreativeItemSource;
 import blockrenderer6343.integration.nei.GuiMultiblockHandler;
+import blockrenderer6343.integration.nei.faceless.FacelessMultiblocks;
 
 public class StructureCompatGuiHandler extends GuiMultiblockHandler {
 
     @Override
-    protected void placeMultiblock() {
-        Block stackBlock = ((ItemBlock) stackForm.getItem()).field_150939_a;
-        renderer.world
-                .setBlock(MB_PLACE_POS.x, MB_PLACE_POS.y, MB_PLACE_POS.z, stackBlock, stackForm.getItemDamage(), 3);
+    protected final void placeMultiblock() {
+        TileEntity tTileEntity;
+        if (this.is_faceless) {
+            // For Multiblocks without a Controller block
+            tTileEntity = FacelessMultiblocks.getFromItemStack(stackForm);
+            renderer.world.setTileEntity(MB_PLACE_POS.x, MB_PLACE_POS.y, MB_PLACE_POS.z, tTileEntity);
+        } else {
+            Block stackBlock = ((ItemBlock) stackForm.getItem()).field_150939_a;
+            renderer.world
+                    .setBlock(MB_PLACE_POS.x, MB_PLACE_POS.y, MB_PLACE_POS.z, stackBlock, stackForm.getItemDamage(), 3);
 
-        TileEntity tTileEntity = renderer.world.getTileEntity(MB_PLACE_POS.x, MB_PLACE_POS.y, MB_PLACE_POS.z);
+            tTileEntity = renderer.world.getTileEntity(MB_PLACE_POS.x, MB_PLACE_POS.y, MB_PLACE_POS.z);
+        }
+
         IMultiblockInfoContainer<TileEntity> t = IMultiblockInfoContainer.get(tTileEntity.getClass());
         ISurvivalConstructable multi = t.toConstructable(tTileEntity, ExtendedFacing.DEFAULT);
 

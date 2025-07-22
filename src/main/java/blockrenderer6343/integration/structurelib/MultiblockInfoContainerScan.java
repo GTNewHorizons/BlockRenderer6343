@@ -20,6 +20,8 @@ import blockrenderer6343.client.utils.ConstructableData;
 import blockrenderer6343.client.world.ObserverWorld;
 import blockrenderer6343.integration.nei.StructureHacks;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
@@ -32,6 +34,7 @@ public class MultiblockInfoContainerScan implements Runnable {
     private static final String IDENTIFIER = "IMultiBlockInfoContainerScan";
     private final Consumer<Long2ObjectMap<ObjectSet<IConstructable>>> resultCallback;
     private final Consumer<Object2ObjectMap<IConstructable, ItemStack>> stackCallback;
+    private final Consumer<Int2ObjectMap<String>> facelessMultiblocksCallback;
     private final Map<String, IMultiblockInfoContainer<TileEntity>> infoContainers;
     private final Long2ObjectMap<ObjectSet<IConstructable>> result = new Long2ObjectOpenHashMap<>();
     private final ObjectSet<IStructureElement<?>> checkedElements = new ObjectOpenHashSet<>();
@@ -41,9 +44,11 @@ public class MultiblockInfoContainerScan implements Runnable {
 
     public MultiblockInfoContainerScan(Consumer<Long2ObjectMap<ObjectSet<IConstructable>>> resultCallback,
             Consumer<Object2ObjectMap<IConstructable, ItemStack>> stackCallback,
+            Consumer<Int2ObjectMap<String>> facelessMultiblocksCallback,
             Map<String, IMultiblockInfoContainer<?>> infoContainers) {
         this.resultCallback = resultCallback;
         this.stackCallback = stackCallback;
+        this.facelessMultiblocksCallback = facelessMultiblocksCallback;
         // noinspection unchecked
         this.infoContainers = infoContainers.entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey, e -> (IMultiblockInfoContainer<TileEntity>) e.getValue()));
@@ -59,10 +64,17 @@ public class MultiblockInfoContainerScan implements Runnable {
 
         Object2ObjectMap<IConstructable, ItemStack> stacks = new Object2ObjectOpenHashMap<>();
         Object2ObjectMap<IConstructable, ConstructableData> constructableData = new Object2ObjectOpenHashMap<>();
+        // Store the ItemStack's hashCode and the corresponding TileEntity's class
+        Int2ObjectMap<String> facelessMultis = new Int2ObjectOpenHashMap<>();
 
         for (Map.Entry<String, IMultiblockInfoContainer<TileEntity>> entry : infoContainers.entrySet()) {
             currentConstructable = world.getConstructableFromContainer(entry.getKey(), entry.getValue());
-            int tier = world.estimateTierFromInfoContainer(result, stacks, currentConstructable);
+            int tier = world.estimateTierFromInfoContainer(
+                    entry.getKey(),
+                    result,
+                    stacks,
+                    facelessMultis,
+                    currentConstructable);
             if (tier > 1) {
                 currentData.setMaxTier(tier, "");
             }
@@ -77,6 +89,7 @@ public class MultiblockInfoContainerScan implements Runnable {
 
         stackCallback.accept(stacks);
         resultCallback.accept(result);
+        facelessMultiblocksCallback.accept(facelessMultis);
 
         if (StructureLibAPI.isInstrumentEnabled()) {
             StructureLibAPI.disableInstrument();

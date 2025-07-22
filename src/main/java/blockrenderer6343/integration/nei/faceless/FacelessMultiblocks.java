@@ -48,8 +48,8 @@ public class FacelessMultiblocks {
     }
 
     /**
-     * Since not every Faceless Multiblock has implemented TileEntity.getBlockType(),
-     * I have to get the display name from GameRegistry.classToNameMap
+     * Since not every Faceless Multiblock has implemented TileEntity.getBlockType(), I have to get the display name
+     * from GameRegistry.classToNameMap
      */
     private static String getTileNameFromRegistry(Class<?> tileClass) {
         try {

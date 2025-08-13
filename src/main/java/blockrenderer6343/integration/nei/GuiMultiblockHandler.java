@@ -209,9 +209,9 @@ public abstract class GuiMultiblockHandler {
         trigger = DEFAULT_TRIGGER.copy();
         int tier = constructableData.getCurrentTier();
         String channel = constructableData.getCurrentChannel();
-
         if (channel.isEmpty()) {
             tierSlider.setValue(trigger.stackSize = tier, false);
+            if (stackForm.getDisplayName().contains("Supercapacitor")) setChannelTier("capacitor", tier, false);
         } else {
             setChannelTier(channel, tier, false);
         }
@@ -228,6 +228,8 @@ public abstract class GuiMultiblockHandler {
         }
 
         if (renderer != null && tier == trigger.stackSize) return;
+
+        if (stackForm.getDisplayName().contains("Supercapacitor")) setChannelTier("capacitor", tier, false);
 
         trigger.stackSize = tier;
         initializeSceneRenderer(false);

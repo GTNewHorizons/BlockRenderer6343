@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
+import kekztech.common.tileentities.MTELapotronicSuperCapacitor;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderBlocks;
@@ -211,7 +212,7 @@ public abstract class GuiMultiblockHandler {
         String channel = constructableData.getCurrentChannel();
         if (channel.isEmpty()) {
             tierSlider.setValue(trigger.stackSize = tier, false);
-            if (stackForm.getDisplayName().contains("Supercapacitor")) setChannelTier("capacitor", tier, false);
+            if (renderingController instanceof MTELapotronicSuperCapacitor) setChannelTier("capacitor", tier, false);
         } else {
             setChannelTier(channel, tier, false);
         }
@@ -229,7 +230,7 @@ public abstract class GuiMultiblockHandler {
 
         if (renderer != null && tier == trigger.stackSize) return;
 
-        if (stackForm.getDisplayName().contains("Supercapacitor")) setChannelTier("capacitor", tier, false);
+        if (renderingController instanceof MTELapotronicSuperCapacitor) setChannelTier("capacitor", tier, false);
 
         trigger.stackSize = tier;
         initializeSceneRenderer(false);

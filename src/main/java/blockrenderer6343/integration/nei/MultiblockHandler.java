@@ -5,7 +5,6 @@ import static blockrenderer6343.integration.nei.GuiMultiblockHandler.SLOT_SIZE;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
@@ -22,6 +21,7 @@ import com.gtnewhorizon.gtnhlib.eventbus.EventBusSubscriber;
 import com.gtnewhorizon.structurelib.alignment.constructable.IConstructable;
 
 import blockrenderer6343.client.utils.ConstructableData;
+import blockrenderer6343.integration.nei.MultiblockHandler.InPreviewFilter;
 import codechicken.nei.LayoutManager;
 import codechicken.nei.PositionedStack;
 import codechicken.nei.RecipeSearchField;
@@ -31,7 +31,6 @@ import codechicken.nei.api.API;
 import codechicken.nei.api.ItemFilter;
 import codechicken.nei.recipe.GuiRecipe;
 import codechicken.nei.recipe.GuiRecipeButton.UpdateRecipeButtonsEvent;
-import codechicken.nei.recipe.GuiRecipeCatalyst;
 import codechicken.nei.recipe.RecipeCatalysts;
 import codechicken.nei.recipe.TemplateRecipeHandler;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
@@ -45,9 +44,6 @@ public abstract class MultiblockHandler extends TemplateRecipeHandler {
     public static final int CANDIDATE_SLOTS_Y = 20;
     public static final int CANDIDATE_IN_COlUMN = 6;
     private static ItemStack lastStack;
-    protected List<ItemStack> ingredients = new ArrayList<>();
-    protected final List<PositionedStack> positionedIngredients = new ArrayList<>();
-    protected int lastRecipeHeight;
     protected RecipeCacher recipeCacher = new RecipeCacher();
     protected GuiMultiblockHandler guiHandler;
     protected IConstructable[] currentMultiblocks;
@@ -125,11 +121,6 @@ public abstract class MultiblockHandler extends TemplateRecipeHandler {
 
         guiHandler.recalculateSearch(recipeSearchField.text());
         guiHandler.drawMultiblock();
-
-        if (lastRecipeHeight != RecipeCatalysts.getHeight()) {
-            resetPositionedIngredients(ingredients);
-            lastRecipeHeight = RecipeCatalysts.getHeight();
-        }
     }
 
     public static @Nullable MultiblockHandler getHandlerFromGui(GuiScreen gui) {
@@ -195,23 +186,7 @@ public abstract class MultiblockHandler extends TemplateRecipeHandler {
     }
 
     public void resetPositionedIngredients(List<ItemStack> ingredients) {
-        this.ingredients = ingredients;
-        positionedIngredients.clear();
-        int rowCount = RecipeCatalysts.getRowCount(RecipeCatalysts.getHeight(), ingredients.size());
-
-        for (int index = 0; index < ingredients.size(); index++) {
-            ItemStack catalyst = ingredients.get(index);
-            int column = index / rowCount;
-            int row = index % rowCount;
-            positionedIngredients.add(
-                    new PositionedStack(
-                            catalyst,
-                            -column * GuiRecipeCatalyst.ingredientSize,
-                            row * GuiRecipeCatalyst.ingredientSize));
-        }
-
-        Map<String, List<PositionedStack>> catalystMap = RecipeCatalysts.getPositionedRecipeCatalystMap();
-        catalystMap.put(getOverlayIdentifier(), positionedIngredients);
+        RecipeCatalysts.putRecipeCatalysts(getOverlayIdentifier(), ingredients);
     }
 
     public void setResults(List<List<ItemStack>> results) {

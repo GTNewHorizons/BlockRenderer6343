@@ -80,8 +80,8 @@ public class GTGuiMultiblockHandler extends GuiMultiblockHandler {
             MethodHandles.Lookup lookup = MethodHandles.lookup();
             MethodHandle hatchBuilder = lookup
                     .unreflectGetter(ReflectionHelper.findField(hatchEle.getClass(), "this$0"));
-            MethodHandle dot = lookup.unreflectGetter(ReflectionHelper.findField(HatchElementBuilder.class, "mDot"));
-            DOT_GETTER = MethodHandles.filterReturnValue(hatchBuilder, dot);
+            MethodHandle hint = lookup.unreflectGetter(ReflectionHelper.findField(HatchElementBuilder.class, "mHint"));
+            DOT_GETTER = MethodHandles.filterReturnValue(hatchBuilder, hint);
             HINT_FALLBACK = lookup
                     .unreflect(ReflectionHelper.findMethod(hatchEle.getClass(), null, new String[] { "getHint" }));
 

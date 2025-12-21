@@ -69,7 +69,7 @@ public class GTGuiMultiblockHandler extends GuiMultiblockHandler {
     static {
         dotForPos.defaultReturnValue(9999);
         HatchElementBuilder<?> builder = GTStructureUtility.buildHatchAdder().adder((a, b, c) -> true).casingIndex(1)
-                .dot(1);
+                .hint(1);
         String hatchNoPlacement = builder.build().getClass().getName();
         IStructureElement<?> hatchEle = builder.hatchItemFilter((a, b) -> c -> true).build();
         HATCH_ELEMENT = hatchEle.getClass().getName();

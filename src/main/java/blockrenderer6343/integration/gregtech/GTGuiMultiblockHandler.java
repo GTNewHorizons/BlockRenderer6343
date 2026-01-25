@@ -30,7 +30,6 @@ import com.gtnewhorizon.structurelib.structure.ISurvivalBuildEnvironment;
 import blockrenderer6343.api.utils.CreativeItemSource;
 import blockrenderer6343.client.renderer.WorldSceneRenderer;
 import blockrenderer6343.client.utils.BRUtil;
-import blockrenderer6343.client.utils.ConstructableData;
 import blockrenderer6343.client.utils.EnumColor;
 import blockrenderer6343.integration.nei.GuiMultiblockHandler;
 import blockrenderer6343.integration.nei.StructureHacks;
@@ -100,17 +99,12 @@ public class GTGuiMultiblockHandler extends GuiMultiblockHandler {
     }
 
     @Override
-    public void loadMultiblock(IConstructable multiblock, ItemStack stackForm, @NotNull ConstructableData data) {
-        super.loadMultiblock(multiblock, stackForm, data);
-        setChannelTier(GTStructureChannels.HATCH.get(), 1);
-    }
-
-    @Override
     protected void loadNewMultiblock() {
         hintForDot.clear();
         dotForPos.clear();
         hatchGroupPositions.clear();
         super.loadNewMultiblock();
+        setChannelTier(GTStructureChannels.HATCH.get(), 1);
         findHints();
     }
 

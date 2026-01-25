@@ -30,6 +30,7 @@ import com.gtnewhorizon.structurelib.structure.ISurvivalBuildEnvironment;
 import blockrenderer6343.api.utils.CreativeItemSource;
 import blockrenderer6343.client.renderer.WorldSceneRenderer;
 import blockrenderer6343.client.utils.BRUtil;
+import blockrenderer6343.client.utils.ConstructableData;
 import blockrenderer6343.client.utils.EnumColor;
 import blockrenderer6343.integration.nei.GuiMultiblockHandler;
 import blockrenderer6343.integration.nei.StructureHacks;
@@ -41,6 +42,7 @@ import gregtech.api.interfaces.tileentity.ITurnable;
 import gregtech.api.threads.RunnableMachineUpdate;
 import gregtech.api.util.GTStructureUtility;
 import gregtech.api.util.HatchElementBuilder;
+import gregtech.common.misc.GTStructureChannels;
 import it.unimi.dsi.fastutil.ints.Int2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
@@ -95,6 +97,12 @@ public class GTGuiMultiblockHandler extends GuiMultiblockHandler {
         super.initGui();
         addButtonInRow("H").setTooltip(I18n.format("blockrenderer6343.nei.hatch_highlight"))
                 .setClickAction(() -> highlightHatch = !highlightHatch);
+    }
+
+    @Override
+    public void loadMultiblock(IConstructable multiblock, ItemStack stackForm, @NotNull ConstructableData data) {
+        super.loadMultiblock(multiblock, stackForm, data);
+        setChannelTier(GTStructureChannels.HATCH.get(), 1);
     }
 
     @Override

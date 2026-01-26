@@ -233,7 +233,7 @@ public abstract class GuiMultiblockHandler {
         initializeSceneRenderer(false);
     }
 
-    private void setChannelTier(String channel, int tier) {
+    protected void setChannelTier(String channel, int tier) {
         setChannelTier(channel, tier, true);
     }
 

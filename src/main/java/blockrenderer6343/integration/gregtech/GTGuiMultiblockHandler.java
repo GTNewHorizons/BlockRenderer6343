@@ -41,6 +41,7 @@ import gregtech.api.interfaces.tileentity.ITurnable;
 import gregtech.api.threads.RunnableMachineUpdate;
 import gregtech.api.util.GTStructureUtility;
 import gregtech.api.util.HatchElementBuilder;
+import gregtech.common.misc.GTStructureChannels;
 import it.unimi.dsi.fastutil.ints.Int2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
@@ -103,6 +104,7 @@ public class GTGuiMultiblockHandler extends GuiMultiblockHandler {
         dotForPos.clear();
         hatchGroupPositions.clear();
         super.loadNewMultiblock();
+        setChannelTier(GTStructureChannels.HATCH.get(), 1);
         findHints();
     }
 

@@ -1,11 +1,11 @@
 // Add your dependencies here
 
 dependencies {
-    api('com.github.GTNewHorizons:StructureLib:1.4.23:dev')
-    api('com.github.GTNewHorizons:GTNHLib:0.7.0:dev')
-    implementation("com.github.GTNewHorizons:GT5-Unofficial:5.09.52.156:dev")
-    implementation('com.github.GTNewHorizons:NotEnoughItems:2.8.11-GTNH:dev')
-    compileOnly("com.github.GTNewHorizons:NotEnoughEnergistics:1.7.14:dev")
+    api('com.github.GTNewHorizons:StructureLib:1.4.28:dev')
+    api('com.github.GTNewHorizons:GTNHLib:0.9.6:dev')
+    implementation("com.github.GTNewHorizons:GT5-Unofficial:5.09.52.232:dev")
+    implementation('com.github.GTNewHorizons:NotEnoughItems:2.8.55-GTNH:dev')
+    compileOnly("com.github.GTNewHorizons:NotEnoughEnergistics:1.7.22:dev")
 
     runtimeOnlyNonPublishable("com.github.GTNewHorizons:StructureCompat:0.7.4:dev")
 }

@@ -224,7 +224,7 @@ public class GTGuiMultiblockHandler extends GuiMultiblockHandler {
             if (matcher.find()) {
                 String match = matcher.group();
                 int dot = Integer.parseInt(match.split(" ")[1]);
-                String hint = string.replace(match, "");
+                String hint = string.replace(match, "").trim();
                 hintForDot.put(dot, hint);
             }
         }

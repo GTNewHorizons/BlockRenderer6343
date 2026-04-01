@@ -224,7 +224,7 @@ public class GTGuiMultiblockHandler extends GuiMultiblockHandler {
             if (matcher.find()) {
                 String match = matcher.group();
                 int dot = Integer.parseInt(match.split(" ")[1]);
-                String hint = string.replace(match, "");
+                String hint = string.replace(match, "").trim();
                 hintForDot.put(dot, hint);
             }
         }
@@ -274,11 +274,12 @@ public class GTGuiMultiblockHandler extends GuiMultiblockHandler {
             int index;
             while ((index = builder.indexOf(" or")) != -1) {
                 int last = builder.lastIndexOf(" or");
-                String replacement = last == index ? " and" : ",";
+                String replacement = last == index ? " and " : ", ";
                 builder.replace(index, index + 3, replacement);
             }
 
-            return builder.toString();
+            String result = builder.toString().replaceAll(",\\s*", ", ").trim();
+            return result;
         } catch (Throwable e) {
             throw new RuntimeException(e);
         }

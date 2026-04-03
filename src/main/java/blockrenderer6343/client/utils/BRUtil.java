@@ -37,6 +37,7 @@ import com.mojang.authlib.GameProfile;
 
 import blockrenderer6343.BlockRenderer6343;
 import blockrenderer6343.api.utils.CreativeItemSource;
+import blockrenderer6343.integration.nei.MultiblockHandler;
 import blockrenderer6343.client.renderer.WorldSceneRenderer;
 import blockrenderer6343.client.world.ClientFakePlayer;
 import blockrenderer6343.client.world.DummyWorld;
@@ -89,7 +90,7 @@ public class BRUtil {
         if (!BlockRenderer6343.isNEELoaded) return;
         NBTTagCompound recipeInputs = new NBTTagCompound();
         GuiRecipe<?> currentScreen = (GuiRecipe<?>) Minecraft.getMinecraft().currentScreen;
-        String recipeName = currentScreen.getHandler().getRecipeName();
+        String recipeName = ((MultiblockHandler) currentScreen.getHandler()).getFullRecipeName();
         Minecraft.getMinecraft().displayGuiScreen(currentScreen.firstGui);
         List<ItemStack> ingredients = getIngredients(renderer);
         for (int i = 0; i < ingredients.size(); i++) {

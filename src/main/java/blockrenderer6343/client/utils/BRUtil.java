@@ -41,6 +41,7 @@ import blockrenderer6343.api.utils.CreativeItemSource;
 import blockrenderer6343.client.renderer.WorldSceneRenderer;
 import blockrenderer6343.client.world.ClientFakePlayer;
 import blockrenderer6343.client.world.DummyWorld;
+import blockrenderer6343.integration.nei.BRNEIConfig;
 import blockrenderer6343.integration.nei.MultiblockHandler;
 import codechicken.lib.math.MathHelper;
 import codechicken.nei.NEIClientUtils;
@@ -91,15 +92,19 @@ public class BRUtil {
 
     public static void neiOverlay(WorldSceneRenderer renderer) {
         if (!BlockRenderer6343.isNEELoaded) return;
+        if (!BRNEIConfig.getConfigValue(BRNEIConfig.AUTO_FILL_PATTERN)) return;
         NBTTagCompound recipeInputs = new NBTTagCompound();
         GuiRecipe<?> currentScreen = (GuiRecipe<?>) Minecraft.getMinecraft().currentScreen;
         String recipeName = ((MultiblockHandler) currentScreen.getHandler()).getFullRecipeName();
         Minecraft.getMinecraft().displayGuiScreen(currentScreen.firstGui);
         List<ItemStack> ingredients = getIngredients(renderer);
+        // hatchFilter is set to GTNEIUtil::isHatchItem when GT is loaded (see ClientProxy).
+        // When GT is not loaded it is a no-op predicate, so filterHatches has no effect.
+        boolean filterHatches = BRNEIConfig.getConfigValue(BRNEIConfig.FILTER_HATCH);
         int slotIndex = 0;
         for (ItemStack itemStack : ingredients) {
             if (itemStack == null) continue;
-            if (hatchFilter.test(itemStack)) continue;
+            if (filterHatches && hatchFilter.test(itemStack)) continue;
             NBTTagCompound itemStackNBT = new NBTTagCompound();
             itemStack.writeToNBT(itemStackNBT);
             itemStackNBT.setInteger("Count", itemStack.stackSize);

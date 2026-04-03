@@ -97,8 +97,6 @@ public class BRUtil {
         String recipeName = ((MultiblockHandler) currentScreen.getHandler()).getFullRecipeName();
         Minecraft.getMinecraft().displayGuiScreen(currentScreen.firstGui);
         List<ItemStack> ingredients = getIngredients(renderer);
-        // hatchFilter is set to GTNEIUtil::isHatchItem when GT is loaded (see ClientProxy).
-        // When GT is not loaded it is a no-op predicate, so filterHatches has no effect.
         boolean filterHatches = BRNEIConfig.getConfigValue(BRNEIConfig.FILTER_HATCH);
         int slotIndex = 0;
         for (ItemStack itemStack : ingredients) {
@@ -110,9 +108,6 @@ public class BRUtil {
             recipeInputs.setTag("#" + slotIndex, itemStackNBT);
             slotIndex++;
         }
-        // When AUTO_FILL_PATTERN is enabled, auto-fill a named paper item into the output slot.
-        // When disabled, send empty outputs like the upstream implementation — the overlay still
-        // opens and populates the ingredient slots, but the paper pattern output is not filled.
         NBTTagCompound recipeOutputs = new NBTTagCompound();
         if (BRNEIConfig.getConfigValue(BRNEIConfig.AUTO_FILL_PATTERN)) {
             ItemStack paper = new ItemStack(Items.paper);

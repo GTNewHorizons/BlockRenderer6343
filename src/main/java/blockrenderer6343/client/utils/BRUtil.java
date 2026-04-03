@@ -92,7 +92,6 @@ public class BRUtil {
 
     public static void neiOverlay(WorldSceneRenderer renderer) {
         if (!BlockRenderer6343.isNEELoaded) return;
-        if (!BRNEIConfig.getConfigValue(BRNEIConfig.AUTO_FILL_PATTERN)) return;
         NBTTagCompound recipeInputs = new NBTTagCompound();
         GuiRecipe<?> currentScreen = (GuiRecipe<?>) Minecraft.getMinecraft().currentScreen;
         String recipeName = ((MultiblockHandler) currentScreen.getHandler()).getFullRecipeName();
@@ -111,13 +110,18 @@ public class BRUtil {
             recipeInputs.setTag("#" + slotIndex, itemStackNBT);
             slotIndex++;
         }
+        // When AUTO_FILL_PATTERN is enabled, auto-fill a named paper item into the output slot.
+        // When disabled, send empty outputs like the upstream implementation — the overlay still
+        // opens and populates the ingredient slots, but the paper pattern output is not filled.
         NBTTagCompound recipeOutputs = new NBTTagCompound();
-        ItemStack paper = new ItemStack(Items.paper);
-        paper.setStackDisplayName(recipeName);
-        NBTTagCompound paperNBT = new NBTTagCompound();
-        paper.writeToNBT(paperNBT);
-        paperNBT.setInteger("Count", 1);
-        recipeOutputs.setTag("Outputs0", paperNBT);
+        if (BRNEIConfig.getConfigValue(BRNEIConfig.AUTO_FILL_PATTERN)) {
+            ItemStack paper = new ItemStack(Items.paper);
+            paper.setStackDisplayName(recipeName);
+            NBTTagCompound paperNBT = new NBTTagCompound();
+            paper.writeToNBT(paperNBT);
+            paperNBT.setInteger("Count", 1);
+            recipeOutputs.setTag("Outputs0", paperNBT);
+        }
         NEENetworkHandler.getInstance().sendToServer(new PacketNEIPatternRecipe(recipeInputs, recipeOutputs));
     }
 

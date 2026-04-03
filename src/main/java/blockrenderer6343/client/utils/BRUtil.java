@@ -107,7 +107,7 @@ public class BRUtil {
         NBTTagCompound paperNBT = new NBTTagCompound();
         paper.writeToNBT(paperNBT);
         paperNBT.setInteger("Count", 1);
-        recipeOutputs.setTag("#0", paperNBT);
+        recipeOutputs.setTag("Outputs0", paperNBT);
         NEENetworkHandler.getInstance().sendToServer(new PacketNEIPatternRecipe(recipeInputs, recipeOutputs));
     }
 

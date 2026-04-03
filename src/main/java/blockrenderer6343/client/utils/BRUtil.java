@@ -12,6 +12,7 @@ import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
+import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ChatComponentText;
@@ -88,6 +89,7 @@ public class BRUtil {
         if (!BlockRenderer6343.isNEELoaded) return;
         NBTTagCompound recipeInputs = new NBTTagCompound();
         GuiRecipe<?> currentScreen = (GuiRecipe<?>) Minecraft.getMinecraft().currentScreen;
+        String recipeName = currentScreen.getHandler().getRecipeName();
         Minecraft.getMinecraft().displayGuiScreen(currentScreen.firstGui);
         List<ItemStack> ingredients = getIngredients(renderer);
         for (int i = 0; i < ingredients.size(); i++) {
@@ -99,7 +101,14 @@ public class BRUtil {
                 recipeInputs.setTag("#" + i, itemStackNBT);
             }
         }
-        NEENetworkHandler.getInstance().sendToServer(new PacketNEIPatternRecipe(recipeInputs, new NBTTagCompound()));
+        NBTTagCompound recipeOutputs = new NBTTagCompound();
+        ItemStack paper = new ItemStack(Items.paper);
+        paper.setStackDisplayName(recipeName);
+        NBTTagCompound paperNBT = new NBTTagCompound();
+        paper.writeToNBT(paperNBT);
+        paperNBT.setInteger("Count", 1);
+        recipeOutputs.setTag("#0", paperNBT);
+        NEENetworkHandler.getInstance().sendToServer(new PacketNEIPatternRecipe(recipeInputs, recipeOutputs));
     }
 
     public static void copyToHologram(ItemStack triggerStack) {

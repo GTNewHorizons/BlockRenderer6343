@@ -160,6 +160,10 @@ public abstract class MultiblockHandler extends TemplateRecipeHandler {
         return StringUtils.abbreviate(guiHandler.getMultiblockName(), 25);
     }
 
+    public String getFullRecipeName() {
+        return guiHandler.getMultiblockName();
+    }
+
     @Override
     public String getRecipeTabName() {
         return StatCollector.translateToLocal("blockrenderer6343.multiblock.structure");

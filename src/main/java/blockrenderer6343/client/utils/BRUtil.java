@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Predicate;
 
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
@@ -47,6 +48,8 @@ import codechicken.nei.recipe.GuiRecipe;
 import it.unimi.dsi.fastutil.longs.LongSet;
 
 public class BRUtil {
+
+    public static Predicate<ItemStack> hatchFilter = stack -> false;
 
     public static final ClientFakePlayer FAKE_PLAYER = new ClientFakePlayer(
             DummyWorld.INSTANCE,
@@ -93,14 +96,15 @@ public class BRUtil {
         String recipeName = ((MultiblockHandler) currentScreen.getHandler()).getFullRecipeName();
         Minecraft.getMinecraft().displayGuiScreen(currentScreen.firstGui);
         List<ItemStack> ingredients = getIngredients(renderer);
-        for (int i = 0; i < ingredients.size(); i++) {
-            ItemStack itemStack = ingredients.get(i);
-            if (itemStack != null) {
-                NBTTagCompound itemStackNBT = new NBTTagCompound();
-                itemStack.writeToNBT(itemStackNBT);
-                itemStackNBT.setInteger("Count", itemStack.stackSize);
-                recipeInputs.setTag("#" + i, itemStackNBT);
-            }
+        int slotIndex = 0;
+        for (ItemStack itemStack : ingredients) {
+            if (itemStack == null) continue;
+            if (hatchFilter.test(itemStack)) continue;
+            NBTTagCompound itemStackNBT = new NBTTagCompound();
+            itemStack.writeToNBT(itemStackNBT);
+            itemStackNBT.setInteger("Count", itemStack.stackSize);
+            recipeInputs.setTag("#" + slotIndex, itemStackNBT);
+            slotIndex++;
         }
         NBTTagCompound recipeOutputs = new NBTTagCompound();
         ItemStack paper = new ItemStack(Items.paper);

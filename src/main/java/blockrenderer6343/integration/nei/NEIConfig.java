@@ -9,6 +9,7 @@ import blockrenderer6343.BlockRenderer6343;
 import blockrenderer6343.Tags;
 import blockrenderer6343.integration.gregtech.GTNEIMultiblockHandler;
 import blockrenderer6343.integration.structurelib.StructureCompatNEIHandler;
+import codechicken.nei.api.API;
 import codechicken.nei.api.IConfigureNEI;
 import codechicken.nei.event.NEIRegisterHandlerInfosEvent;
 import codechicken.nei.recipe.GuiCraftingRecipe;
@@ -39,8 +40,12 @@ public class NEIConfig implements IConfigureNEI {
     public void loadConfig() {
         addHandler(new StructureCompatNEIHandler());
 
+        if (BlockRenderer6343.isNEELoaded) {
+            API.addOption(new BROptionToggleButton(BRNEIConfig.AUTO_FILL_PATTERN));
+        }
         if (BlockRenderer6343.isGTLoaded) {
             addHandler(new GTNEIMultiblockHandler());
+            API.addOption(new BROptionToggleButton(BRNEIConfig.FILTER_HATCH));
         }
     }
 

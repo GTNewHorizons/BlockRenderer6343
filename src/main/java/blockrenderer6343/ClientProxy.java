@@ -7,8 +7,10 @@ import net.minecraft.client.resources.IResourceManagerReloadListener;
 import net.minecraft.util.StatCollector;
 
 import blockrenderer6343.client.renderer.WorldSceneRenderer;
+import blockrenderer6343.client.utils.BRUtil;
 import blockrenderer6343.client.world.ObserverWorld;
 import blockrenderer6343.client.world.TrackedDummyWorld;
+import blockrenderer6343.integration.gregtech.GTNEIUtil;
 import blockrenderer6343.integration.nei.InputHandler;
 import codechicken.nei.guihook.GuiContainerManager;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
@@ -27,6 +29,7 @@ public class ClientProxy extends CommonProxy implements IResourceManagerReloadLi
         if (BlockRenderer6343.isGTLoaded) {
             GregTechAPI.addDummyWorld(TrackedDummyWorld.class);
             GregTechAPI.addDummyWorld(ObserverWorld.class);
+            BRUtil.hatchFilter = GTNEIUtil::isHatchItem;
         }
         ((IReloadableResourceManager) Minecraft.getMinecraft().getResourceManager()).registerReloadListener(this);
     }

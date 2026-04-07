@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Predicate;
 
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
@@ -12,6 +13,7 @@ import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
+import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ChatComponentText;
@@ -39,12 +41,16 @@ import blockrenderer6343.api.utils.CreativeItemSource;
 import blockrenderer6343.client.renderer.WorldSceneRenderer;
 import blockrenderer6343.client.world.ClientFakePlayer;
 import blockrenderer6343.client.world.DummyWorld;
+import blockrenderer6343.integration.nei.BRNEIConfig;
+import blockrenderer6343.integration.nei.MultiblockHandler;
 import codechicken.lib.math.MathHelper;
 import codechicken.nei.NEIClientUtils;
 import codechicken.nei.recipe.GuiRecipe;
 import it.unimi.dsi.fastutil.longs.LongSet;
 
 public class BRUtil {
+
+    public static Predicate<ItemStack> hatchFilter = stack -> false;
 
     public static final ClientFakePlayer FAKE_PLAYER = new ClientFakePlayer(
             DummyWorld.INSTANCE,
@@ -88,18 +94,30 @@ public class BRUtil {
         if (!BlockRenderer6343.isNEELoaded) return;
         NBTTagCompound recipeInputs = new NBTTagCompound();
         GuiRecipe<?> currentScreen = (GuiRecipe<?>) Minecraft.getMinecraft().currentScreen;
+        String recipeName = ((MultiblockHandler) currentScreen.getHandler()).getFullRecipeName();
         Minecraft.getMinecraft().displayGuiScreen(currentScreen.firstGui);
         List<ItemStack> ingredients = getIngredients(renderer);
-        for (int i = 0; i < ingredients.size(); i++) {
-            ItemStack itemStack = ingredients.get(i);
-            if (itemStack != null) {
-                NBTTagCompound itemStackNBT = new NBTTagCompound();
-                itemStack.writeToNBT(itemStackNBT);
-                itemStackNBT.setInteger("Count", itemStack.stackSize);
-                recipeInputs.setTag("#" + i, itemStackNBT);
-            }
+        boolean filterHatches = BRNEIConfig.getConfigValue(BRNEIConfig.FILTER_HATCH);
+        int slotIndex = 0;
+        for (ItemStack itemStack : ingredients) {
+            if (itemStack == null) continue;
+            if (filterHatches && hatchFilter.test(itemStack)) continue;
+            NBTTagCompound itemStackNBT = new NBTTagCompound();
+            itemStack.writeToNBT(itemStackNBT);
+            itemStackNBT.setInteger("Count", itemStack.stackSize);
+            recipeInputs.setTag("#" + slotIndex, itemStackNBT);
+            slotIndex++;
         }
-        NEENetworkHandler.getInstance().sendToServer(new PacketNEIPatternRecipe(recipeInputs, new NBTTagCompound()));
+        NBTTagCompound recipeOutputs = new NBTTagCompound();
+        if (BRNEIConfig.getConfigValue(BRNEIConfig.AUTO_FILL_PATTERN)) {
+            ItemStack paper = new ItemStack(Items.paper);
+            paper.setStackDisplayName(recipeName);
+            NBTTagCompound paperNBT = new NBTTagCompound();
+            paper.writeToNBT(paperNBT);
+            paperNBT.setInteger("Count", 1);
+            recipeOutputs.setTag("Outputs0", paperNBT);
+        }
+        NEENetworkHandler.getInstance().sendToServer(new PacketNEIPatternRecipe(recipeInputs, recipeOutputs));
     }
 
     public static void copyToHologram(ItemStack triggerStack) {

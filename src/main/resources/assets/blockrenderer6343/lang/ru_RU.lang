@@ -18,6 +18,6 @@ nei.options.blockrenderer6343=BlockRenderer6343
 nei.options.blockrenderer6343.auto_fill_pattern=Автозаполнение бумажного шаблона через NEI Overlay
 nei.options.blockrenderer6343.auto_fill_pattern.true=Да
 nei.options.blockrenderer6343.auto_fill_pattern.false=Нет
-nei.options.blockrenderer6343.filter_hatch=Фильтровать GT-люки (ME-люки) в NEI Overlay
+nei.options.blockrenderer6343.filter_hatch=Фильтровать GT-люки в NEI Overlay
 nei.options.blockrenderer6343.filter_hatch.true=Да
 nei.options.blockrenderer6343.filter_hatch.false=Нет

@@ -327,7 +327,7 @@ public abstract class GuiMultiblockHandler {
         renderer.setCameraLookAt(center, zoom, Math.toRadians(rotationPitch), Math.toRadians(rotationYaw));
     }
 
-    public void drawMultiblock() {
+    public void drawMultiblock(int recipeIndex) {
         guiMouseX = GuiDraw.getMousePosition().x;
         guiMouseY = GuiDraw.getMousePosition().y;
         guiLeft = recipeGui.guiLeft;
@@ -386,7 +386,7 @@ public abstract class GuiMultiblockHandler {
 
             renderer.setCameraLookAt(center, zoom, Math.toRadians(rotationPitch), Math.toRadians(rotationYaw));
         }
-        Point recipePos = recipeGui.getRecipePosition(0);
+        Point recipePos = recipeGui.getRecipePosition(recipeIndex);
         relativeMousePos.set(guiMouseX - guiLeft - recipePos.x, guiMouseY - guiTop - recipePos.y);
 
         for (BRButton button : allButtons) {

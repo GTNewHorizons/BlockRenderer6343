@@ -21,7 +21,6 @@ import com.gtnewhorizon.gtnhlib.eventbus.EventBusSubscriber;
 import com.gtnewhorizon.structurelib.alignment.constructable.IConstructable;
 
 import blockrenderer6343.client.utils.ConstructableData;
-import blockrenderer6343.integration.nei.MultiblockHandler.InPreviewFilter;
 import codechicken.nei.LayoutManager;
 import codechicken.nei.PositionedStack;
 import codechicken.nei.RecipeSearchField;
@@ -120,7 +119,7 @@ public abstract class MultiblockHandler extends TemplateRecipeHandler {
         }
 
         guiHandler.recalculateSearch(recipeSearchField.text());
-        guiHandler.drawMultiblock();
+        guiHandler.drawMultiblock(recipe);
     }
 
     public static @Nullable MultiblockHandler getHandlerFromGui(GuiScreen gui) {

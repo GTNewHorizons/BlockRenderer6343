@@ -2,7 +2,10 @@ package blockrenderer6343.client.utils;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Predicate;
@@ -16,6 +19,7 @@ import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.StatCollector;
@@ -46,6 +50,10 @@ import blockrenderer6343.integration.nei.MultiblockHandler;
 import codechicken.lib.math.MathHelper;
 import codechicken.nei.NEIClientUtils;
 import codechicken.nei.recipe.GuiRecipe;
+import gregtech.api.interfaces.metatileentity.IMetaTileEntity;
+import gregtech.api.interfaces.tileentity.IGregTechTileEntity;
+import gregtech.api.metatileentity.implementations.MTEHatch;
+import gregtech.api.metatileentity.implementations.MTEMultiBlockBase;
 import it.unimi.dsi.fastutil.longs.LongSet;
 
 public class BRUtil {
@@ -132,33 +140,83 @@ public class BRUtil {
     }
 
     public static List<ItemStack> getIngredients(WorldSceneRenderer renderer) {
-        List<ItemStack> ingredients = new ArrayList<>();
+        Map<ItemStack, Integer> controllers = new LinkedHashMap<>();
+        Map<ItemStack, Integer> hatches = new LinkedHashMap<>();
+        Map<ItemStack, Integer> blockCounts = new LinkedHashMap<>();
+
         for (long renderedBlock : renderer.renderedBlocks) {
             int x = CoordinatePacker.unpackX(renderedBlock);
             int y = CoordinatePacker.unpackY(renderedBlock);
             int z = CoordinatePacker.unpackZ(renderedBlock);
-            Block block = renderer.world.getBlock(x, y, z);
+            World world = renderer.world;
+
+            Block block = world.getBlock(x, y, z);
             if (block.equals(Blocks.air)) continue;
-            int meta = renderer.world.getBlockMetadata(x, y, z);
-            int qty = block.quantityDropped(renderer.world.rand);
-            ArrayList<ItemStack> itemStacks = new ArrayList<>();
+
+            int meta = world.getBlockMetadata(x, y, z);
+            TileEntity te = world.getTileEntity(x, y, z);
+            IMetaTileEntity mte = null;
+
+            if (te instanceof IGregTechTileEntity gregTechTileEntity) {
+                mte = gregTechTileEntity.getMetaTileEntity();
+            }
+
+            ArrayList<ItemStack> drops;
+            int qty = block.quantityDropped(world.rand);
+
             if (qty != 1) {
-                itemStacks.add(new ItemStack(block));
+                drops = new ArrayList<>();
+                drops.add(new ItemStack(block));
             } else {
-                itemStacks = block.getDrops(renderer.world, x, y, z, meta, 0);
+                drops = block.getDrops(world, x, y, z, meta, 0);
             }
-            boolean added = false;
-            for (ItemStack ingredient : ingredients) {
-                if (NEIClientUtils.areStacksSameTypeWithNBT(ingredient, itemStacks.get(0))) {
-                    ingredient.stackSize++;
-                    added = true;
-                    break;
-                }
+
+            ItemStack stack = drops.get(0).copy();
+
+            if (mte instanceof MTEMultiBlockBase) {
+                addOrMergeToMap(controllers, stack);
+            } else if (mte instanceof MTEHatch) {
+                addOrMergeToMap(hatches, stack);
+            } else {
+                addOrMergeToMap(blockCounts, stack);
             }
-            if (!added) ingredients.add(itemStacks.get(0));
         }
 
-        return ingredients;
+        List<ItemStack> result = new ArrayList<>();
+
+        addMapToResult(hatches, result);
+
+        blockCounts.entrySet().stream().sorted(Map.Entry.comparingByValue()).forEach(entry -> {
+            ItemStack stack = entry.getKey().copy();
+            stack.stackSize = entry.getValue();
+            result.add(stack);
+        });
+
+        addMapToResult(controllers, result);
+
+        return result;
+    }
+
+    private static void addOrMergeToMap(Map<ItemStack, Integer> map, ItemStack newStack) {
+        for (ItemStack key : map.keySet()) {
+            if (NEIClientUtils.areStacksSameTypeWithNBT(key, newStack)) {
+                map.merge(key, 1, Integer::sum);
+                return;
+            }
+        }
+        map.put(newStack, 1);
+    }
+
+    private static void addMapToResult(Map<ItemStack, Integer> map, List<ItemStack> result) {
+        map.entrySet().stream()
+                .sorted(
+                        Comparator.comparingInt(Map.Entry<ItemStack, Integer>::getValue)
+                                .thenComparing(e -> e.getKey().getDisplayName()))
+                .forEach(entry -> {
+                    ItemStack stack = entry.getKey().copy();
+                    stack.stackSize = entry.getValue();
+                    result.add(stack);
+                });
     }
 
     public static List<List<ItemStack>> scanCandidates(Object multi, IStructureElement<Object> element,

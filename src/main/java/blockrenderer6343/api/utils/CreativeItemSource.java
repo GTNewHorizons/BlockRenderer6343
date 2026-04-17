@@ -18,6 +18,7 @@ public class CreativeItemSource implements IItemSource {
     public static final CreativeItemSource instance = new CreativeItemSource();
 
     private Reference2ReferenceLinkedOpenHashMap<ItemStack, ItemStack> itemList;
+    private final Reference2ReferenceLinkedOpenHashMap<ItemStack, ItemStack> tempItemList = new Reference2ReferenceLinkedOpenHashMap<>();
 
     @NotNull
     @Override
@@ -33,13 +34,25 @@ public class CreativeItemSource implements IItemSource {
             }
         }
 
+        if (!tempItemList.isEmpty()) {
+            for (var p : tempItemList.reference2ReferenceEntrySet()) {
+                ItemStack itemStack = p.getValue();
+
+                if (predicate.test(itemStack)) {
+                    store.put(itemStack, Integer.MAX_VALUE);
+
+                    return store;
+                }
+            }
+        }
+
         for (var p : itemList.reference2ReferenceEntrySet()) {
             ItemStack itemStack = p.getValue();
 
             if (predicate.test(itemStack)) {
                 store.put(itemStack, Integer.MAX_VALUE);
 
-                itemList.putAndMoveToFirst(itemStack, itemStack);
+                tempItemList.put(itemStack, itemStack);
 
                 return store;
             }

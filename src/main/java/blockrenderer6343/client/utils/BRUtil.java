@@ -3,7 +3,6 @@ package blockrenderer6343.client.utils;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -48,8 +47,9 @@ import blockrenderer6343.client.world.DummyWorld;
 import blockrenderer6343.integration.nei.BRNEIConfig;
 import blockrenderer6343.integration.nei.MultiblockHandler;
 import codechicken.lib.math.MathHelper;
-import codechicken.nei.NEIClientUtils;
+import codechicken.nei.ItemStackAmount;
 import codechicken.nei.recipe.GuiRecipe;
+import codechicken.nei.recipe.StackInfo;
 import gregtech.api.interfaces.metatileentity.IMetaTileEntity;
 import gregtech.api.interfaces.tileentity.IGregTechTileEntity;
 import gregtech.api.metatileentity.implementations.MTEHatch;
@@ -140,9 +140,9 @@ public class BRUtil {
     }
 
     public static List<ItemStack> getIngredients(WorldSceneRenderer renderer) {
-        Map<ItemStack, Integer> controllers = new LinkedHashMap<>();
-        Map<ItemStack, Integer> hatches = new LinkedHashMap<>();
-        Map<ItemStack, Integer> blocks = new LinkedHashMap<>();
+        ItemStackAmount controllers = new ItemStackAmount();
+        ItemStackAmount hatches = new ItemStackAmount();
+        ItemStackAmount blocks = new ItemStackAmount();
 
         for (long renderedBlock : renderer.renderedBlocks) {
             int x = CoordinatePacker.unpackX(renderedBlock);
@@ -171,50 +171,40 @@ public class BRUtil {
                 drops = block.getDrops(world, x, y, z, meta, 0);
             }
 
+            if (drops.isEmpty()) continue;
+
             ItemStack stack = drops.get(0).copy();
 
             if (mte instanceof MTEMultiBlockBase) {
-                addOrMergeToMap(controllers, stack);
+                controllers.add(stack);
             } else if (mte instanceof MTEHatch) {
-                addOrMergeToMap(hatches, stack);
+                hatches.add(stack);
             } else {
-                addOrMergeToMap(blocks, stack);
+                blocks.add(stack);
             }
         }
 
         List<ItemStack> result = new ArrayList<>();
 
-        addMapToResult(hatches, result);
+        addAmountToResult(hatches, result);
 
         blocks.entrySet().stream().sorted(Map.Entry.comparingByValue()).forEach(entry -> {
-            ItemStack stack = entry.getKey().copy();
-            stack.stackSize = entry.getValue();
+            ItemStack stack = StackInfo.loadFromNBT(entry.getKey(), entry.getValue().intValue());
             result.add(stack);
         });
 
-        addMapToResult(controllers, result);
+        addAmountToResult(controllers, result);
 
         return result;
     }
 
-    private static void addOrMergeToMap(Map<ItemStack, Integer> map, ItemStack newStack) {
-        for (ItemStack key : map.keySet()) {
-            if (NEIClientUtils.areStacksSameTypeWithNBT(key, newStack)) {
-                map.merge(key, 1, Integer::sum);
-                return;
-            }
-        }
-        map.put(newStack, 1);
-    }
-
-    private static void addMapToResult(Map<ItemStack, Integer> map, List<ItemStack> result) {
-        map.entrySet().stream()
-                .sorted(
-                        Comparator.comparingInt(Map.Entry<ItemStack, Integer>::getValue)
-                                .thenComparing(e -> e.getKey().getDisplayName()))
-                .forEach(entry -> {
-                    ItemStack stack = entry.getKey().copy();
-                    stack.stackSize = entry.getValue();
+    private static void addAmountToResult(ItemStackAmount amount, List<ItemStack> result) {
+        amount.entrySet().stream()
+                .sorted(Comparator.comparingLong(Map.Entry<NBTTagCompound, Long>::getValue).thenComparing(e -> {
+                    ItemStack stack = StackInfo.loadFromNBT(e.getKey(), 1);
+                    return stack.getDisplayName();
+                })).forEach(entry -> {
+                    ItemStack stack = StackInfo.loadFromNBT(entry.getKey(), entry.getValue().intValue());
                     result.add(stack);
                 });
     }

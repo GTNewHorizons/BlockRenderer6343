@@ -142,7 +142,7 @@ public class BRUtil {
     public static List<ItemStack> getIngredients(WorldSceneRenderer renderer) {
         Map<ItemStack, Integer> controllers = new LinkedHashMap<>();
         Map<ItemStack, Integer> hatches = new LinkedHashMap<>();
-        Map<ItemStack, Integer> blockCounts = new LinkedHashMap<>();
+        Map<ItemStack, Integer> blocks = new LinkedHashMap<>();
 
         for (long renderedBlock : renderer.renderedBlocks) {
             int x = CoordinatePacker.unpackX(renderedBlock);
@@ -178,7 +178,7 @@ public class BRUtil {
             } else if (mte instanceof MTEHatch) {
                 addOrMergeToMap(hatches, stack);
             } else {
-                addOrMergeToMap(blockCounts, stack);
+                addOrMergeToMap(blocks, stack);
             }
         }
 
@@ -186,7 +186,7 @@ public class BRUtil {
 
         addMapToResult(hatches, result);
 
-        blockCounts.entrySet().stream().sorted(Map.Entry.comparingByValue()).forEach(entry -> {
+        blocks.entrySet().stream().sorted(Map.Entry.comparingByValue()).forEach(entry -> {
             ItemStack stack = entry.getKey().copy();
             stack.stackSize = entry.getValue();
             result.add(stack);

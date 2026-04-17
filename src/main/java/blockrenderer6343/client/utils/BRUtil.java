@@ -4,10 +4,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
@@ -49,7 +49,6 @@ import blockrenderer6343.integration.nei.MultiblockHandler;
 import codechicken.lib.math.MathHelper;
 import codechicken.nei.ItemStackAmount;
 import codechicken.nei.recipe.GuiRecipe;
-import codechicken.nei.recipe.StackInfo;
 import gregtech.api.interfaces.metatileentity.IMetaTileEntity;
 import gregtech.api.interfaces.tileentity.IGregTechTileEntity;
 import gregtech.api.metatileentity.implementations.MTEHatch;
@@ -186,27 +185,17 @@ public class BRUtil {
 
         List<ItemStack> result = new ArrayList<>();
 
-        addAmountToResult(hatches, result);
-
-        blocks.entrySet().stream().sorted(Map.Entry.comparingByValue()).forEach(entry -> {
-            ItemStack stack = StackInfo.loadFromNBT(entry.getKey(), entry.getValue().intValue());
-            result.add(stack);
-        });
-
-        addAmountToResult(controllers, result);
+        addItemStacksWithSorting(hatches, result);
+        addItemStacksWithSorting(blocks, result);
+        addItemStacksWithSorting(controllers, result);
 
         return result;
     }
 
-    private static void addAmountToResult(ItemStackAmount amount, List<ItemStack> result) {
-        amount.entrySet().stream()
-                .sorted(Comparator.comparingLong(Map.Entry<NBTTagCompound, Long>::getValue).thenComparing(e -> {
-                    ItemStack stack = StackInfo.loadFromNBT(e.getKey(), 1);
-                    return stack.getDisplayName();
-                })).forEach(entry -> {
-                    ItemStack stack = StackInfo.loadFromNBT(entry.getKey(), entry.getValue().intValue());
-                    result.add(stack);
-                });
+    private static void addItemStacksWithSorting(ItemStackAmount amount, List<ItemStack> result) {
+        amount.values().stream().sorted(
+                Comparator.comparingLong((ItemStack stack) -> stack.stackSize).thenComparing(ItemStack::getDisplayName))
+                .collect(Collectors.toCollection(() -> result));
     }
 
     public static List<List<ItemStack>> scanCandidates(Object multi, IStructureElement<Object> element,

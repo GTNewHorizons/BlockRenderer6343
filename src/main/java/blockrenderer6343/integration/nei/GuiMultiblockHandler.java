@@ -77,7 +77,7 @@ public abstract class GuiMultiblockHandler {
     protected static final int SLIDER_WIDTH = BUTTON_RIGHT - BETWEEN_BUTTON_X - 2;
     protected static final float DEFAULT_RANGE_MULTIPLIER = 3.5f;
     protected static final int MAX_PLACE_ROUNDS = 2000;
-    protected static final BlockPos MB_PLACE_POS = new BlockPos(0, 64, 0);
+    public static final BlockPos MB_PLACE_POS = new BlockPos(0, 64, 0);
     protected static final BlockPos SELECTED_BLOCK = new BlockPos().set(NO_SELECTED_BLOCK);
     protected static final ItemStack DEFAULT_TRIGGER = new ItemStack(StructureLibAPI.getDefaultHologramItem());
 

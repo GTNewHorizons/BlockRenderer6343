@@ -1,5 +1,7 @@
 package blockrenderer6343.client.utils;
 
+import static blockrenderer6343.integration.nei.GuiMultiblockHandler.MB_PLACE_POS;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -153,12 +155,6 @@ public class BRUtil {
             if (block.equals(Blocks.air)) continue;
 
             int meta = world.getBlockMetadata(x, y, z);
-            TileEntity te = world.getTileEntity(x, y, z);
-            IMetaTileEntity mte = null;
-
-            if (te instanceof IGregTechTileEntity gregTechTileEntity) {
-                mte = gregTechTileEntity.getMetaTileEntity();
-            }
 
             ArrayList<ItemStack> drops;
             int qty = block.quantityDropped(world.rand);
@@ -174,10 +170,25 @@ public class BRUtil {
 
             ItemStack stack = drops.get(0).copy();
 
-            if (mte instanceof MTEMultiBlockBase) {
+            if (BlockRenderer6343.isGTLoaded) {
+                TileEntity te = world.getTileEntity(x, y, z);
+                IMetaTileEntity mte = null;
+
+                if (te instanceof IGregTechTileEntity gregTechTileEntity) {
+                    mte = gregTechTileEntity.getMetaTileEntity();
+                }
+
+                if (mte instanceof MTEMultiBlockBase) {
+                    controllers.add(stack);
+                    continue;
+                } else if (mte instanceof MTEHatch) {
+                    hatches.add(stack);
+                    continue;
+                }
+            }
+
+            if (x == MB_PLACE_POS.x && y == MB_PLACE_POS.y && z == MB_PLACE_POS.z) {
                 controllers.add(stack);
-            } else if (mte instanceof MTEHatch) {
-                hatches.add(stack);
             } else {
                 blocks.add(stack);
             }

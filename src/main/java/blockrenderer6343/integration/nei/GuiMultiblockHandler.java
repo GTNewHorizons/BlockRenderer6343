@@ -105,7 +105,6 @@ public abstract class GuiMultiblockHandler {
     protected final ObjectList<BRButton> allButtons = new ObjectArrayList<>();
     protected GuiSlider tierSlider;
     protected Vector2i relativeMousePos = new Vector2i();
-    protected GuiRecipe<?> recipeGui;
     private int buttonsInRow;
     protected String lastSearch = "";
     protected static Minecraft mc = Minecraft.getMinecraft();
@@ -115,7 +114,6 @@ public abstract class GuiMultiblockHandler {
     public void loadMultiblock(IConstructable multiblock, ItemStack stackForm, @NotNull ConstructableData data) {
         renderingController = multiblock;
         constructableData = data;
-        recipeGui = (GuiRecipe<?>) NEIClientUtils.getGuiContainer();
 
         this.stackForm = stackForm;
         if (stackForm.stackSize == 0) stackForm.stackSize = 1;
@@ -328,6 +326,7 @@ public abstract class GuiMultiblockHandler {
     }
 
     public void drawMultiblock(int recipeIndex) {
+        GuiRecipe<?> recipeGui = (GuiRecipe<?>) NEIClientUtils.getGuiContainer();
         guiMouseX = GuiDraw.getMousePosition().x;
         guiMouseY = GuiDraw.getMousePosition().y;
         guiLeft = recipeGui.guiLeft;

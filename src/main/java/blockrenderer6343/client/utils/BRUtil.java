@@ -156,7 +156,7 @@ public class BRUtil {
 
             int meta = world.getBlockMetadata(x, y, z);
 
-            ArrayList<ItemStack> drops;
+            List<ItemStack> drops;
             int qty = block.quantityDropped(world.rand);
 
             if (qty != 1) {
@@ -166,9 +166,17 @@ public class BRUtil {
                 drops = block.getDrops(world, x, y, z, meta, 0);
             }
 
-            if (drops.isEmpty()) continue;
+            if (drops == null || drops.isEmpty()) continue;
 
-            ItemStack stack = drops.get(0).copy();
+            ItemStack stack = null;
+            for (ItemStack drop : drops) {
+                if (drop != null && drop.getItem() != null) {
+                    stack = drop.copy();
+                    break;
+                }
+            }
+
+            if (stack == null) continue;
 
             if (BlockRenderer6343.isGTLoaded) {
                 TileEntity te = world.getTileEntity(x, y, z);

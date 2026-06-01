@@ -8,6 +8,6 @@ public class ColorUtils {
 
     public static final ColorResource
     // spotless:off
-        neiBackground   = color.rgb("neiBackground",    "#C6C6C6");
+        neiBackground   = color.rgb("neiBackground",    "0xC6C6C6");
     // spotless:on
 }

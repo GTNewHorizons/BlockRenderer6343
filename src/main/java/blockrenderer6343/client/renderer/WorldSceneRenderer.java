@@ -53,6 +53,7 @@ import org.lwjgl.util.glu.GLU;
 
 import com.gtnewhorizon.gtnhlib.util.CoordinatePacker;
 
+import blockrenderer6343.client.utils.ColorUtils;
 import blockrenderer6343.client.utils.ProjectionUtils;
 import blockrenderer6343.client.world.TrackedDummyWorld;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
@@ -69,7 +70,6 @@ import it.unimi.dsi.fastutil.longs.LongSet;
  */
 public abstract class WorldSceneRenderer {
 
-    public static int backgroundColor = 0xC6C6C6;
     // you have to place blocks in the world before use
     public final TrackedDummyWorld world;
     // the Blocks which this renderer needs to render
@@ -239,7 +239,8 @@ public abstract class WorldSceneRenderer {
     }
 
     protected void clearView(int x, int y, int width, int height) {
-        setGlClearColorFromInt(backgroundColor, backgroundColor >> 24);
+        int bg = ColorUtils.neiBackground.getColor();
+        setGlClearColorFromInt(bg, bg >> 24);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     }
 

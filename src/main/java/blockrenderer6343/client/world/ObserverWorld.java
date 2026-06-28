@@ -11,6 +11,7 @@ import javax.annotation.Nullable;
 import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 
 import com.gtnewhorizon.gtnhlib.util.CoordinatePacker;
@@ -174,6 +175,13 @@ public class ObserverWorld extends DummyWorld {
     private int estimateTier(IConstructable multi) {
         int tier = 0;
         ItemStack holo = HOLO_STACK.copy();
+
+        // I'm sorry for this code, but too many glass tiers
+        NBTTagCompound tag = new NBTTagCompound();
+        NBTTagCompound channels = new NBTTagCompound();
+        channels.setInteger("glass", 100);
+        tag.setTag("channels", channels);
+        holo.setTagCompound(tag);
 
         do {
             holo.stackSize = tier + 1;

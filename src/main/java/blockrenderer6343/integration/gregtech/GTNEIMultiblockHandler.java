@@ -65,7 +65,7 @@ public class GTNEIMultiblockHandler extends MultiblockHandler {
         if (candidate.getItem() instanceof ItemMachines) {
             for (IConstructable multiblock : multiblocksList) {
                 ItemStack stackForm = ((IMetaTileEntity) multiblock).getStackForm(1);
-                if (NEIClientUtils.areStacksSameType(stackForm, candidate)) {
+                if (NEIClientUtils.areStacksSameTypeCrafting(stackForm, candidate)) {
                     return ObjectSets.singleton(multiblock);
                 }
             }

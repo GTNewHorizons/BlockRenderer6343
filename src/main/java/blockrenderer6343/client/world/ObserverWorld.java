@@ -176,13 +176,6 @@ public class ObserverWorld extends DummyWorld {
         int tier = 0;
         ItemStack holo = HOLO_STACK.copy();
 
-        // I'm sorry for this code, but too many glass tiers
-        NBTTagCompound tag = new NBTTagCompound();
-        NBTTagCompound channels = new NBTTagCompound();
-        channels.setInteger("glass", 100);
-        tag.setTag("channels", channels);
-        holo.setTagCompound(tag);
-
         do {
             holo.stackSize = tier + 1;
             hasChanged = false;

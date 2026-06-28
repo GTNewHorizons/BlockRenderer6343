@@ -62,7 +62,10 @@ public class ConstructableData {
     public void setMaxTier(int tier, @NotNull String channel) {
         if (this == EMPTY) return;
         hasData = true;
-        maxTotalTier = Math.max(maxTotalTier, tier);
+        // I'm sorry for this code but too many glass channels
+        if (!channel.equals("glass")) {
+            maxTotalTier = Math.max(maxTotalTier, tier);
+        }
         if (!channel.isEmpty() && channelMaxTierMap.getInt(channel) < tier) {
             channelMaxTierMap.put(channel, tier);
         }

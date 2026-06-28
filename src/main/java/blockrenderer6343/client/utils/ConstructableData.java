@@ -1,6 +1,5 @@
 package blockrenderer6343.client.utils;
 
-import gregtech.api.util.GlassTier;
 import net.minecraft.item.ItemStack;
 
 import org.jetbrains.annotations.NotNull;
@@ -8,6 +7,7 @@ import org.jetbrains.annotations.NotNull;
 import com.gtnewhorizon.structurelib.alignment.constructable.IConstructable;
 
 import blockrenderer6343.integration.nei.StructureHacks;
+import gregtech.api.util.GlassTier;
 import gregtech.common.misc.GTStructureChannels;
 import it.unimi.dsi.fastutil.longs.Long2IntMap;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;

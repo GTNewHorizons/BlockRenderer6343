@@ -1,11 +1,13 @@
 // Add your dependencies here
 
 dependencies {
-    api('com.github.GTNewHorizons:StructureLib:1.4.34:dev')
-    api('com.github.GTNewHorizons:GTNHLib:0.11.5:dev')
-    implementation("com.github.GTNewHorizons:GT5-Unofficial:5.09.52.398:dev")
-    implementation('com.github.GTNewHorizons:NotEnoughItems:2.8.84-GTNH:dev')
-    compileOnly("com.github.GTNewHorizons:NotEnoughEnergistics:1.7.26:dev")
+    api('com.github.GTNewHorizons:StructureLib:1.4.40:dev')
+    api('com.github.GTNewHorizons:GTNHLib:0.11.20:dev')
+    implementation("com.github.GTNewHorizons:GT5-Unofficial:5.09.54.03:dev")
+    implementation('com.github.GTNewHorizons:NotEnoughItems:2.8.107-GTNH:dev')
+    compileOnly("com.github.GTNewHorizons:NotEnoughEnergistics:1.7.33:dev")
 
     runtimeOnlyNonPublishable("com.github.GTNewHorizons:StructureCompat:0.7.4:dev")
+    runtimeOnlyNonPublishable("com.github.GTNewHorizons:Applied-Energistics-2-Unofficial:rv3-beta-994-GTNH:dev")
+    runtimeOnlyNonPublishable("com.github.GTNewHorizons:WirelessCraftingTerminal:1.12.16:dev")
 }

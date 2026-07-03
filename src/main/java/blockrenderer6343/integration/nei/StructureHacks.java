@@ -11,7 +11,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.function.Function;
 
-import gregtech.api.util.GTStructureUtility;
 import net.minecraft.item.ItemStack;
 
 import org.jetbrains.annotations.NotNull;
@@ -26,6 +25,7 @@ import com.gtnewhorizon.structurelib.structure.StructureUtility;
 import blockrenderer6343.client.utils.ConstructableData;
 import blockrenderer6343.client.world.DummyWorld;
 import cpw.mods.fml.relauncher.ReflectionHelper;
+import gregtech.api.util.GTStructureUtility;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
 
@@ -36,7 +36,8 @@ public class StructureHacks {
     private static final List<String> TIERED_ELEMENTS = new ArrayList<>();
     private static final String CHANNEL_ELEMENT, ON_ELEMENT_PASS, TRIGGER_ITEM_TRANSFORM;
     public static final String LAZY_ELEMENT = "com.gtnewhorizon.structurelib.structure.LazyStructureElement";
-    private static final MethodHandle CHANNEL_GETTER, LAZY_ELEMENT_GETTER, ON_ELEMENT_PASS_GETTER, TRIGGER_ITEM_TRANSFORM_GETTER;
+    private static final MethodHandle CHANNEL_GETTER, LAZY_ELEMENT_GETTER, ON_ELEMENT_PASS_GETTER,
+            TRIGGER_ITEM_TRANSFORM_GETTER;
     public static final ItemStack HOLO_STACK = new ItemStack(StructureLibAPI.getDefaultHologramItem());
     public static final Collection<String> SKIP_ELEMENTS = getClassNames(
             StructureUtility.isAir(),
@@ -54,7 +55,8 @@ public class StructureHacks {
         addTieredElement(CHANNEL_ELEMENT = channelElem.getClass().getName());
         IStructureElement<?> onElementPassElem = StructureUtility.onElementPass(o -> {}, elem);
         ON_ELEMENT_PASS = onElementPassElem.getClass().getName();
-        IStructureElement<?> triggerItemTransformElem = GTStructureUtility.triggerItemTransform(Function.identity(), elem);
+        IStructureElement<?> triggerItemTransformElem = GTStructureUtility
+                .triggerItemTransform(Function.identity(), elem);
         TRIGGER_ITEM_TRANSFORM = triggerItemTransformElem.getClass().getName();
 
         try {

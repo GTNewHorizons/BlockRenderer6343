@@ -65,9 +65,10 @@ public class ConstructableData {
         if (this == EMPTY) return;
         hasData = true;
         // I'm sorry for this code but too many glass channels
-        if (!channel.equals(GTStructureChannels.BOROGLASS.get())) {
-            maxTotalTier = Math.max(maxTotalTier, GlassTier.getMaxTierIndex());
+        if (channel.equals(GTStructureChannels.BOROGLASS.get())) {
+            tier = GlassTier.getMaxTierIndex();
         }
+        maxTotalTier = Math.max(maxTotalTier, tier);
         if (!channel.isEmpty() && channelMaxTierMap.getInt(channel) < tier) {
             channelMaxTierMap.put(channel, tier);
         }

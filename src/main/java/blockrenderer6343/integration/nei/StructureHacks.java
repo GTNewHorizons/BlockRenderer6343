@@ -32,7 +32,7 @@ import it.unimi.dsi.fastutil.objects.ObjectSet;
 @SuppressWarnings({ "unchecked" })
 public class StructureHacks {
 
-    private static final int MAX_TIERS_TO_CHECK = 50;
+    private static final int MAX_TIERS_TO_CHECK = 100;
     private static final List<String> TIERED_ELEMENTS = new ArrayList<>();
     private static final String CHANNEL_ELEMENT, ON_ELEMENT_PASS, TRIGGER_ITEM_TRANSFORM;
     public static final String LAZY_ELEMENT = "com.gtnewhorizon.structurelib.structure.LazyStructureElement";

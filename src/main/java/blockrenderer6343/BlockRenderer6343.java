@@ -37,7 +37,7 @@ public class BlockRenderer6343 {
     // preInit "Run before anything else. Read your config, create blocks, items,
     // etc, and register them with the GameRegistry."
     public void preInit(FMLPreInitializationEvent event) {
-        isGTLoaded = Loader.isModLoaded("gregtech");
+        isGTLoaded = Loader.isModLoaded("gregtech_nh");
         isBartworksLoaded = Loader.isModLoaded("bartworks");
         isNEELoaded = Loader.isModLoaded("neenergistics");
         proxy.preInit(event);

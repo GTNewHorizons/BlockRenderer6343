@@ -148,7 +148,7 @@ public class ObserverWorld extends DummyWorld {
     }
 
     public int estimateTierFromConstructable(Consumer<ItemStack> result, IConstructable multi) {
-        if (!BlockRenderer6343.isGTLoaded || !(multi instanceof IMetaTileEntity metaTile)) return 0;
+        if (!BlockRenderer6343.isGT5uNHLoaded || !(multi instanceof IMetaTileEntity metaTile)) return 0;
         if (RunnableMachineUpdate.isCurrentThreadEnabled()) {
             RunnableMachineUpdate.setCurrentThreadEnabled(false);
         }
@@ -178,7 +178,7 @@ public class ObserverWorld extends DummyWorld {
         do {
             holo.stackSize = tier + 1;
             hasChanged = false;
-            if (BlockRenderer6343.isGTLoaded && multi instanceof INEIPreviewModifier modifier) {
+            if (BlockRenderer6343.isGT5uNHLoaded && multi instanceof INEIPreviewModifier modifier) {
                 modifier.onPreviewConstruct(holo);
             }
             multi.construct(holo, false);

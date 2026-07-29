@@ -170,7 +170,7 @@ public class BRUtil {
 
             ItemStack stack = drops.get(0).copy();
 
-            if (BlockRenderer6343.isGTLoaded) {
+            if (BlockRenderer6343.isGT5uNHLoaded) {
                 TileEntity te = world.getTileEntity(x, y, z);
                 IMetaTileEntity mte = null;
 

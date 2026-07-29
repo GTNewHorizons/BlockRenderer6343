@@ -29,7 +29,7 @@ public class BlockRenderer6343 {
     @SidedProxy(clientSide = MOD_ID + ".ClientProxy", serverSide = MOD_ID + ".CommonProxy")
     public static CommonProxy proxy;
 
-    public static boolean isGTLoaded;
+    public static boolean isGT5uNHLoaded;
     public static boolean isBartworksLoaded;
     public static boolean isNEELoaded;
 
@@ -37,7 +37,7 @@ public class BlockRenderer6343 {
     // preInit "Run before anything else. Read your config, create blocks, items,
     // etc, and register them with the GameRegistry."
     public void preInit(FMLPreInitializationEvent event) {
-        isGTLoaded = Loader.isModLoaded("gregtech_nh");
+        isGT5uNHLoaded = Loader.isModLoaded("gregtech_nh");
         isBartworksLoaded = Loader.isModLoaded("bartworks");
         isNEELoaded = Loader.isModLoaded("neenergistics");
         proxy.preInit(event);

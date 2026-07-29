@@ -43,7 +43,7 @@ public class NEIConfig implements IConfigureNEI {
         if (BlockRenderer6343.isNEELoaded) {
             API.addOption(new BROptionToggleButton(BRNEIConfig.AUTO_FILL_PATTERN));
         }
-        if (BlockRenderer6343.isGTLoaded) {
+        if (BlockRenderer6343.isGT5uNHLoaded) {
             addHandler(new GTNEIMultiblockHandler());
             API.addOption(new BROptionToggleButton(BRNEIConfig.FILTER_HATCH));
         }

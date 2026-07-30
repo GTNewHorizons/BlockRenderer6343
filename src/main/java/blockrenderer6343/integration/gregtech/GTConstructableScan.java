@@ -60,6 +60,7 @@ public class GTConstructableScan implements Runnable {
         ObjectSet<IConstructable> secondScan = new ObjectOpenHashSet<>();
         Object2ObjectMap<IConstructable, ConstructableData> constructableData = new Object2ObjectOpenHashMap<>();
         ConstructableData data = new ConstructableData();
+        ObserverWorld world = new ObserverWorld();
 
         for (Pair<IConstructable, Collection<IStructureElement<IConstructable>[]>> pair : constructables) {
             IConstructable multi = pair.left();
@@ -85,6 +86,11 @@ public class GTConstructableScan implements Runnable {
             }
 
             if (data.hasData()) {
+                int estimatedTier = world.estimateTierFromConstructable(
+                        e -> {}, multi);
+                if (estimatedTier > 1) {
+                    data.setMaxTier(estimatedTier, "");
+                }
                 constructableData.put(multi, data);
                 data = new ConstructableData();
             } else if (structures.size() > 1) {
@@ -92,7 +98,6 @@ public class GTConstructableScan implements Runnable {
             }
         }
 
-        ObserverWorld world = new ObserverWorld();
         for (IConstructable multi : secondScan) {
             int tier = world.estimateTierFromConstructable(
                     stack -> result.computeIfAbsent(BRUtil.hashStack(stack), k -> new ObjectOpenHashSet<>()).add(multi),

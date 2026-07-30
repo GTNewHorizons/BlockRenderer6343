@@ -86,8 +86,7 @@ public class GTConstructableScan implements Runnable {
             }
 
             if (data.hasData()) {
-                int estimatedTier = world.estimateTierFromConstructable(
-                        e -> {}, multi);
+                int estimatedTier = world.estimateTierFromConstructable(e -> {}, multi);
                 if (estimatedTier > 1) {
                     data.setMaxTier(estimatedTier, "");
                 }

@@ -101,8 +101,6 @@ public class GTGuiMultiblockHandler extends GuiMultiblockHandler {
     @Override
     protected void loadNewMultiblock() {
         hintForDot.clear();
-        dotForPos.clear();
-        hatchGroupPositions.clear();
         super.loadNewMultiblock();
         setChannelTier(GTStructureChannels.HATCH.get(), 1);
         findHints();
@@ -154,6 +152,9 @@ public class GTGuiMultiblockHandler extends GuiMultiblockHandler {
 
     @Override
     protected void placeMultiblock() {
+        dotForPos.clear();
+        hatchGroupPositions.clear();
+
         if (RunnableMachineUpdate.isCurrentThreadEnabled()) {
             RunnableMachineUpdate.setCurrentThreadEnabled(false);
         }

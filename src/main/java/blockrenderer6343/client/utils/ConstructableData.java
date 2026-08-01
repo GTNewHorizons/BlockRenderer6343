@@ -1,12 +1,12 @@
 package blockrenderer6343.client.utils;
 
-import blockrenderer6343.BlockRenderer6343;
 import net.minecraft.item.ItemStack;
 
 import org.jetbrains.annotations.NotNull;
 
 import com.gtnewhorizon.structurelib.alignment.constructable.IConstructable;
 
+import blockrenderer6343.BlockRenderer6343;
 import blockrenderer6343.integration.nei.StructureHacks;
 import gregtech.api.util.GlassTier;
 import gregtech.common.misc.GTStructureChannels;

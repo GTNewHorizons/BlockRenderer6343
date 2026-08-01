@@ -11,7 +11,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.function.Function;
 
-import blockrenderer6343.BlockRenderer6343;
 import net.minecraft.item.ItemStack;
 
 import org.jetbrains.annotations.NotNull;
@@ -23,6 +22,7 @@ import com.gtnewhorizon.structurelib.structure.IStructureElement;
 import com.gtnewhorizon.structurelib.structure.IStructureElementChain;
 import com.gtnewhorizon.structurelib.structure.StructureUtility;
 
+import blockrenderer6343.BlockRenderer6343;
 import blockrenderer6343.client.utils.ConstructableData;
 import blockrenderer6343.client.world.DummyWorld;
 import cpw.mods.fml.relauncher.ReflectionHelper;
@@ -65,12 +65,12 @@ public class StructureHacks {
             CHANNEL_GETTER = lookup.unreflectGetter(ReflectionHelper.findField(channelElem.getClass(), "val$channel"));
             ON_ELEMENT_PASS_GETTER = lookup
                     .unreflectGetter(ReflectionHelper.findField(onElementPassElem.getClass(), "val$element"));
-            if(BlockRenderer6343.isGT5uNHLoaded) {
+            if (BlockRenderer6343.isGT5uNHLoaded) {
                 IStructureElement<?> triggerItemTransformElem = GTStructureUtility
-                    .triggerItemTransform(Function.identity(), elem);
+                        .triggerItemTransform(Function.identity(), elem);
                 TRIGGER_ITEM_TRANSFORM = triggerItemTransformElem.getClass().getName();
-                TRIGGER_ITEM_TRANSFORM_GETTER = lookup
-                    .unreflectGetter(ReflectionHelper.findField(triggerItemTransformElem.getClass(), "val$backing"));
+                TRIGGER_ITEM_TRANSFORM_GETTER = lookup.unreflectGetter(
+                        ReflectionHelper.findField(triggerItemTransformElem.getClass(), "val$backing"));
             } else {
                 TRIGGER_ITEM_TRANSFORM = null;
                 TRIGGER_ITEM_TRANSFORM_GETTER = null;

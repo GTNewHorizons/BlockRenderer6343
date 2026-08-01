@@ -6,6 +6,7 @@ import org.jetbrains.annotations.NotNull;
 
 import com.gtnewhorizon.structurelib.alignment.constructable.IConstructable;
 
+import blockrenderer6343.BlockRenderer6343;
 import blockrenderer6343.integration.nei.StructureHacks;
 import gregtech.api.util.GlassTier;
 import gregtech.common.misc.GTStructureChannels;
@@ -65,7 +66,7 @@ public class ConstructableData {
         if (this == EMPTY) return;
         hasData = true;
         // I'm sorry for this code but too many glass channels
-        if (channel.equals(GTStructureChannels.BOROGLASS.get())) {
+        if (BlockRenderer6343.isGT5uNHLoaded && channel.equals(GTStructureChannels.BOROGLASS.get())) {
             maxTotalTier = Math.max(maxTotalTier, GlassTier.getMaxTierIndex());
         } else {
             maxTotalTier = Math.max(maxTotalTier, tier);

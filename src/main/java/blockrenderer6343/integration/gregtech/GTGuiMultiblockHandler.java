@@ -21,6 +21,7 @@ import org.lwjgl.opengl.GL11;
 
 import com.google.common.collect.ImmutableList;
 import com.gtnewhorizon.gtnhlib.util.CoordinatePacker;
+import com.gtnewhorizon.structurelib.alignment.constructable.ChannelDataAccessor;
 import com.gtnewhorizon.structurelib.alignment.constructable.IConstructable;
 import com.gtnewhorizon.structurelib.alignment.constructable.IConstructableProvider;
 import com.gtnewhorizon.structurelib.alignment.constructable.ISurvivalConstructable;
@@ -102,7 +103,6 @@ public class GTGuiMultiblockHandler extends GuiMultiblockHandler {
     protected void loadNewMultiblock() {
         hintForDot.clear();
         super.loadNewMultiblock();
-        setChannelTier(GTStructureChannels.HATCH.get(), 1);
         findHints();
     }
 
@@ -177,6 +177,7 @@ public class GTGuiMultiblockHandler extends GuiMultiblockHandler {
         ((ITurnable) tTileEntity).setFrontFacing(ForgeDirection.SOUTH);
         IMetaTileEntity mte = ((IGregTechTileEntity) tTileEntity).getMetaTileEntity();
 
+        setChannelTier(GTStructureChannels.HATCH.get(), 1);
         if (mte instanceof INEIPreviewModifier modifier) {
             modifier.onPreviewConstruct(getBuildTriggerStack());
         }
@@ -203,6 +204,8 @@ public class GTGuiMultiblockHandler extends GuiMultiblockHandler {
         if (mte instanceof INEIPreviewModifier modifier) {
             modifier.onPreviewStructureComplete(getBuildTriggerStack());
         }
+
+        ChannelDataAccessor.unsetChannelData(trigger, GTStructureChannels.HATCH.get());
 
         if (!RunnableMachineUpdate.isCurrentThreadEnabled()) {
             RunnableMachineUpdate.setCurrentThreadEnabled(true);

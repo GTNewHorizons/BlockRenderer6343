@@ -28,12 +28,14 @@ public class NEIConfig implements IConfigureNEI {
             event.registerHandlerInfo(
                     new HandlerInfo.Builder(GTNEIMultiblockHandler.class, "GregTech", "gregtech")
                             .setDisplayStack(new ItemStack(StructureLibAPI.getDefaultHologramItem())).setHeight(168)
-                            .setAllowOverflowX(true).setAllowOverflowY(true).setMultipleWidgetsAllowed(false).setShiftY(6).build());
+                            .setAllowOverflowX(true).setAllowOverflowY(true).setMultipleWidgetsAllowed(false)
+                            .setShiftY(6).build());
         }
         event.registerHandlerInfo(
                 new HandlerInfo.Builder(StructureCompatNEIHandler.class, "StructureLib", StructureLibAPI.MOD_ID)
                         .setDisplayStack(new ItemStack(StructureLibAPI.getDefaultHologramItem())).setHeight(168)
-                    .setAllowOverflowX(true).setAllowOverflowY(true).setMultipleWidgetsAllowed(false).setShiftY(6).build());
+                        .setAllowOverflowX(true).setAllowOverflowY(true).setMultipleWidgetsAllowed(false).setShiftY(6)
+                        .build());
     }
 
     @Override

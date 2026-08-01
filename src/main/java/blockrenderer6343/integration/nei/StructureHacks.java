@@ -11,6 +11,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.function.Function;
 
+import blockrenderer6343.BlockRenderer6343;
 import net.minecraft.item.ItemStack;
 
 import org.jetbrains.annotations.NotNull;
@@ -55,9 +56,6 @@ public class StructureHacks {
         addTieredElement(CHANNEL_ELEMENT = channelElem.getClass().getName());
         IStructureElement<?> onElementPassElem = StructureUtility.onElementPass(o -> {}, elem);
         ON_ELEMENT_PASS = onElementPassElem.getClass().getName();
-        IStructureElement<?> triggerItemTransformElem = GTStructureUtility
-                .triggerItemTransform(Function.identity(), elem);
-        TRIGGER_ITEM_TRANSFORM = triggerItemTransformElem.getClass().getName();
 
         try {
             MethodHandles.Lookup lookup = MethodHandles.lookup();
@@ -67,8 +65,16 @@ public class StructureHacks {
             CHANNEL_GETTER = lookup.unreflectGetter(ReflectionHelper.findField(channelElem.getClass(), "val$channel"));
             ON_ELEMENT_PASS_GETTER = lookup
                     .unreflectGetter(ReflectionHelper.findField(onElementPassElem.getClass(), "val$element"));
-            TRIGGER_ITEM_TRANSFORM_GETTER = lookup
+            if(BlockRenderer6343.isGT5uNHLoaded) {
+                IStructureElement<?> triggerItemTransformElem = GTStructureUtility
+                    .triggerItemTransform(Function.identity(), elem);
+                TRIGGER_ITEM_TRANSFORM = triggerItemTransformElem.getClass().getName();
+                TRIGGER_ITEM_TRANSFORM_GETTER = lookup
                     .unreflectGetter(ReflectionHelper.findField(triggerItemTransformElem.getClass(), "val$backing"));
+            } else {
+                TRIGGER_ITEM_TRANSFORM = null;
+                TRIGGER_ITEM_TRANSFORM_GETTER = null;
+            }
         } catch (ClassNotFoundException | IllegalAccessException e) {
             throw new RuntimeException(e);
         }
@@ -211,16 +217,17 @@ public class StructureHacks {
     }
 
     public static <T> IStructureElement<T> getUnderlyingElement(T multi, IStructureElement<?> element) {
+        String name = element.getClass().getName();
         try {
-            if (LAZY_ELEMENT.equals(element.getClass().getName())) {
+            if (name.equals(LAZY_ELEMENT)) {
                 return (IStructureElement<T>) LAZY_ELEMENT_GETTER.invokeWithArguments(element, multi);
             }
 
-            if (ON_ELEMENT_PASS.equals(element.getClass().getName())) {
+            if (name.equals(ON_ELEMENT_PASS)) {
                 return (IStructureElement<T>) ON_ELEMENT_PASS_GETTER.invokeWithArguments(element);
             }
 
-            if (TRIGGER_ITEM_TRANSFORM.equals(element.getClass().getName())) {
+            if (name.equals(TRIGGER_ITEM_TRANSFORM)) {
                 return (IStructureElement<T>) TRIGGER_ITEM_TRANSFORM_GETTER.invokeWithArguments(element);
             }
 

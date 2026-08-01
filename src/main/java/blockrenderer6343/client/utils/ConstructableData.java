@@ -1,5 +1,6 @@
 package blockrenderer6343.client.utils;
 
+import blockrenderer6343.BlockRenderer6343;
 import net.minecraft.item.ItemStack;
 
 import org.jetbrains.annotations.NotNull;
@@ -65,7 +66,7 @@ public class ConstructableData {
         if (this == EMPTY) return;
         hasData = true;
         // I'm sorry for this code but too many glass channels
-        if (channel.equals(GTStructureChannels.BOROGLASS.get())) {
+        if (BlockRenderer6343.isGT5uNHLoaded && channel.equals(GTStructureChannels.BOROGLASS.get())) {
             maxTotalTier = Math.max(maxTotalTier, GlassTier.getMaxTierIndex());
         } else {
             maxTotalTier = Math.max(maxTotalTier, tier);

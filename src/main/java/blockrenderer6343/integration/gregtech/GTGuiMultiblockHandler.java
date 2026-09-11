@@ -28,6 +28,7 @@ import com.gtnewhorizon.structurelib.alignment.constructable.ISurvivalConstructa
 import com.gtnewhorizon.structurelib.structure.IStructureElement;
 import com.gtnewhorizon.structurelib.structure.ISurvivalBuildEnvironment;
 
+import blockrenderer6343.api.utils.CreativeFluidSource;
 import blockrenderer6343.api.utils.CreativeItemSource;
 import blockrenderer6343.client.renderer.WorldSceneRenderer;
 import blockrenderer6343.client.utils.BRUtil;
@@ -188,7 +189,10 @@ public class GTGuiMultiblockHandler extends GuiMultiblockHandler {
                 survivalConstructable.survivalConstruct(
                         getBuildTriggerStack(),
                         Integer.MAX_VALUE,
-                        ISurvivalBuildEnvironment.create(CreativeItemSource.instance, FAKE_PLAYER));
+                        ISurvivalBuildEnvironment.create(
+                                CreativeItemSource.instance,
+                                CreativeFluidSource.instance,
+                                FAKE_PLAYER));
                 iterations++;
             } while (renderer.world.hasChanged() && iterations < MAX_PLACE_ROUNDS);
         } else if (tTileEntity instanceof IConstructableProvider iConstructableProvider) {

@@ -19,7 +19,7 @@ public class ClientProxy extends CommonProxy {
         super.preInit(event);
         GuiContainerManager.addInputHandler(new InputHandler());
         GuiContainerManager.addTooltipHandler(new InputHandler());
-        if (BlockRenderer6343.isGTLoaded) {
+        if (BlockRenderer6343.isGT5uNHLoaded) {
             GregTechAPI.addDummyWorld(TrackedDummyWorld.class);
             GregTechAPI.addDummyWorld(ObserverWorld.class);
             BRUtil.hatchFilter = GTNEIUtil::isHatchItem;

@@ -9,6 +9,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.Function;
 
 import net.minecraft.item.ItemStack;
 
@@ -16,24 +17,28 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import com.gtnewhorizon.structurelib.StructureLibAPI;
+import com.gtnewhorizon.structurelib.alignment.constructable.ChannelDataAccessor;
 import com.gtnewhorizon.structurelib.structure.IStructureElement;
 import com.gtnewhorizon.structurelib.structure.IStructureElementChain;
 import com.gtnewhorizon.structurelib.structure.StructureUtility;
 
+import blockrenderer6343.BlockRenderer6343;
 import blockrenderer6343.client.utils.ConstructableData;
 import blockrenderer6343.client.world.DummyWorld;
 import cpw.mods.fml.relauncher.ReflectionHelper;
+import gregtech.api.util.GTStructureUtility;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
 
 @SuppressWarnings({ "unchecked" })
 public class StructureHacks {
 
-    private static final int MAX_TIERS_TO_CHECK = 50;
+    private static final int MAX_TIERS_TO_CHECK = 100;
     private static final List<String> TIERED_ELEMENTS = new ArrayList<>();
-    private static final String CHANNEL_ELEMENT, ON_ELEMENT_PASS;
+    private static final String CHANNEL_ELEMENT, ON_ELEMENT_PASS, TRIGGER_ITEM_TRANSFORM;
     public static final String LAZY_ELEMENT = "com.gtnewhorizon.structurelib.structure.LazyStructureElement";
-    private static final MethodHandle CHANNEL_GETTER, LAZY_ELEMENT_GETTER, ON_ELEMENT_PASS_GETTER;
+    private static final MethodHandle CHANNEL_GETTER, LAZY_ELEMENT_GETTER, ON_ELEMENT_PASS_GETTER,
+            TRIGGER_ITEM_TRANSFORM_GETTER;
     public static final ItemStack HOLO_STACK = new ItemStack(StructureLibAPI.getDefaultHologramItem());
     public static final Collection<String> SKIP_ELEMENTS = getClassNames(
             StructureUtility.isAir(),
@@ -60,6 +65,16 @@ public class StructureHacks {
             CHANNEL_GETTER = lookup.unreflectGetter(ReflectionHelper.findField(channelElem.getClass(), "val$channel"));
             ON_ELEMENT_PASS_GETTER = lookup
                     .unreflectGetter(ReflectionHelper.findField(onElementPassElem.getClass(), "val$element"));
+            if (BlockRenderer6343.isGT5uNHLoaded) {
+                IStructureElement<?> triggerItemTransformElem = GTStructureUtility
+                        .triggerItemTransform(Function.identity(), elem);
+                TRIGGER_ITEM_TRANSFORM = triggerItemTransformElem.getClass().getName();
+                TRIGGER_ITEM_TRANSFORM_GETTER = lookup.unreflectGetter(
+                        ReflectionHelper.findField(triggerItemTransformElem.getClass(), "val$backing"));
+            } else {
+                TRIGGER_ITEM_TRANSFORM = null;
+                TRIGGER_ITEM_TRANSFORM_GETTER = null;
+            }
         } catch (ClassNotFoundException | IllegalAccessException e) {
             throw new RuntimeException(e);
         }
@@ -78,7 +93,7 @@ public class StructureHacks {
     public static <T> @Nullable Iterable<ItemStack> getStacksForElement(T multi, IStructureElement<T> element,
             ConstructableData data) {
         String name = element.getClass().getName();
-        if (name.equals(LAZY_ELEMENT) || name.equals(ON_ELEMENT_PASS)) {
+        if (name.equals(LAZY_ELEMENT) || name.equals(ON_ELEMENT_PASS) || name.equals(TRIGGER_ITEM_TRANSFORM)) {
             element = getUnderlyingElement(multi, element);
             if (element == null) return Collections.emptyList();
             name = element.getClass().getName();
@@ -119,6 +134,9 @@ public class StructureHacks {
 
         do {
             holo.stackSize = tier++ + 1;
+            if (!channel.isEmpty()) {
+                ChannelDataAccessor.setChannelData(holo, channel, tier);
+            }
             IStructureElement.BlocksToPlace toPlace = element
                     .getBlocksToPlace(multi, DummyWorld.INSTANCE, 0, 0, 0, holo, AUTO_PLACE_ENVIRONMENT);
             if (toPlace == null || toPlace.getStacks() == null) break;
@@ -199,14 +217,20 @@ public class StructureHacks {
     }
 
     public static <T> IStructureElement<T> getUnderlyingElement(T multi, IStructureElement<?> element) {
+        String name = element.getClass().getName();
         try {
-            if (LAZY_ELEMENT.equals(element.getClass().getName())) {
+            if (name.equals(LAZY_ELEMENT)) {
                 return (IStructureElement<T>) LAZY_ELEMENT_GETTER.invokeWithArguments(element, multi);
             }
 
-            if (ON_ELEMENT_PASS.equals(element.getClass().getName())) {
+            if (name.equals(ON_ELEMENT_PASS)) {
                 return (IStructureElement<T>) ON_ELEMENT_PASS_GETTER.invokeWithArguments(element);
             }
+
+            if (name.equals(TRIGGER_ITEM_TRANSFORM)) {
+                return (IStructureElement<T>) TRIGGER_ITEM_TRANSFORM_GETTER.invokeWithArguments(element);
+            }
+
             return (IStructureElement<T>) element;
         } catch (Throwable ignored) {
             // This should never happen

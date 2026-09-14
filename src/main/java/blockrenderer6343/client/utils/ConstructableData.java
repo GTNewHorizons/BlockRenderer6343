@@ -22,8 +22,8 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 @SuppressWarnings("BooleanMethodIsAlwaysInverted")
 public class ConstructableData {
 
-    private static final Object2ObjectMap<IConstructable, ConstructableData> constructableData = new Object2ObjectOpenHashMap<>();
-    private static final ConstructableData EMPTY = new ConstructableData();
+    public static final Object2ObjectMap<IConstructable, ConstructableData> constructableData = new Object2ObjectOpenHashMap<>();
+    public static final ConstructableData EMPTY = new ConstructableData();
 
     private final Object2IntMap<String> channelMaxTierMap = new Object2IntOpenHashMap<>();
     private final Long2IntMap itemTiers = new Long2IntOpenHashMap();
@@ -101,5 +101,13 @@ public class ConstructableData {
 
     public Object2IntMap<String> getChannelData() {
         return channelMaxTierMap;
+    }
+
+    public Long2IntMap getItemChannels() {
+        return itemTiers;
+    }
+
+    public Long2ObjectMap<String> getItemChannels() {
+        return itemChannels;
     }
 }

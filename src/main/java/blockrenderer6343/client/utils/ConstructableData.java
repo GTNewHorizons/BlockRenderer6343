@@ -22,8 +22,8 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 @SuppressWarnings("BooleanMethodIsAlwaysInverted")
 public class ConstructableData {
 
-    public static final Object2ObjectMap<IConstructable, ConstructableData> constructableData = new Object2ObjectOpenHashMap<>();
-    public static final ConstructableData EMPTY = new ConstructableData();
+    private static final Object2ObjectMap<IConstructable, ConstructableData> constructableData = new Object2ObjectOpenHashMap<>();
+    private static final ConstructableData EMPTY = new ConstructableData();
 
     private final Object2IntMap<String> channelMaxTierMap = new Object2IntOpenHashMap<>();
     private final Long2IntMap itemTiers = new Long2IntOpenHashMap();
@@ -76,15 +76,23 @@ public class ConstructableData {
         }
     }
 
-    public boolean hasData() {
-        return hasData;
-    }
-
     public ConstructableData setTierFromStack(ItemStack stack) {
         long hash = BRUtil.hashStack(stack);
         currentTier = itemTiers.getOrDefault(hash, 1);
         currentChannel = itemChannels.getOrDefault(hash, "");
         return this;
+    }
+
+    public Object2ObjectMap<IConstructable, ConstructableData> getConstructableData() {
+        return constructableData;
+    }
+
+    public ConstructableData getEmptyConstructableData() {
+        return EMPTY;
+    }
+
+    public boolean hasData() {
+        return hasData;
     }
 
     public int getMaxTotalTier() {

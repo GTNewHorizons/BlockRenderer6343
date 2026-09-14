@@ -99,11 +99,11 @@ public class ConstructableData {
         return currentChannel;
     }
 
-    public Object2IntMap<String> getChannelData() {
+    public Object2IntMap<String> getChannelMaxTierMap() {
         return channelMaxTierMap;
     }
 
-    public Long2IntMap getItemChannels() {
+    public Long2IntMap getItemTiers() {
         return itemTiers;
     }
 

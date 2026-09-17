@@ -160,7 +160,7 @@ public abstract class GuiMultiblockHandler {
                         MathHelper.floor_double(MB_PLACE_POS.y - renderer.world.getMinPos().y)));
         addButtonInRow("?").setTooltip(I18n.format("blockrenderer6343.multiblock.overlay"))
                 .setClickAction(() -> BRUtil.neiOverlay(renderer));
-        if (!constructableData.getChannelData().isEmpty()) {
+        if (!constructableData.getChannelMaxTierMap().isEmpty()) {
             addButtonInRow("C").setTooltip(I18n.format("blockrenderer6343.multiblock.copy_channels"))
                     .setClickAction(() -> BRUtil.copyToHologram(trigger));
         }
@@ -176,7 +176,7 @@ public abstract class GuiMultiblockHandler {
     }
 
     protected void loadChannels() {
-        Object2IntMap<String> channels = constructableData.getChannelData();
+        Object2IntMap<String> channels = constructableData.getChannelMaxTierMap();
         int curSliders = allButtons.size();
         if (channels.isEmpty()) return;
         int i = 0;

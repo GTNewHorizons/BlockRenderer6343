@@ -76,15 +76,23 @@ public class ConstructableData {
         }
     }
 
-    public boolean hasData() {
-        return hasData;
-    }
-
     public ConstructableData setTierFromStack(ItemStack stack) {
         long hash = BRUtil.hashStack(stack);
         currentTier = itemTiers.getOrDefault(hash, 1);
         currentChannel = itemChannels.getOrDefault(hash, "");
         return this;
+    }
+
+    public Object2ObjectMap<IConstructable, ConstructableData> getConstructableData() {
+        return constructableData;
+    }
+
+    public ConstructableData getEmptyConstructableData() {
+        return EMPTY;
+    }
+
+    public boolean hasData() {
+        return hasData;
     }
 
     public int getMaxTotalTier() {
@@ -99,7 +107,15 @@ public class ConstructableData {
         return currentChannel;
     }
 
-    public Object2IntMap<String> getChannelData() {
+    public Object2IntMap<String> getChannelMaxTierMap() {
         return channelMaxTierMap;
+    }
+
+    public Long2IntMap getItemTiers() {
+        return itemTiers;
+    }
+
+    public Long2ObjectMap<String> getItemChannels() {
+        return itemChannels;
     }
 }

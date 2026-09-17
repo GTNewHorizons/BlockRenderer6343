@@ -19,7 +19,9 @@ import cpw.mods.fml.relauncher.Side;
         version = Tags.VERSION,
         name = BlockRenderer6343.MOD_NAME,
         acceptedMinecraftVersions = "[1.7.10]",
-        dependencies = "required-after:NotEnoughItems;required-after:structurelib;required-after:gtnhlib;")
+        dependencies = "required-after:NotEnoughItems;" + "required-after:structurelib;"
+                + "required-after:gtnhlib;"
+                + "after:gregtech_nh@[5.09.54.158,);")
 public class BlockRenderer6343 {
 
     public static final String MOD_ID = "blockrenderer6343";

@@ -63,7 +63,7 @@ public class GTGuiMultiblockHandler extends GuiMultiblockHandler {
     private static final Long2IntMap dotForPos = new Long2IntOpenHashMap();
     private static final List<String> hatchElements;
     private static final String HATCH_ELEMENT;
-    private static final MethodHandle DOT_GETTER, HINT_FALLBACK;
+    private static final MethodHandle HATCH_BUILDER_GETTER;
     private static final Pattern hintPattern = Pattern.compile("Hint \\d+ dot:");
 
     private boolean highlightHatch = false;
@@ -79,14 +79,8 @@ public class GTGuiMultiblockHandler extends GuiMultiblockHandler {
         hatchElements = ImmutableList.of(HATCH_ELEMENT, hatchNoPlacement, chained);
 
         try {
-            MethodHandles.Lookup lookup = MethodHandles.lookup();
-            MethodHandle hatchBuilder = lookup
+            HATCH_BUILDER_GETTER = MethodHandles.lookup()
                     .unreflectGetter(ReflectionHelper.findField(hatchEle.getClass(), "this$0"));
-            MethodHandle hint = lookup.unreflectGetter(ReflectionHelper.findField(HatchElementBuilder.class, "mHint"));
-            DOT_GETTER = MethodHandles.filterReturnValue(hatchBuilder, hint);
-            HINT_FALLBACK = lookup
-                    .unreflect(ReflectionHelper.findMethod(hatchEle.getClass(), null, new String[] { "getHint" }));
-
         } catch (IllegalAccessException e) {
             throw new RuntimeException(e);
         }
@@ -248,17 +242,21 @@ public class GTGuiMultiblockHandler extends GuiMultiblockHandler {
         }
     }
 
+    private static HatchElementBuilder<?> getHatchBuilder(IStructureElement<?> element) {
+        try {
+            return (HatchElementBuilder<?>) HATCH_BUILDER_GETTER.invoke(element);
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     private int getDotForElement(IStructureElement<Object> element) {
         return cachedDots.computeIfAbsent(element, a -> {
             IStructureElement<?> match = StructureHacks
                     .getFirstMatchingElement(HATCH_ELEMENT, renderingController, element);
             if (match == null) return dotForPos.defaultReturnValue();
 
-            try {
-                return (int) DOT_GETTER.invokeWithArguments(match);
-            } catch (Throwable e) {
-                throw new RuntimeException(e);
-            }
+            return getHatchBuilder(match).getHint();
         });
     }
 
@@ -266,26 +264,22 @@ public class GTGuiMultiblockHandler extends GuiMultiblockHandler {
         IStructureElement<Object> hatchEle = StructureHacks
                 .getFirstMatchingElement(HATCH_ELEMENT, renderingController, element);
         if (hatchEle == null) return "";
-        try {
-            String hint = (String) HINT_FALLBACK.invokeWithArguments(hatchEle);
-            StringBuilder builder = new StringBuilder(hint);
-            int typeIndex = builder.indexOf("of type");
-            if (typeIndex == -1) {
-                return hint;
-            }
 
-            builder.replace(0, 7, "");
-            int index;
-            while ((index = builder.indexOf(" or")) != -1) {
-                int last = builder.lastIndexOf(" or");
-                String replacement = last == index ? " and " : ", ";
-                builder.replace(index, index + 3, replacement);
-            }
-
-            String result = builder.toString().replaceAll(",\\s*", ", ").trim();
-            return result;
-        } catch (Throwable e) {
-            throw new RuntimeException(e);
+        String hint = getHatchBuilder(hatchEle).getHatchItemTypeName();
+        StringBuilder builder = new StringBuilder(hint);
+        int typeIndex = builder.indexOf("of type");
+        if (typeIndex == -1) {
+            return hint;
         }
+
+        builder.replace(0, 7, "");
+        int index;
+        while ((index = builder.indexOf(" or")) != -1) {
+            int last = builder.lastIndexOf(" or");
+            String replacement = last == index ? " and " : ", ";
+            builder.replace(index, index + 3, replacement);
+        }
+
+        return builder.toString().replaceAll(",\\s*", ", ").trim();
     }
 }

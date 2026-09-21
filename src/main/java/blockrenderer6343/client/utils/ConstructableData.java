@@ -83,11 +83,11 @@ public class ConstructableData {
         return this;
     }
 
-    public Object2ObjectMap<IConstructable, ConstructableData> getConstructableData() {
+    public static Object2ObjectMap<IConstructable, ConstructableData> getConstructableData() {
         return constructableData;
     }
 
-    public ConstructableData getEmptyConstructableData() {
+    public static ConstructableData getEmptyConstructableData() {
         return EMPTY;
     }
 

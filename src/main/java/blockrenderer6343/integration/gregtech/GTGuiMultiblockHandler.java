@@ -210,7 +210,8 @@ public class GTGuiMultiblockHandler extends GuiMultiblockHandler {
     @Override
     protected void onElementAdded(@NotNull IStructureElement<Object> element, long pos) {
         if (renderingController instanceof MTEPCBFactory && trigger.stackSize < 3
-                && pos == CoordinatePacker.pack(MB_PLACE_POS.x - 2, MB_PLACE_POS.y, MB_PLACE_POS.z)) return;
+                && pos == CoordinatePacker.pack(MB_PLACE_POS.x - 2, MB_PLACE_POS.y, MB_PLACE_POS.z))
+            return;
         if (StructureHacks.anyElementMatches(hatchElements, renderingController, element)) {
             int dot = getDotForElement(element);
             if (dot == dotForPos.defaultReturnValue()) return;

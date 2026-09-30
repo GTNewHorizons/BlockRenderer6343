@@ -208,6 +208,13 @@ public class GTGuiMultiblockHandler extends GuiMultiblockHandler {
 
     @Override
     protected void onElementAdded(@NotNull IStructureElement<Object> element, long pos) {
+        // Structure checks can revisit a position with an element from another tier.
+        int previousDot = dotForPos.remove(pos);
+        LongSet previousPositions = hatchGroupPositions.get(previousDot);
+        if (previousPositions != null) {
+            previousPositions.remove(pos);
+            if (previousPositions.isEmpty()) hatchGroupPositions.remove(previousDot);
+        }
         if (StructureHacks.anyElementMatches(hatchElements, renderingController, element)) {
             int dot = getDotForElement(element);
             if (dot == dotForPos.defaultReturnValue()) return;

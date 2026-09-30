@@ -43,7 +43,6 @@ import gregtech.api.threads.RunnableMachineUpdate;
 import gregtech.api.util.GTStructureUtility;
 import gregtech.api.util.HatchElementBuilder;
 import gregtech.common.misc.GTStructureChannels;
-import gregtech.common.tileentities.machines.multi.pcb.MTEPCBFactory;
 import it.unimi.dsi.fastutil.ints.Int2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
@@ -209,9 +208,13 @@ public class GTGuiMultiblockHandler extends GuiMultiblockHandler {
 
     @Override
     protected void onElementAdded(@NotNull IStructureElement<Object> element, long pos) {
-        if (renderingController instanceof MTEPCBFactory && trigger.stackSize < 3
-                && pos == CoordinatePacker.pack(MB_PLACE_POS.x - 2, MB_PLACE_POS.y, MB_PLACE_POS.z))
-            return;
+        // Structure checks can revisit a position with an element from another tier.
+        int previousDot = dotForPos.remove(pos);
+        LongSet previousPositions = hatchGroupPositions.get(previousDot);
+        if (previousPositions != null) {
+            previousPositions.remove(pos);
+            if (previousPositions.isEmpty()) hatchGroupPositions.remove(previousDot);
+        }
         if (StructureHacks.anyElementMatches(hatchElements, renderingController, element)) {
             int dot = getDotForElement(element);
             if (dot == dotForPos.defaultReturnValue()) return;

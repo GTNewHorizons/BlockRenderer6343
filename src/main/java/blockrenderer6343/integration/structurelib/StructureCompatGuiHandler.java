@@ -11,6 +11,7 @@ import com.gtnewhorizon.structurelib.alignment.constructable.ISurvivalConstructa
 import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
 import com.gtnewhorizon.structurelib.structure.ISurvivalBuildEnvironment;
 
+import blockrenderer6343.api.utils.CreativeFluidSource;
 import blockrenderer6343.api.utils.CreativeItemSource;
 import blockrenderer6343.integration.nei.GuiMultiblockHandler;
 
@@ -32,7 +33,10 @@ public class StructureCompatGuiHandler extends GuiMultiblockHandler {
             result = multi.survivalConstruct(
                     getBuildTriggerStack(),
                     Integer.MAX_VALUE,
-                    ISurvivalBuildEnvironment.create(CreativeItemSource.instance, FAKE_PLAYER));
+                    ISurvivalBuildEnvironment.create(
+                            CreativeItemSource.instance,
+                            CreativeFluidSource.instance,
+                            FAKE_PLAYER));
             iterations++;
             if (result == -2) {
                 tryConstruct = true;

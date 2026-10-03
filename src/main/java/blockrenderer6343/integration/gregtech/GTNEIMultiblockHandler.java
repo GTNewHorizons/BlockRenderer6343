@@ -29,8 +29,8 @@ import it.unimi.dsi.fastutil.objects.ObjectSets;
 public class GTNEIMultiblockHandler extends MultiblockHandler {
 
     public static final List<IConstructable> multiblocksList = new ArrayList<>();
-    private static Long2ObjectMap<ObjectSet<IConstructable>> multiBlockComponents;
-    private static final GTGuiMultiblockHandler baseHandler = new GTGuiMultiblockHandler();
+    private static IConstructable[] allMultiblocks;
+    private static volatile Long2ObjectMap<ObjectSet<IConstructable>> multiBlockComponents;
 
     static {
         IStructureElement<MTEMultiBlockBase> coilElem = GTStructureUtility
@@ -42,12 +42,13 @@ public class GTNEIMultiblockHandler extends MultiblockHandler {
                 multiblocksList.add(constructable);
             }
         }
+        allMultiblocks = multiblocksList.toArray(new IConstructable[0]);
 
         new Thread(new GTConstructableScan(e -> multiBlockComponents = e, multiblocksList)).start();
     }
 
     public GTNEIMultiblockHandler() {
-        super(baseHandler);
+        super(new GTGuiMultiblockHandler());
     }
 
     @Override
@@ -74,5 +75,10 @@ public class GTNEIMultiblockHandler extends MultiblockHandler {
         if (multiBlockComponents == null) return ObjectSets.emptySet();
 
         return multiBlockComponents.getOrDefault(BRUtil.hashStack(candidate), ObjectSets.emptySet());
+    }
+
+    @Override
+    protected @NotNull IConstructable[] getAllMultiblocks() {
+        return allMultiblocks;
     }
 }

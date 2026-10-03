@@ -50,7 +50,7 @@ public class InputHandler implements IContainerInputHandler, IContainerTooltipHa
 
     @Override
     public boolean keyTyped(GuiContainer gui, char keyChar, int keyCode) {
-        return false;
+        return canHandle(gui) && activeHandler.getGuiHandler().keyTyped(keyChar, keyCode);
     }
 
     @Override

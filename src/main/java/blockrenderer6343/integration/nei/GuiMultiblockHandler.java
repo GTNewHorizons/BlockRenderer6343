@@ -30,6 +30,7 @@ import com.gtnewhorizon.structurelib.StructureEvent;
 import com.gtnewhorizon.structurelib.StructureLibAPI;
 import com.gtnewhorizon.structurelib.alignment.constructable.ChannelDataAccessor;
 import com.gtnewhorizon.structurelib.alignment.constructable.IConstructable;
+import com.gtnewhorizon.structurelib.structure.IChannelDefinition;
 import com.gtnewhorizon.structurelib.structure.IStructureElement;
 
 import blockrenderer6343.BlockRenderer6343;
@@ -58,7 +59,7 @@ import it.unimi.dsi.fastutil.objects.ObjectList;
 @EventBusSubscriber(side = Side.CLIENT)
 public abstract class GuiMultiblockHandler {
 
-    protected static ImmediateWorldSceneRenderer renderer;
+    protected ImmediateWorldSceneRenderer renderer;
     private final RenderBlocks renderBlocks = new RenderBlocks();
 
     public static final int SLOT_SIZE = 18;
@@ -71,23 +72,23 @@ public abstract class GuiMultiblockHandler {
     public static final int RECIPE_LAYOUT_Y = 33;
     public static final int RECIPE_WIDTH = 163;
     public static final int SCENE_HEIGHT = RECIPE_WIDTH - 10;
-    public static final Long2ObjectMap<IStructureElement<Object>> structureElementMap = new Long2ObjectOpenHashMap<>();
+    protected final Long2ObjectMap<IStructureElement<Object>> structureElementMap = new Long2ObjectOpenHashMap<>();
 
     protected static final int BETWEEN_BUTTON_X = ICON_SIZE_X + 2;
     protected static final int SLIDER_WIDTH = BUTTON_RIGHT - BETWEEN_BUTTON_X - 2;
     protected static final float DEFAULT_RANGE_MULTIPLIER = 3.5f;
     protected static final int MAX_PLACE_ROUNDS = 2000;
     public static final BlockPos MB_PLACE_POS = new BlockPos(0, 64, 0);
-    protected static final BlockPos SELECTED_BLOCK = new BlockPos().set(NO_SELECTED_BLOCK);
+    protected final BlockPos selectedBlock = new BlockPos().set(NO_SELECTED_BLOCK);
     protected static final ItemStack DEFAULT_TRIGGER = new ItemStack(StructureLibAPI.getDefaultHologramItem());
 
-    protected static int guiMouseX, guiMouseY, guiLeft, guiTop;
-    protected static int lastGuiMouseX, lastGuiMouseY;
-    protected static Vector3f center = new Vector3f();
-    protected static float rotationYaw, rotationPitch;
-    protected static float zoom;
-    protected static IConstructable renderingController, lastRenderingController;
-    protected static int layerIndex = -1;
+    protected int guiMouseX, guiMouseY, guiLeft, guiTop;
+    protected int lastGuiMouseX, lastGuiMouseY;
+    protected Vector3f center = new Vector3f();
+    protected float rotationYaw, rotationPitch;
+    protected float zoom;
+    protected IConstructable renderingController, lastRenderingController;
+    protected int layerIndex = -1;
 
     protected ItemStack tooltipBlockStack;
 
@@ -99,6 +100,8 @@ public abstract class GuiMultiblockHandler {
 
     protected int scrolled = 0;
     protected float scaleFactor;
+    private boolean sceneRendererUpdatePending;
+    private boolean deferIngredientRefresh;
 
     protected ItemStack trigger;
     protected int lastHeight;
@@ -107,6 +110,8 @@ public abstract class GuiMultiblockHandler {
     protected Vector2i relativeMousePos = new Vector2i();
     private int buttonsInRow;
     protected String lastSearch = "";
+    private final Long2BooleanMap checkedBlocks = new Long2BooleanOpenHashMap();
+    private int clearedStructureElementCount;
     protected static Minecraft mc = Minecraft.getMinecraft();
 
     protected abstract void placeMultiblock();
@@ -145,12 +150,12 @@ public abstract class GuiMultiblockHandler {
                         UNDER_PREVIEW_Y + 12,
                         SLIDER_WIDTH,
                         16,
-                        -1,
-                        -1).setTextSupplier(
-                                value -> value == -1 ? I18n.format("blockrenderer6343.nei.all")
-                                        : String.valueOf(value + 1))
+                        0,
+                        0).setTextSupplier(
+                                value -> value == 0 ? I18n.format("blockrenderer6343.nei.all")
+                                        : String.valueOf(value))
                                 .setMaxValueSupplier(
-                                        () -> (int) (renderer.world.getMaxPos().y - renderer.world.getMinPos().y))
+                                        () -> (int) (renderer.world.getMaxPos().y - renderer.world.getMinPos().y + 1))
                                 .setValueListener(this::setActiveLayer).setIndex(1));
         loadChannels();
         addButtonInRow("P").setTooltip(I18n.format("blockrenderer6343.multiblock.project")).setClickAction(
@@ -182,23 +187,40 @@ public abstract class GuiMultiblockHandler {
         int i = 0;
         for (Object2IntMap.Entry<String> entry : channels.object2IntEntrySet()) {
             String channel = entry.getKey();
-            int startVal = constructableData.getCurrentChannel().equals(channel) ? constructableData.getCurrentTier()
-                    : 0;
-            allButtons.add(
-                    new GuiSlider(
+            IChannelDefinition definition = constructableData.getChannelDefinitions().get(channel);
+            int minimum = definition == null ? 0 : definition.getMinimumValue();
+            int startVal = definition == null ? 0 : definition.getMinimumValue();
+            boolean initiallyUnset = definition != null;
+            if (constructableData.getCurrentChannel().equals(channel)) {
+                startVal = Math.max(minimum, Math.min(entry.getIntValue(), constructableData.getCurrentTier()));
+                initiallyUnset = false;
+            }
+            GuiSlider slider = new GuiSlider(
                             StringUtils.capitalize(channel),
                             0,
                             UNDER_PREVIEW_Y + (12 * (i + curSliders)),
                             SLIDER_WIDTH,
                             16,
                             startVal,
-                            0,
-                            entry.getIntValue())
-                                    .setValueListener(val -> setChannelTier(channel, val))
-                                    .setTextSupplier(
-                                            value -> value == 0 ? I18n.format("blockrenderer6343.nei.not_set")
-                                                    : String.valueOf(value))
-                                    .setIndex(i + curSliders));
+                            minimum,
+                            entry.getIntValue());
+            slider.setAllowUnset(definition != null).setUnset(initiallyUnset).setTextSupplier(
+                    value -> definition == null && value == 0
+                            ? I18n.format("blockrenderer6343.nei.not_set")
+                            : String.valueOf(value));
+            slider.setIndex(i + curSliders);
+            slider.setDeferredValueListener(
+                    val -> {
+                        if (setChannelTier(channel, val, slider.isUnset(), false)) {
+                            sceneRendererUpdatePending = true;
+                            deferIngredientRefresh = true;
+                        }
+                    },
+                    val -> {
+                        updatePendingSceneRenderer();
+                        refreshDeferredIngredients();
+                    });
+            allButtons.add(slider);
             i++;
         }
     }
@@ -235,25 +257,45 @@ public abstract class GuiMultiblockHandler {
         setChannelTier(channel, tier, true);
     }
 
-    private void setChannelTier(String channel, int tier, boolean rebuild) {
-        if (tier < 0) return;
+    protected void setChannelTier(String channel, int tier, boolean rebuild) {
+        setChannelTier(channel, tier, false, rebuild);
+    }
 
+    private boolean setChannelTier(String channel, int tier, boolean unset, boolean rebuild) {
+        IChannelDefinition definition = constructableData.getChannelDefinitions().get(channel);
+        if (definition == null && tier < 0) return false;
+
+        boolean hasCurrent = ChannelDataAccessor.hasSubChannel(trigger, channel);
         int current = ChannelDataAccessor.hasSubChannel(trigger, channel)
                 ? ChannelDataAccessor.getChannelData(trigger, channel)
                 : 0;
 
-        if (tier > 0) {
+        if (unset) {
+            if (!hasCurrent) return false;
+            ChannelDataAccessor.unsetChannelData(trigger, channel);
+        } else if (definition != null) {
+            tier = definition.normalizeValue(tier);
+            if (hasCurrent && current == tier) return false;
+            ChannelDataAccessor.setChannelData(trigger, channel, tier);
+        } else if (tier > 0) {
+            if (hasCurrent && current == tier) return false;
             ChannelDataAccessor.setChannelData(trigger, channel, tier);
         } else {
+            if (!hasCurrent) return false;
             ChannelDataAccessor.unsetChannelData(trigger, channel);
         }
 
-        if (current != tier && rebuild) {
+        if (rebuild) {
             initializeSceneRenderer(false);
         }
+        return true;
     }
 
     private void setActiveLayer(int newLayer) {
+        setActiveLayerIndex(newLayer - 1);
+    }
+
+    private void setActiveLayerIndex(int newLayer) {
         int height = (int) renderer.world.getSize().y() - 1;
         if (newLayer < 0 || newLayer > height) {
             // if current layer index is more than max height, reset it
@@ -279,10 +321,12 @@ public abstract class GuiMultiblockHandler {
             renderer.setRenderAllBlocks();
         }
 
-        onIngredientChanged.accept(BRUtil.getIngredients(renderer));
+        if (!deferIngredientRefresh || hasActiveSearch()) {
+            onIngredientChanged.accept(BRUtil.getIngredients(renderer));
+        }
 
-        if (lastSearch != null && !lastSearch.isEmpty()) {
-            Long2BooleanMap checkedBlocks = new Long2BooleanOpenHashMap();
+        if (hasActiveSearch()) {
+            checkedBlocks.clear();
 
             boolean foundMatch = false;
 
@@ -326,6 +370,7 @@ public abstract class GuiMultiblockHandler {
     }
 
     public void drawMultiblock(int recipeIndex) {
+        updatePendingSceneRenderer();
         GuiRecipe<?> recipeGui = (GuiRecipe<?>) NEIClientUtils.getGuiContainer();
         guiMouseX = GuiDraw.getMousePosition().x;
         guiMouseY = GuiDraw.getMousePosition().y;
@@ -426,6 +471,7 @@ public abstract class GuiMultiblockHandler {
     }
 
     protected void initializeSceneRenderer(boolean resetCamera) {
+        sceneRendererUpdatePending = false;
         Vector3f eyePos = new Vector3f(), lookAt = new Vector3f(), worldUp = new Vector3f();
 
         if (!resetCamera) {
@@ -438,38 +484,52 @@ public abstract class GuiMultiblockHandler {
             }
         }
 
-        renderer = new ImmediateWorldSceneRenderer(new TrackedDummyWorld());
+        if (renderer == null) {
+            renderer = new ImmediateWorldSceneRenderer(new TrackedDummyWorld());
+        } else {
+            renderer.world.clear();
+            renderer.resetRenderedBlocks();
+        }
         renderer.world.updateEntitiesForNEI();
 
         FAKE_PLAYER.setWorld(renderer.world);
         renderer.world.unloadEntities(Collections.singletonList(FAKE_PLAYER));
 
-        if (!StructureLibAPI.isInstrumentEnabled()) {
+        boolean instrumentEnabled = !StructureLibAPI.isInstrumentEnabled();
+        if (instrumentEnabled) {
             StructureLibAPI.enableInstrument(BlockRenderer6343.MOD_ID);
         }
 
+        clearedStructureElementCount = structureElementMap.size();
         structureElementMap.clear();
-        placeMultiblock();
-
-        if (StructureLibAPI.isInstrumentEnabled()) {
-            StructureLibAPI.disableInstrument();
+        try {
+            placeMultiblock();
+        } finally {
+            if (instrumentEnabled) StructureLibAPI.disableInstrument();
         }
+
+        if ((long) structureElementMap.size() * 4L + 64L < clearedStructureElementCount) {
+            ((Long2ObjectOpenHashMap<?>) structureElementMap).trim();
+            clearedStructureElementCount = structureElementMap.size();
+        }
+        renderer.world.trimIfOversized();
 
         Vector3f size = renderer.world.getSize();
         Vector3f minPos = renderer.world.getMinPos();
         center = new Vector3f(minPos.x + size.x / 2, minPos.y + size.y / 2, minPos.z + size.z / 2);
 
         renderer.setRenderAllBlocks();
+        renderer.trimIfOversized();
 
         renderer.setOnLookingAt(ray -> {});
 
         renderer.setOnWorldRender(this::onRendererRender);
         renderer.setPostBlockRender(this::onPostBlocksRendered);
 
-        SELECTED_BLOCK.set(NO_SELECTED_BLOCK);
+        selectedBlock.set(NO_SELECTED_BLOCK);
         onCandidateChanged.accept(Collections.emptyList());
 
-        setActiveLayer(layerIndex);
+        setActiveLayerIndex(layerIndex);
         updateRenderer();
 
         if (resetCamera) {
@@ -485,6 +545,23 @@ public abstract class GuiMultiblockHandler {
         } else {
             renderer.setCameraLookAt(eyePos, lookAt, worldUp);
         }
+    }
+
+    private void updatePendingSceneRenderer() {
+        if (!sceneRendererUpdatePending) return;
+        sceneRendererUpdatePending = false;
+        initializeSceneRenderer(false);
+    }
+
+    private void refreshDeferredIngredients() {
+        if (!deferIngredientRefresh || renderer == null) return;
+        deferIngredientRefresh = false;
+        if (hasActiveSearch()) return;
+        onIngredientChanged.accept(BRUtil.getIngredients(renderer));
+    }
+
+    private boolean hasActiveSearch() {
+        return lastSearch != null && !lastSearch.isEmpty();
     }
 
     public boolean handleMouseScrollUp(int scrolled) {
@@ -506,13 +583,13 @@ public abstract class GuiMultiblockHandler {
         MovingObjectPosition lookingPos = renderer.getLastTraceResult();
         long lookingBlock = lookingPos == null ? NO_SELECTED_BLOCK
                 : CoordinatePacker.pack(lookingPos.blockX, lookingPos.blockY, lookingPos.blockZ);
-        long selectedBlock = SELECTED_BLOCK.asLong();
-        if (selectedBlock == lookingBlock) {
-            renderBlockOverLay(selectedBlock, Blocks.glass.getIcon(0, 6));
+        long selectedPosition = selectedBlock.asLong();
+        if (selectedPosition == lookingBlock) {
+            renderBlockOverLay(selectedPosition, Blocks.glass.getIcon(0, 6));
             return;
         }
         renderBlockOverLay(lookingBlock, Blocks.stained_glass.getIcon(0, 7));
-        renderBlockOverLay(selectedBlock, Blocks.stained_glass.getIcon(0, 14));
+        renderBlockOverLay(selectedPosition, Blocks.stained_glass.getIcon(0, 14));
     }
 
     private void renderBlockOverLay(long pos, IIcon icon) {
@@ -529,9 +606,24 @@ public abstract class GuiMultiblockHandler {
     }
 
     public boolean mouseClicked(int button) {
+        if (button == 2) {
+            for (BRButton candidate : allButtons) {
+                if (candidate instanceof GuiSlider slider && slider.isMouseOver(relativeMousePos)) {
+                    slider.toggleInputMode();
+                    return true;
+                }
+            }
+        }
+        if (button != 0) return false;
+        for (BRButton candidate : allButtons) {
+            if (candidate instanceof GuiSlider slider && slider.isInputMode()
+                    && !slider.isMouseOver(relativeMousePos)) {
+                slider.toggleInputMode();
+            }
+        }
         for (BRButton buttons : allButtons) {
             if (buttons.mousePressed(mc, relativeMousePos.x, relativeMousePos.y)) {
-                SELECTED_BLOCK.set(NO_SELECTED_BLOCK);
+                selectedBlock.set(NO_SELECTED_BLOCK);
                 onCandidateChanged.accept(Collections.emptyList());
                 return true;
             }
@@ -539,8 +631,8 @@ public abstract class GuiMultiblockHandler {
         if (button == 1 && renderer != null) {
             MovingObjectPosition rayTrace = renderer.getLastTraceResult();
             if (rayTrace == null) {
-                if (SELECTED_BLOCK.asLong() != NO_SELECTED_BLOCK) {
-                    SELECTED_BLOCK.set(NO_SELECTED_BLOCK);
+                if (selectedBlock.asLong() != NO_SELECTED_BLOCK) {
+                    selectedBlock.set(NO_SELECTED_BLOCK);
                     onCandidateChanged.accept(Collections.emptyList());
                     return true;
                 }
@@ -552,7 +644,7 @@ public abstract class GuiMultiblockHandler {
                             getContextObject(),
                             structureElementMap.get(pos),
                             getOriginalTriggerStack(),
-                            SELECTED_BLOCK.set(pos)));
+                            selectedBlock.set(pos)));
         }
         return false;
     }
@@ -567,6 +659,15 @@ public abstract class GuiMultiblockHandler {
         for (BRButton button : allButtons) {
             button.mouseReleased(relativeMousePos.x, relativeMousePos.y);
         }
+    }
+
+    public boolean keyTyped(char keyChar, int keyCode) {
+        for (BRButton button : allButtons) {
+            if (button instanceof GuiSlider slider && slider.isInputMode() && slider.keyTyped(keyChar, keyCode)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @NotNull
@@ -610,15 +711,15 @@ public abstract class GuiMultiblockHandler {
     }
 
     public @NotNull List<String> getTooltip() {
-        if (tooltipBlockStack != null) {
-            return getHoveredTooltip(tooltipBlockStack);
-        }
-
         for (BRButton button : allButtons) {
             List<String> tooltip = button.getTooltip(relativeMousePos);
             if (!tooltip.isEmpty()) {
                 return tooltip;
             }
+        }
+
+        if (tooltipBlockStack != null) {
+            return getHoveredTooltip(tooltipBlockStack);
         }
 
         return Collections.emptyList();
@@ -641,6 +742,6 @@ public abstract class GuiMultiblockHandler {
         IStructureElement<Object> element = (IStructureElement<Object>) event.getElement();
         long pos = CoordinatePacker.pack(event.getX(), event.getY(), event.getZ());
         handler.onElementAdded(element, pos);
-        structureElementMap.put(pos, element);
+        handler.structureElementMap.put(pos, element);
     }
 }

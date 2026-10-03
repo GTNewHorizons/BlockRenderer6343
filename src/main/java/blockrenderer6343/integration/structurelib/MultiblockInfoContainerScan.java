@@ -15,6 +15,7 @@ import com.gtnewhorizon.structurelib.alignment.constructable.IConstructable;
 import com.gtnewhorizon.structurelib.alignment.constructable.IMultiblockInfoContainer;
 import com.gtnewhorizon.structurelib.structure.IStructureElement;
 
+import blockrenderer6343.BlockRenderer6343;
 import blockrenderer6343.client.utils.BRUtil;
 import blockrenderer6343.client.utils.ConstructableData;
 import blockrenderer6343.client.world.ObserverWorld;
@@ -53,36 +54,47 @@ public class MultiblockInfoContainerScan implements Runnable {
     @Override
     public void run() {
         MinecraftForge.EVENT_BUS.register(this);
-        if (!StructureLibAPI.isInstrumentEnabled()) {
+        boolean instrumentEnabled = false;
+        try {
             StructureLibAPI.enableInstrument(IDENTIFIER);
+            instrumentEnabled = true;
+            scan();
+        } finally {
+            if (instrumentEnabled) StructureLibAPI.disableInstrument();
+            MinecraftForge.EVENT_BUS.unregister(this);
         }
+    }
 
+    private void scan() {
         Object2ObjectMap<IConstructable, ItemStack> stacks = new Object2ObjectOpenHashMap<>();
-        Object2ObjectMap<IConstructable, ConstructableData> constructableData = new Object2ObjectOpenHashMap<>();
 
         for (Map.Entry<String, IMultiblockInfoContainer<TileEntity>> entry : infoContainers.entrySet()) {
-            currentConstructable = world.getConstructableFromContainer(entry.getKey(), entry.getValue());
-            int tier = world.estimateTierFromInfoContainer(result, stacks, currentConstructable);
-            if (tier > 1) {
-                currentData.setMaxTier(tier, "");
-            }
-
-            if (currentData.hasData()) {
-                constructableData.put(currentConstructable, currentData);
-                currentData = new ConstructableData();
+            currentData = new ConstructableData();
+            checkedElements.clear();
+            currentConstructable = null;
+            try {
+                currentConstructable = world.getConstructableFromContainer(entry.getKey(), entry.getValue());
+                if (currentConstructable == null) {
+                    world.reset();
+                    continue;
+                }
+                int tier = world.estimateTierFromInfoContainer(result, stacks, currentConstructable);
+                if (tier > 1) currentData.setMaxTier(tier, "");
+                if (currentData.hasData()) {
+                    ConstructableData.addConstructableData(currentConstructable, currentData);
+                }
+            } catch (Exception e) {
+                BlockRenderer6343.LOG.error("Failed to scan multiblock info container {}", entry.getKey(), e);
+                if (currentConstructable != null) {
+                    result.values().forEach(multiblocks -> multiblocks.remove(currentConstructable));
+                    stacks.remove(currentConstructable);
+                }
+                world.reset();
             }
         }
-
-        ConstructableData.addConstructableData(constructableData);
 
         stackCallback.accept(stacks);
         resultCallback.accept(result);
-
-        if (StructureLibAPI.isInstrumentEnabled()) {
-            StructureLibAPI.disableInstrument();
-        }
-
-        MinecraftForge.EVENT_BUS.unregister(this);
     }
 
     @SubscribeEvent

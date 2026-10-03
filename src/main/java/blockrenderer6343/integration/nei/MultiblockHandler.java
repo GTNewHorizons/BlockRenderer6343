@@ -10,6 +10,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.StatCollector;
 
@@ -42,7 +43,8 @@ public abstract class MultiblockHandler extends TemplateRecipeHandler {
     public static final int CANDIDATE_SLOTS_X = 150;
     public static final int CANDIDATE_SLOTS_Y = 20;
     public static final int CANDIDATE_IN_COlUMN = 6;
-    private static ItemStack lastStack;
+    private ItemStack lastStack;
+    private List<ItemStack> lastPositionedIngredients;
     protected RecipeCacher recipeCacher = new RecipeCacher();
     protected GuiMultiblockHandler guiHandler;
     protected IConstructable[] currentMultiblocks;
@@ -84,6 +86,28 @@ public abstract class MultiblockHandler extends TemplateRecipeHandler {
 
     protected abstract @NotNull ObjectSet<IConstructable> tryLoadingMultiblocks(ItemStack candidate);
 
+    protected @NotNull IConstructable[] getAllMultiblocks() {
+        return new IConstructable[0];
+    }
+
+    @Override
+    public void loadCraftingRecipes(String outputId, Object... results) {
+        if ("all".equals(outputId)) {
+            loadAllRecipes();
+            return;
+        }
+        super.loadCraftingRecipes(outputId, results);
+    }
+
+    @Override
+    public void loadUsageRecipes(String inputId, Object... ingredients) {
+        if ("all".equals(inputId)) {
+            loadAllRecipes();
+            return;
+        }
+        super.loadUsageRecipes(inputId, ingredients);
+    }
+
     @Override
     public void loadCraftingRecipes(ItemStack result) {
         loadRecipes(result);
@@ -99,10 +123,21 @@ public abstract class MultiblockHandler extends TemplateRecipeHandler {
     private void loadRecipes(ItemStack stack) {
         currentMultiblocks = null;
         oldRecipe = -1;
+        lastPositionedIngredients = null;
         ObjectSet<IConstructable> multiblocks = tryLoadingMultiblocks(stack);
         if (multiblocks.isEmpty()) return;
         lastStack = stack;
         currentMultiblocks = multiblocks.toArray(new IConstructable[0]);
+    }
+
+    private void loadAllRecipes() {
+        currentMultiblocks = null;
+        lastStack = null;
+        oldRecipe = -1;
+        lastPositionedIngredients = null;
+
+        currentMultiblocks = getAllMultiblocks();
+        if (currentMultiblocks.length == 0) currentMultiblocks = null;
     }
 
     @Override
@@ -112,10 +147,12 @@ public abstract class MultiblockHandler extends TemplateRecipeHandler {
         if (oldRecipe != recipe) {
             oldRecipe = recipe;
             IConstructable multi = currentMultiblocks[recipe];
+            ItemStack displayStack = getConstructableStack(multi);
+            ItemStack tierStack = lastStack == null ? displayStack : lastStack;
             guiHandler.loadMultiblock(
                     multi,
-                    getConstructableStack(multi),
-                    ConstructableData.getTierData(multi).setTierFromStack(lastStack));
+                    displayStack,
+                    ConstructableData.getTierData(multi).setTierFromStack(tierStack));
         }
 
         guiHandler.recalculateSearch(recipeSearchField.text());
@@ -174,7 +211,19 @@ public abstract class MultiblockHandler extends TemplateRecipeHandler {
 
     @Override
     public List<PositionedStack> getIngredientStacks(int recipe) {
-        return Collections.emptyList();
+        if (currentMultiblocks == null || recipe < 0 || recipe >= currentMultiblocks.length) {
+            return Collections.emptyList();
+        }
+
+        ItemStack identity = new ItemStack(Items.poisonous_potato);
+        NBTTagCompound tag = new NBTTagCompound();
+        tag.setString("BlockRenderer6343Recipe", getRecipeIdentity(currentMultiblocks[recipe]));
+        identity.setTagCompound(tag);
+        return Collections.singletonList(new PositionedStack(identity, 0, 9999, false));
+    }
+
+    private String getRecipeIdentity(IConstructable multiblock) {
+        return multiblock.getClass().getName() + '@' + Integer.toHexString(System.identityHashCode(multiblock));
     }
 
     @Override
@@ -189,7 +238,22 @@ public abstract class MultiblockHandler extends TemplateRecipeHandler {
     }
 
     public void resetPositionedIngredients(List<ItemStack> ingredients) {
+        if (sameIngredients(lastPositionedIngredients, ingredients)) return;
+
+        List<ItemStack> ingredientSnapshot = new ArrayList<>(ingredients.size());
+        for (ItemStack ingredient : ingredients) {
+            ingredientSnapshot.add(ingredient.copy());
+        }
         RecipeCatalysts.putRecipeCatalysts(getOverlayIdentifier(), ingredients);
+        lastPositionedIngredients = ingredientSnapshot;
+    }
+
+    private static boolean sameIngredients(List<ItemStack> first, List<ItemStack> second) {
+        if (first == null || first.size() != second.size()) return false;
+        for (int i = 0; i < first.size(); i++) {
+            if (!ItemStack.areItemStacksEqual(first.get(i), second.get(i))) return false;
+        }
+        return true;
     }
 
     public void setResults(List<List<ItemStack>> results) {
@@ -200,10 +264,14 @@ public abstract class MultiblockHandler extends TemplateRecipeHandler {
 
     public class RecipeCacher extends CachedRecipe {
 
-        private final List<PositionedStack> positionedResults = new ArrayList<>();
+        private List<PositionedStack> positionedResults = new ArrayList<>();
 
         public void setResults(List<List<ItemStack>> results) {
-            positionedResults.clear();
+            if (positionedResults.size() > results.size() * 4L + 32) {
+                positionedResults = new ArrayList<>(results.size());
+            } else {
+                positionedResults.clear();
+            }
             int columnCount = results.size() / CANDIDATE_IN_COlUMN + 1;
             int realCandidateInColumn = results.size() % columnCount == 0 ? results.size() / columnCount
                     : results.size() / columnCount + 1;

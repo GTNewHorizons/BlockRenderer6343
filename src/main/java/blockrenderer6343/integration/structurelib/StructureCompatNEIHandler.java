@@ -17,20 +17,23 @@ import it.unimi.dsi.fastutil.objects.ObjectSets;
 
 public class StructureCompatNEIHandler extends MultiblockHandler {
 
-    private static final StructureCompatGuiHandler baseHandler = new StructureCompatGuiHandler();
-    private static Long2ObjectMap<ObjectSet<IConstructable>> multiBlockComponents;
-    private static Object2ObjectMap<IConstructable, ItemStack> stacks;
+    private static volatile Long2ObjectMap<ObjectSet<IConstructable>> multiBlockComponents;
+    private static volatile Object2ObjectMap<IConstructable, ItemStack> stacks;
+    private static volatile IConstructable[] allMultiblocks;
 
     static {
         new Thread(
                 new MultiblockInfoContainerScan(
                         e -> multiBlockComponents = e,
-                        s -> stacks = s,
+                        s -> {
+                            stacks = s;
+                            allMultiblocks = s.keySet().toArray(new IConstructable[0]);
+                        },
                         IMultiblockInfoContainer.MULTIBLOCK_MAP)).start();
     }
 
     public StructureCompatNEIHandler() {
-        super(baseHandler);
+        super(new StructureCompatGuiHandler());
     }
 
     @Override
@@ -48,5 +51,11 @@ public class StructureCompatNEIHandler extends MultiblockHandler {
         if (multiBlockComponents == null) return ObjectSets.emptySet();
 
         return multiBlockComponents.getOrDefault(BRUtil.hashStack(candidate), ObjectSets.emptySet());
+    }
+
+    @Override
+    protected @NotNull IConstructable[] getAllMultiblocks() {
+        IConstructable[] result = allMultiblocks;
+        return result == null ? new IConstructable[0] : result;
     }
 }

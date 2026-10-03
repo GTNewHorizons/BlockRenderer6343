@@ -40,7 +40,6 @@ import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
-import net.minecraft.init.Blocks;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
@@ -56,6 +55,7 @@ import com.gtnewhorizon.gtnhlib.util.CoordinatePacker;
 import blockrenderer6343.client.utils.ColorUtils;
 import blockrenderer6343.client.utils.ProjectionUtils;
 import blockrenderer6343.client.world.TrackedDummyWorld;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 import it.unimi.dsi.fastutil.longs.LongCollection;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
@@ -80,6 +80,8 @@ public abstract class WorldSceneRenderer {
     private Consumer<MovingObjectPosition> onLookingAt;
     private Consumer<WorldSceneRenderer> onPostBlockRendered;
     private MovingObjectPosition lastTraceResult;
+    private int clearedRenderedBlockCount;
+    private int clearedTranslucentBlockCount;
     private final Vector3f eyePos = new Vector3f(0, 0, -10f);
     private final Vector3f lookAt = new Vector3f(0, 0, 0);
     private final Vector3f worldUp = new Vector3f(0, 1, 0);
@@ -141,8 +143,25 @@ public abstract class WorldSceneRenderer {
     }
 
     public void resetRenderedBlocks() {
+        if (!renderedBlocks.isEmpty()) {
+            clearedRenderedBlockCount = renderedBlocks.size();
+        }
+        if (!renderTranslucentBlocks.isEmpty()) {
+            clearedTranslucentBlockCount = renderTranslucentBlocks.size();
+        }
         renderedBlocks.clear();
         renderTranslucentBlocks.clear();
+    }
+
+    public void trimIfOversized() {
+        if ((long) renderedBlocks.size() * 4L + 64L < clearedRenderedBlockCount) {
+            ((LongOpenHashSet) renderedBlocks).trim();
+            clearedRenderedBlockCount = renderedBlocks.size();
+        }
+        if ((long) renderTranslucentBlocks.size() * 4L + 64L < clearedTranslucentBlockCount) {
+            renderTranslucentBlocks.trim();
+            clearedTranslucentBlockCount = renderTranslucentBlocks.size();
+        }
     }
 
     /**
@@ -310,19 +329,21 @@ public abstract class WorldSceneRenderer {
         TileEntityRendererDispatcher tesr = TileEntityRendererDispatcher.instance;
         for (int pass = 0; pass < 2; pass++) {
             ForgeHooksClient.setRenderPass(pass);
-            int finalPass = pass;
-            renderedBlocks.forEach(pos -> {
-                int x = CoordinatePacker.unpackX(pos);
-                int y = CoordinatePacker.unpackY(pos);
-                int z = CoordinatePacker.unpackZ(pos);
-                setDefaultPassRenderState(finalPass);
-                TileEntity tile = world.getTileEntity(x, y, z);
-                if (tile != null && tesr.hasSpecialRenderer(tile)) {
-                    if (tile.shouldRenderInPass(finalPass)) {
-                        tesr.renderTileEntityAt(tile, x, y, z, 0);
-                    }
-                }
-            });
+            setDefaultPassRenderState(pass);
+            for (Long2ObjectMap.Entry<TileEntity> entry : world.tileMap.long2ObjectEntrySet()) {
+                long pos = entry.getLongKey();
+                if (!renderedBlocks.contains(pos)) continue;
+                TileEntity tile = entry.getValue();
+                if (tile == null || !tesr.hasSpecialRenderer(tile) || !tile.shouldRenderInPass(pass)) continue;
+
+                setDefaultPassRenderState(pass);
+                tesr.renderTileEntityAt(
+                        tile,
+                        CoordinatePacker.unpackX(pos),
+                        CoordinatePacker.unpackY(pos),
+                        CoordinatePacker.unpackZ(pos),
+                        0);
+            }
         }
         ForgeHooksClient.setRenderPass(-1);
         glEnable(GL_DEPTH_TEST);
@@ -344,11 +365,12 @@ public abstract class WorldSceneRenderer {
             tessellator.setBrightness(15 << 20 | 15 << 4);
             for (int i = 0; i < 2; i++) {
                 for (long pos : blocksToRender) {
+                    Block block = world.blockMap.get(pos);
+                    if (block == null || !block.canRenderInPass(i)) continue;
+
                     int x = CoordinatePacker.unpackX(pos);
                     int y = CoordinatePacker.unpackY(pos);
                     int z = CoordinatePacker.unpackZ(pos);
-                    Block block = world.getBlock(x, y, z);
-                    if (block.equals(Blocks.air) || !block.canRenderInPass(i)) continue;
 
                     bufferBuilder.blockAccess = world;
                     bufferBuilder.setRenderBounds(0, 0, 0, 1, 1, 1);

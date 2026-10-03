@@ -152,8 +152,7 @@ public abstract class GuiMultiblockHandler {
                         16,
                         0,
                         0).setTextSupplier(
-                                value -> value == 0 ? I18n.format("blockrenderer6343.nei.all")
-                                        : String.valueOf(value))
+                                value -> value == 0 ? I18n.format("blockrenderer6343.nei.all") : String.valueOf(value))
                                 .setMaxValueSupplier(
                                         () -> (int) (renderer.world.getMaxPos().y - renderer.world.getMinPos().y + 1))
                                 .setValueListener(this::setActiveLayer).setIndex(1));
@@ -196,30 +195,27 @@ public abstract class GuiMultiblockHandler {
                 initiallyUnset = false;
             }
             GuiSlider slider = new GuiSlider(
-                            StringUtils.capitalize(channel),
-                            0,
-                            UNDER_PREVIEW_Y + (12 * (i + curSliders)),
-                            SLIDER_WIDTH,
-                            16,
-                            startVal,
-                            minimum,
-                            entry.getIntValue());
+                    StringUtils.capitalize(channel),
+                    0,
+                    UNDER_PREVIEW_Y + (12 * (i + curSliders)),
+                    SLIDER_WIDTH,
+                    16,
+                    startVal,
+                    minimum,
+                    entry.getIntValue());
             slider.setAllowUnset(definition != null).setUnset(initiallyUnset).setTextSupplier(
-                    value -> definition == null && value == 0
-                            ? I18n.format("blockrenderer6343.nei.not_set")
+                    value -> definition == null && value == 0 ? I18n.format("blockrenderer6343.nei.not_set")
                             : String.valueOf(value));
             slider.setIndex(i + curSliders);
-            slider.setDeferredValueListener(
-                    val -> {
-                        if (setChannelTier(channel, val, slider.isUnset(), false)) {
-                            sceneRendererUpdatePending = true;
-                            deferIngredientRefresh = true;
-                        }
-                    },
-                    val -> {
-                        updatePendingSceneRenderer();
-                        refreshDeferredIngredients();
-                    });
+            slider.setDeferredValueListener(val -> {
+                if (setChannelTier(channel, val, slider.isUnset(), false)) {
+                    sceneRendererUpdatePending = true;
+                    deferIngredientRefresh = true;
+                }
+            }, val -> {
+                updatePendingSceneRenderer();
+                refreshDeferredIngredients();
+            });
             allButtons.add(slider);
             i++;
         }
@@ -495,8 +491,8 @@ public abstract class GuiMultiblockHandler {
         FAKE_PLAYER.setWorld(renderer.world);
         renderer.world.unloadEntities(Collections.singletonList(FAKE_PLAYER));
 
-        boolean instrumentEnabled = !StructureLibAPI.isInstrumentEnabled();
-        if (instrumentEnabled) {
+        boolean instrumentEnabledByUs = !StructureLibAPI.isInstrumentEnabled();
+        if (instrumentEnabledByUs) {
             StructureLibAPI.enableInstrument(BlockRenderer6343.MOD_ID);
         }
 
@@ -505,7 +501,7 @@ public abstract class GuiMultiblockHandler {
         try {
             placeMultiblock();
         } finally {
-            if (instrumentEnabled) StructureLibAPI.disableInstrument();
+            if (instrumentEnabledByUs) StructureLibAPI.disableInstrument();
         }
 
         if ((long) structureElementMap.size() * 4L + 64L < clearedStructureElementCount) {
@@ -614,18 +610,19 @@ public abstract class GuiMultiblockHandler {
                 }
             }
         }
-        if (button != 0) return false;
-        for (BRButton candidate : allButtons) {
-            if (candidate instanceof GuiSlider slider && slider.isInputMode()
-                    && !slider.isMouseOver(relativeMousePos)) {
-                slider.toggleInputMode();
+        if (button == 0) {
+            for (BRButton candidate : allButtons) {
+                if (candidate instanceof GuiSlider slider && slider.isInputMode()
+                        && !slider.isMouseOver(relativeMousePos)) {
+                    slider.toggleInputMode();
+                }
             }
-        }
-        for (BRButton buttons : allButtons) {
-            if (buttons.mousePressed(mc, relativeMousePos.x, relativeMousePos.y)) {
-                selectedBlock.set(NO_SELECTED_BLOCK);
-                onCandidateChanged.accept(Collections.emptyList());
-                return true;
+            for (BRButton buttons : allButtons) {
+                if (buttons.mousePressed(mc, relativeMousePos.x, relativeMousePos.y)) {
+                    selectedBlock.set(NO_SELECTED_BLOCK);
+                    onCandidateChanged.accept(Collections.emptyList());
+                    return true;
+                }
             }
         }
         if (button == 1 && renderer != null) {

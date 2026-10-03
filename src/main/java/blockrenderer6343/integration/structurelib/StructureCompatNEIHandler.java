@@ -22,14 +22,10 @@ public class StructureCompatNEIHandler extends MultiblockHandler {
     private static volatile IConstructable[] allMultiblocks;
 
     static {
-        new Thread(
-                new MultiblockInfoContainerScan(
-                        e -> multiBlockComponents = e,
-                        s -> {
-                            stacks = s;
-                            allMultiblocks = s.keySet().toArray(new IConstructable[0]);
-                        },
-                        IMultiblockInfoContainer.MULTIBLOCK_MAP)).start();
+        new Thread(new MultiblockInfoContainerScan(e -> multiBlockComponents = e, s -> {
+            stacks = s;
+            allMultiblocks = s.keySet().toArray(new IConstructable[0]);
+        }, IMultiblockInfoContainer.MULTIBLOCK_MAP)).start();
     }
 
     public StructureCompatNEIHandler() {

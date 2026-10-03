@@ -48,7 +48,8 @@ public class GTConstructableScan implements Runnable {
                 IStructureDefinition<IConstructable> structure = (IStructureDefinition<IConstructable>) multi
                         .getStructureDefinition();
                 if (structure instanceof StructureDefinition) {
-                    result.add(Pair.of(multi, ((StructureDefinition<IConstructable>) structure).getStructures().values()));
+                    result.add(
+                            Pair.of(multi, ((StructureDefinition<IConstructable>) structure).getStructures().values()));
                 } else {
                     result.add(Pair.of(multi, Collections.emptySet()));
                 }
@@ -96,12 +97,14 @@ public class GTConstructableScan implements Runnable {
                     }
                 }
 
-                if (data.hasData()) {
+                if (data.hasTierData()) {
                     constructableData.put(multi, data);
-                    if (data.hasTierData()) pendingTierEstimates.put(multi, data);
+                    pendingTierEstimates.put(multi, data);
                 } else if (structures.size() > 1) {
                     secondScan.add(multi);
                     secondScanData.put(multi, data);
+                } else if (data.hasData()) {
+                    constructableData.put(multi, data);
                 }
             } catch (Exception e) {
                 BlockRenderer6343.LOG.error("Failed to scan multiblock {}", multi, e);
@@ -126,7 +129,8 @@ public class GTConstructableScan implements Runnable {
             if (data == null) data = new ConstructableData();
             try {
                 int tier = world.estimateTierFromConstructable(
-                        stack -> result.computeIfAbsent(BRUtil.hashStack(stack), k -> new ObjectOpenHashSet<>()).add(multi),
+                        stack -> result.computeIfAbsent(BRUtil.hashStack(stack), k -> new ObjectOpenHashSet<>())
+                                .add(multi),
                         multi);
                 if (tier > 1) data.setMaxTier(tier, "");
                 if (data.hasData()) ConstructableData.addConstructableData(multi, data);

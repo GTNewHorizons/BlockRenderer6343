@@ -2,14 +2,15 @@ package blockrenderer6343.client.utils;
 
 import static blockrenderer6343.integration.nei.GuiMultiblockHandler.SCENE_HEIGHT;
 
-import java.util.function.IntSupplier;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.IntSupplier;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.client.renderer.OpenGlHelper;
+import net.minecraft.client.resources.I18n;
 import net.minecraft.util.MathHelper;
 
 import org.jetbrains.annotations.NotNull;
@@ -112,7 +113,11 @@ public class GuiSlider extends BRButton {
     }
 
     private void updateInputText() {
-        if (inputField != null) inputField.setText(unset ? "No Set" : String.valueOf(value));
+        if (inputField != null) inputField.setText(unset ? getUnsetText() : String.valueOf(value));
+    }
+
+    private static String getUnsetText() {
+        return I18n.format("blockrenderer6343.nei.not_set");
     }
 
     private void commitInput() {
@@ -249,7 +254,7 @@ public class GuiSlider extends BRButton {
     }
 
     public String getText(FontRenderer font) {
-        if (unset) return name + ": No Set";
+        if (unset) return name + ": " + getUnsetText();
         String val = ": " + (valueStringSupplier == null ? value + "" : valueStringSupplier.apply(value));
         String trimmed = font.trimStringToWidth(name, (int) (width / scale) - font.getStringWidth(val));
         return trimmed + val;
@@ -301,6 +306,9 @@ public class GuiSlider extends BRButton {
         if (!inputMode || inputField == null) return false;
         if (keyCode == Keyboard.KEY_RETURN || keyCode == Keyboard.KEY_NUMPADENTER) {
             commitInput();
+            inputMode = false;
+            inputField.setFocused(false);
+            updateInputText();
             return true;
         }
         if (keyCode == Keyboard.KEY_ESCAPE) {

@@ -56,6 +56,7 @@ import blockrenderer6343.client.utils.ColorUtils;
 import blockrenderer6343.client.utils.ProjectionUtils;
 import blockrenderer6343.client.world.TrackedDummyWorld;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMaps;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 import it.unimi.dsi.fastutil.longs.LongCollection;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
@@ -330,7 +331,7 @@ public abstract class WorldSceneRenderer {
         for (int pass = 0; pass < 2; pass++) {
             ForgeHooksClient.setRenderPass(pass);
             setDefaultPassRenderState(pass);
-            for (Long2ObjectMap.Entry<TileEntity> entry : world.tileMap.long2ObjectEntrySet()) {
+            for (Long2ObjectMap.Entry<TileEntity> entry : Long2ObjectMaps.fastIterable(world.tileMap)) {
                 long pos = entry.getLongKey();
                 if (!renderedBlocks.contains(pos)) continue;
                 TileEntity tile = entry.getValue();

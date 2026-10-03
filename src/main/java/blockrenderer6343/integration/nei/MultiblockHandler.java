@@ -45,6 +45,7 @@ public abstract class MultiblockHandler extends TemplateRecipeHandler {
     public static final int CANDIDATE_IN_COlUMN = 6;
     private ItemStack lastStack;
     private List<ItemStack> lastPositionedIngredients;
+    private List<List<PositionedStack>> currentIngredientStacks;
     protected RecipeCacher recipeCacher = new RecipeCacher();
     protected GuiMultiblockHandler guiHandler;
     protected IConstructable[] currentMultiblocks;
@@ -122,22 +123,26 @@ public abstract class MultiblockHandler extends TemplateRecipeHandler {
 
     private void loadRecipes(ItemStack stack) {
         currentMultiblocks = null;
+        currentIngredientStacks = null;
         oldRecipe = -1;
         lastPositionedIngredients = null;
         ObjectSet<IConstructable> multiblocks = tryLoadingMultiblocks(stack);
         if (multiblocks.isEmpty()) return;
         lastStack = stack;
         currentMultiblocks = multiblocks.toArray(new IConstructable[0]);
+        cacheIngredientStacks();
     }
 
     private void loadAllRecipes() {
         currentMultiblocks = null;
+        currentIngredientStacks = null;
         lastStack = null;
         oldRecipe = -1;
         lastPositionedIngredients = null;
 
         currentMultiblocks = getAllMultiblocks();
         if (currentMultiblocks.length == 0) currentMultiblocks = null;
+        else cacheIngredientStacks();
     }
 
     @Override
@@ -211,15 +216,22 @@ public abstract class MultiblockHandler extends TemplateRecipeHandler {
 
     @Override
     public List<PositionedStack> getIngredientStacks(int recipe) {
-        if (currentMultiblocks == null || recipe < 0 || recipe >= currentMultiblocks.length) {
+        if (currentIngredientStacks == null || recipe < 0 || recipe >= currentIngredientStacks.size()) {
             return Collections.emptyList();
         }
+        return currentIngredientStacks.get(recipe);
+    }
 
-        ItemStack identity = new ItemStack(Items.poisonous_potato);
-        NBTTagCompound tag = new NBTTagCompound();
-        tag.setString("BlockRenderer6343Recipe", getRecipeIdentity(currentMultiblocks[recipe]));
-        identity.setTagCompound(tag);
-        return Collections.singletonList(new PositionedStack(identity, 0, 9999, false));
+    private void cacheIngredientStacks() {
+        List<List<PositionedStack>> cached = new ArrayList<>(currentMultiblocks.length);
+        for (IConstructable multiblock : currentMultiblocks) {
+            ItemStack identity = new ItemStack(Items.poisonous_potato);
+            NBTTagCompound tag = new NBTTagCompound();
+            tag.setString("BlockRenderer6343Recipe", getRecipeIdentity(multiblock));
+            identity.setTagCompound(tag);
+            cached.add(Collections.singletonList(new PositionedStack(identity, 0, 9999, false)));
+        }
+        currentIngredientStacks = cached;
     }
 
     private String getRecipeIdentity(IConstructable multiblock) {

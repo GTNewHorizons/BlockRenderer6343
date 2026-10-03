@@ -11,6 +11,7 @@ import org.joml.Vector3f;
 
 import com.gtnewhorizon.gtnhlib.util.CoordinatePacker;
 
+import blockrenderer6343.BlockRenderer6343;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import it.unimi.dsi.fastutil.longs.Long2IntMap;
@@ -39,7 +40,9 @@ public class TrackedDummyWorld extends DummyWorld {
             if (tile != null) {
                 try {
                     tile.invalidate();
-                } catch (Throwable ignored) {}
+                } catch (Throwable e) {
+                    BlockRenderer6343.LOG.error("Failed to invalidate preview tile entity", e);
+                }
             }
         }
         tileMap.clear();

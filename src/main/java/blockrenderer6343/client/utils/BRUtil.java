@@ -59,8 +59,8 @@ import it.unimi.dsi.fastutil.longs.LongSet;
 public class BRUtil {
 
     public static Predicate<ItemStack> hatchFilter = stack -> false;
-    private static final Comparator<ItemStack> INGREDIENT_ORDER = Comparator.comparingLong(
-            (ItemStack stack) -> stack.stackSize).thenComparing(ItemStack::getDisplayName);
+    private static final Comparator<ItemStack> INGREDIENT_ORDER = Comparator
+            .comparingLong((ItemStack stack) -> stack.stackSize).thenComparing(ItemStack::getDisplayName);
 
     public static final ClientFakePlayer FAKE_PLAYER = new ClientFakePlayer(
             DummyWorld.INSTANCE,

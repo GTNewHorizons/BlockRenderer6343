@@ -159,7 +159,7 @@ public class StructureHacks {
     }
 
     private static String getChannel(IStructureElement<?> element) {
-        return element instanceof IChannelAwareElement<?> channelElement ? channelElement.getChannel() : "";
+        return element instanceof IChannelAwareElement<?>channelElement ? channelElement.getChannel() : "";
     }
 
     public static <T> boolean anyElementMatches(@NotNull Collection<String> elementsToFind, @NotNull T multi,

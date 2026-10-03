@@ -138,37 +138,34 @@ public class ObserverWorld extends DummyWorld {
             Object2ObjectMap<IConstructable, ItemStack> multiBlockStack, IConstructable constructable) {
         stackConsumer = e -> result.computeIfAbsent(BRUtil.hashStack(e), k -> new ObjectOpenHashSet<>())
                 .add(constructable);
-        int tier = estimateTier(constructable);
-        Block block = getBlock(0, 64, 0);
-        long pos = CoordinatePacker.pack(0, 64, 0);
-        ItemStack stack = new ItemStack(block, 1, BRUtil.getDamageValue(this, block, pos));
-        multiBlockStack.put(constructable, stack);
-        reset();
-        return tier;
+        try {
+            int tier = estimateTier(constructable);
+            Block block = getBlock(0, 64, 0);
+            long pos = CoordinatePacker.pack(0, 64, 0);
+            ItemStack stack = new ItemStack(block, 1, BRUtil.getDamageValue(this, block, pos));
+            multiBlockStack.put(constructable, stack);
+            return tier;
+        } finally {
+            reset();
+        }
     }
 
     public int estimateTierFromConstructable(Consumer<ItemStack> result, IConstructable multi) {
         if (!BlockRenderer6343.isGT5uNHLoaded || !(multi instanceof IMetaTileEntity metaTile)) return 0;
-        if (RunnableMachineUpdate.isCurrentThreadEnabled()) {
-            RunnableMachineUpdate.setCurrentThreadEnabled(false);
+        boolean machineUpdatesEnabled = RunnableMachineUpdate.isCurrentThreadEnabled();
+        if (machineUpdatesEnabled) RunnableMachineUpdate.setCurrentThreadEnabled(false);
+        try {
+            ItemStack stack = metaTile.getStackForm(1);
+            FAKE_PLAYER.setWorld(this);
+            stack.getItem().onItemUse(stack, FAKE_PLAYER, this, 0, 64, 0, 0, 0, 64, 0);
+            TileEntity tile = getTileEntity(0, 64, 0);
+            IConstructable constructable = (IConstructable) ((IGregTechTileEntity) tile).getMetaTileEntity();
+            stackConsumer = result;
+            return estimateTier(constructable);
+        } finally {
+            if (machineUpdatesEnabled) RunnableMachineUpdate.setCurrentThreadEnabled(true);
+            reset();
         }
-
-        ItemStack stack = metaTile.getStackForm(1);
-        FAKE_PLAYER.setWorld(this);
-        stack.getItem().onItemUse(stack, FAKE_PLAYER, this, 0, 64, 0, 0, 0, 64, 0);
-        TileEntity tile = getTileEntity(0, 64, 0);
-        IConstructable constructable = (IConstructable) ((IGregTechTileEntity) tile).getMetaTileEntity();
-        stackConsumer = result;
-
-        int tier = estimateTier(constructable);
-
-        if (!RunnableMachineUpdate.isCurrentThreadEnabled()) {
-            RunnableMachineUpdate.setCurrentThreadEnabled(true);
-        }
-
-        reset();
-
-        return tier;
     }
 
     private int estimateTier(IConstructable multi) {
@@ -189,6 +186,8 @@ public class ObserverWorld extends DummyWorld {
     }
 
     public void reset() {
+        stackConsumer = null;
+        hasChanged = false;
         checkedBlocks.clear();
         blockMap.clear();
         tileMap.clear();

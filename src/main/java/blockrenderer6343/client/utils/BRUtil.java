@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
@@ -60,6 +59,8 @@ import it.unimi.dsi.fastutil.longs.LongSet;
 public class BRUtil {
 
     public static Predicate<ItemStack> hatchFilter = stack -> false;
+    private static final Comparator<ItemStack> INGREDIENT_ORDER = Comparator.comparingLong(
+            (ItemStack stack) -> stack.stackSize).thenComparing(ItemStack::getDisplayName);
 
     public static final ClientFakePlayer FAKE_PLAYER = new ClientFakePlayer(
             DummyWorld.INSTANCE,
@@ -204,9 +205,9 @@ public class BRUtil {
     }
 
     private static void addItemStacksWithSorting(ItemStackAmount amount, List<ItemStack> result) {
-        amount.values().stream().sorted(
-                Comparator.comparingLong((ItemStack stack) -> stack.stackSize).thenComparing(ItemStack::getDisplayName))
-                .collect(Collectors.toCollection(() -> result));
+        int start = result.size();
+        result.addAll(amount.values());
+        result.subList(start, result.size()).sort(INGREDIENT_ORDER);
     }
 
     public static List<List<ItemStack>> scanCandidates(Object multi, IStructureElement<Object> element,

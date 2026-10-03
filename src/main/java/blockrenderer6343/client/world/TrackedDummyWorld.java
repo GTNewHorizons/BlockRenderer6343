@@ -29,8 +29,38 @@ public class TrackedDummyWorld extends DummyWorld {
     private final Vector3f maxPos = new Vector3f(Integer.MIN_VALUE, Integer.MIN_VALUE, Integer.MIN_VALUE);
     private final Vector3f size = new Vector3f();
     private boolean hasChanged;
+    private int clearedBlockCount;
 
     private int visibleYLevel = -1;
+
+    public void clear() {
+        clearedBlockCount = blockMap.size();
+        for (TileEntity tile : tileMap.values()) {
+            if (tile != null) {
+                try {
+                    tile.invalidate();
+                } catch (Throwable ignored) {}
+            }
+        }
+        tileMap.clear();
+        blockMap.clear();
+        blockMetaMap.clear();
+        minPos.set(Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE);
+        maxPos.set(Integer.MIN_VALUE, Integer.MIN_VALUE, Integer.MIN_VALUE);
+        size.zero();
+        hasChanged = false;
+        visibleYLevel = -1;
+    }
+
+    public void trimIfOversized() {
+        int currentBlockCount = blockMap.size();
+        if ((long) currentBlockCount * 4L + 64L >= clearedBlockCount) return;
+
+        ((Long2ObjectOpenHashMap<?>) blockMap).trim();
+        ((Long2ObjectOpenHashMap<?>) tileMap).trim();
+        ((Long2IntOpenHashMap) blockMetaMap).trim();
+        clearedBlockCount = currentBlockCount;
+    }
 
     @Override
     public boolean setBlock(int x, int y, int z, Block block, int meta, int flags) {

@@ -187,8 +187,8 @@ public abstract class GuiMultiblockHandler {
         for (Object2IntMap.Entry<String> entry : channels.object2IntEntrySet()) {
             String channel = entry.getKey();
             IChannelDefinition definition = constructableData.getChannelDefinitions().get(channel);
-            int minimum = definition == null ? 0 : definition.getMinimumValue();
-            int startVal = definition == null ? 0 : definition.getMinimumValue();
+            int minimum = definition == null ? 0 : Math.max(1, definition.getMinimumValue());
+            int startVal = minimum;
             boolean initiallyUnset = definition != null;
             if (constructableData.getCurrentChannel().equals(channel)) {
                 startVal = Math.max(minimum, Math.min(entry.getIntValue(), constructableData.getCurrentTier()));

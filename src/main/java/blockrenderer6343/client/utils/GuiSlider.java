@@ -317,6 +317,10 @@ public class GuiSlider extends BRButton {
             updateInputText();
             return true;
         }
+        if (keyChar == '-' && inputField.getCursorPosition() == 0 && !inputField.getText().startsWith("-")) {
+            inputField.textboxKeyTyped(keyChar, keyCode);
+            return true;
+        }
         if (keyChar >= ' ' && (keyChar < '0' || keyChar > '9')) return true;
         inputField.textboxKeyTyped(keyChar, keyCode);
         return true;

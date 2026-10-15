@@ -3,6 +3,7 @@ package blockrenderer6343.integration.nei;
 import static blockrenderer6343.client.utils.BRUtil.FAKE_PLAYER;
 
 import java.awt.Point;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
@@ -190,7 +191,7 @@ public abstract class GuiMultiblockHandler {
             int minimum = definition == null ? 0 : Math.max(1, definition.getMinimumValue());
             int startVal = minimum;
             boolean initiallyUnset = definition != null;
-            if (constructableData.getCurrentChannel().equals(channel)) {
+            if (constructableData.getCurrentChannels().contains(channel)) {
                 startVal = Math.max(minimum, Math.min(entry.getIntValue(), constructableData.getCurrentTier()));
                 initiallyUnset = false;
             }
@@ -224,12 +225,14 @@ public abstract class GuiMultiblockHandler {
     protected void loadNewMultiblock() {
         trigger = DEFAULT_TRIGGER.copy();
         int tier = constructableData.getCurrentTier();
-        String channel = constructableData.getCurrentChannel();
+        Collection<String> channels = constructableData.getCurrentChannels();
 
-        if (channel.isEmpty()) {
+        if (channels.isEmpty()) {
             tierSlider.setValue(trigger.stackSize = tier, false);
         } else {
-            setChannelTier(channel, tier, false);
+            for (String channel : channels) {
+                setChannelTier(channel, tier, false);
+            }
         }
 
         layerIndex = -1;

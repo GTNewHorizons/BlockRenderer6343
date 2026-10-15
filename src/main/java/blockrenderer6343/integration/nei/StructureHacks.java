@@ -18,7 +18,6 @@ import org.jetbrains.annotations.Nullable;
 
 import com.gtnewhorizon.structurelib.StructureLibAPI;
 import com.gtnewhorizon.structurelib.alignment.constructable.ChannelDataAccessor;
-import com.gtnewhorizon.structurelib.structure.IChannelAwareElement;
 import com.gtnewhorizon.structurelib.structure.IStructureElement;
 import com.gtnewhorizon.structurelib.structure.IStructureElementChain;
 import com.gtnewhorizon.structurelib.structure.StructureUtility;
@@ -31,7 +30,6 @@ import gregtech.api.util.GTStructureUtility;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
 
-@SuppressWarnings({ "unchecked" })
 public class StructureHacks {
 
     private static final int MAX_TIERS_TO_CHECK = 100;
@@ -116,7 +114,7 @@ public class StructureHacks {
         IStructureElement.BlocksToPlace blocks = element
                 .getBlocksToPlace(multi, DummyWorld.INSTANCE, 0, 0, 0, HOLO_STACK, AUTO_PLACE_ENVIRONMENT);
         if (TIERED_ELEMENTS.contains(name)) {
-            return extractTieredBlocks(multi, element, data, getChannel(element));
+            return extractTieredBlocks(multi, element, data, element.getChannels());
         }
 
         if (blocks == null) return Collections.emptyList();
@@ -125,7 +123,7 @@ public class StructureHacks {
     }
 
     private static <T> ObjectSet<ItemStack> extractTieredBlocks(T multi, IStructureElement<T> element,
-            ConstructableData data, String channel) {
+            ConstructableData data, Collection<String> channels) {
         ObjectSet<ItemStack> result = new ObjectOpenHashSet<>();
         ItemStack holo = HOLO_STACK.copy();
         int tier = 0;
@@ -133,7 +131,7 @@ public class StructureHacks {
 
         do {
             holo.stackSize = tier++ + 1;
-            if (!channel.isEmpty()) {
+            for (String channel : channels) {
                 ChannelDataAccessor.setChannelData(holo, channel, tier);
             }
             IStructureElement.BlocksToPlace toPlace = element
@@ -143,23 +141,19 @@ public class StructureHacks {
             if (!iterator.hasNext()) break;
             ItemStack firstStack = iterator.next();
 
-            if (!data.addItemTier(firstStack, lastStack, channel, tier)) break;
+            if (!data.addItemTier(firstStack, lastStack, channels, tier)) break;
             result.add(firstStack);
             lastStack = firstStack.copy();
 
             while (iterator.hasNext()) {
                 ItemStack stack = iterator.next();
-                data.addItemTier(stack, channel, tier);
+                data.addItemTier(stack, channels, tier);
                 result.add(stack);
             }
         } while (tier < MAX_TIERS_TO_CHECK);
 
-        data.setMaxTier(tier - 1, channel);
+        data.setMaxTier(tier - 1, channels);
         return result;
-    }
-
-    private static String getChannel(IStructureElement<?> element) {
-        return element instanceof IChannelAwareElement<?>channelElement ? channelElement.getChannel() : "";
     }
 
     public static <T> boolean anyElementMatches(@NotNull Collection<String> elementsToFind, @NotNull T multi,

@@ -118,7 +118,7 @@ public class GTConstructableScan implements Runnable {
                 .object2ObjectEntrySet()) {
             try {
                 int estimatedTier = world.estimateTierFromConstructable(e -> {}, entry.getKey());
-                if (estimatedTier > 1) entry.getValue().setMaxTier(estimatedTier, "");
+                if (estimatedTier > 1) entry.getValue().setMaxTier(estimatedTier, Collections.emptySet());
             } catch (Exception e) {
                 BlockRenderer6343.LOG.error("Failed to estimate multiblock tier {}", entry.getKey(), e);
             }
@@ -132,7 +132,7 @@ public class GTConstructableScan implements Runnable {
                         stack -> result.computeIfAbsent(BRUtil.hashStack(stack), k -> new ObjectOpenHashSet<>())
                                 .add(multi),
                         multi);
-                if (tier > 1) data.setMaxTier(tier, "");
+                if (tier > 1) data.setMaxTier(tier, Collections.emptySet());
                 if (data.hasData()) ConstructableData.addConstructableData(multi, data);
             } catch (Exception e) {
                 BlockRenderer6343.LOG.error("Failed to estimate multiblock tier {}", multi, e);

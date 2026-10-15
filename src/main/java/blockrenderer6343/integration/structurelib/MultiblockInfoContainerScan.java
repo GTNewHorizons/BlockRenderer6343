@@ -1,5 +1,6 @@
 package blockrenderer6343.integration.structurelib;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -79,7 +80,7 @@ public class MultiblockInfoContainerScan implements Runnable {
                     continue;
                 }
                 int tier = world.estimateTierFromInfoContainer(result, stacks, currentConstructable);
-                if (tier > 1) currentData.setMaxTier(tier, "");
+                if (tier > 1) currentData.setMaxTier(tier, Collections.emptySet());
                 if (currentData.hasData()) {
                     ConstructableData.addConstructableData(currentConstructable, currentData);
                 }

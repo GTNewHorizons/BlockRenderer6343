@@ -30,15 +30,13 @@ import gregtech.api.util.GTStructureUtility;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
 
-@SuppressWarnings({ "unchecked" })
 public class StructureHacks {
 
     private static final int MAX_TIERS_TO_CHECK = 100;
     private static final List<String> TIERED_ELEMENTS = new ArrayList<>();
-    private static final String CHANNEL_ELEMENT, ON_ELEMENT_PASS, TRIGGER_ITEM_TRANSFORM;
+    private static final String ON_ELEMENT_PASS, TRIGGER_ITEM_TRANSFORM;
     public static final String LAZY_ELEMENT = "com.gtnewhorizon.structurelib.structure.LazyStructureElement";
-    private static final MethodHandle CHANNEL_GETTER, LAZY_ELEMENT_GETTER, ON_ELEMENT_PASS_GETTER,
-            TRIGGER_ITEM_TRANSFORM_GETTER;
+    private static final MethodHandle LAZY_ELEMENT_GETTER, ON_ELEMENT_PASS_GETTER, TRIGGER_ITEM_TRANSFORM_GETTER;
     public static final ItemStack HOLO_STACK = new ItemStack(StructureLibAPI.getDefaultHologramItem());
     public static final Collection<String> SKIP_ELEMENTS = getClassNames(
             StructureUtility.isAir(),
@@ -53,7 +51,7 @@ public class StructureHacks {
         IStructureElement<?> elem = StructureUtility.ofBlocksTiered((a, b) -> 0, null, (c, d) -> {}, e -> -1);
         addTieredElement(elem.getClass().getName());
         IStructureElement<?> channelElem = StructureUtility.withChannel("blah", elem);
-        addTieredElement(CHANNEL_ELEMENT = channelElem.getClass().getName());
+        addTieredElement(channelElem.getClass().getName());
         IStructureElement<?> onElementPassElem = StructureUtility.onElementPass(o -> {}, elem);
         ON_ELEMENT_PASS = onElementPassElem.getClass().getName();
 
@@ -62,7 +60,6 @@ public class StructureHacks {
             LAZY_ELEMENT_GETTER = lookup.unreflect(
                     ReflectionHelper
                             .findMethod(Class.forName(LAZY_ELEMENT), null, new String[] { "get" }, Object.class));
-            CHANNEL_GETTER = lookup.unreflectGetter(ReflectionHelper.findField(channelElem.getClass(), "val$channel"));
             ON_ELEMENT_PASS_GETTER = lookup
                     .unreflectGetter(ReflectionHelper.findField(onElementPassElem.getClass(), "val$element"));
             if (BlockRenderer6343.isGT5uNHLoaded) {
@@ -117,7 +114,7 @@ public class StructureHacks {
         IStructureElement.BlocksToPlace blocks = element
                 .getBlocksToPlace(multi, DummyWorld.INSTANCE, 0, 0, 0, HOLO_STACK, AUTO_PLACE_ENVIRONMENT);
         if (TIERED_ELEMENTS.contains(name)) {
-            return extractTieredBlocks(multi, element, data, getChannel(name, element));
+            return extractTieredBlocks(multi, element, data, element.getChannels());
         }
 
         if (blocks == null) return Collections.emptyList();
@@ -126,7 +123,7 @@ public class StructureHacks {
     }
 
     private static <T> ObjectSet<ItemStack> extractTieredBlocks(T multi, IStructureElement<T> element,
-            ConstructableData data, String channel) {
+            ConstructableData data, Collection<String> channels) {
         ObjectSet<ItemStack> result = new ObjectOpenHashSet<>();
         ItemStack holo = HOLO_STACK.copy();
         int tier = 0;
@@ -134,7 +131,7 @@ public class StructureHacks {
 
         do {
             holo.stackSize = tier++ + 1;
-            if (!channel.isEmpty()) {
+            for (String channel : channels) {
                 ChannelDataAccessor.setChannelData(holo, channel, tier);
             }
             IStructureElement.BlocksToPlace toPlace = element
@@ -144,31 +141,19 @@ public class StructureHacks {
             if (!iterator.hasNext()) break;
             ItemStack firstStack = iterator.next();
 
-            if (!data.addItemTier(firstStack, lastStack, channel, tier)) break;
+            if (!data.addItemTier(firstStack, lastStack, channels, tier)) break;
             result.add(firstStack);
             lastStack = firstStack.copy();
 
             while (iterator.hasNext()) {
                 ItemStack stack = iterator.next();
-                data.addItemTier(stack, channel, tier);
+                data.addItemTier(stack, channels, tier);
                 result.add(stack);
             }
         } while (tier < MAX_TIERS_TO_CHECK);
 
-        data.setMaxTier(tier - 1, channel);
+        data.setMaxTier(tier - 1, channels);
         return result;
-    }
-
-    private static String getChannel(String className, IStructureElement<?> element) {
-        if (className.equals(CHANNEL_ELEMENT)) {
-            try {
-                return (String) CHANNEL_GETTER.invokeWithArguments(element);
-            } catch (Throwable e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        return "";
     }
 
     public static <T> boolean anyElementMatches(@NotNull Collection<String> elementsToFind, @NotNull T multi,

@@ -58,9 +58,9 @@ import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 public class GTGuiMultiblockHandler extends GuiMultiblockHandler {
 
     private static final Object2IntMap<IStructureElement<?>> cachedDots = new Object2IntOpenHashMap<>();
-    private static final Int2ObjectMap<LongSet> hatchGroupPositions = new Int2ObjectLinkedOpenHashMap<>();
-    private static final Int2ObjectMap<String> hintForDot = new Int2ObjectOpenHashMap<>();
-    private static final Long2IntMap dotForPos = new Long2IntOpenHashMap();
+    private final Int2ObjectMap<LongSet> hatchGroupPositions = new Int2ObjectLinkedOpenHashMap<>();
+    private final Int2ObjectMap<String> hintForDot = new Int2ObjectOpenHashMap<>();
+    private final Long2IntMap dotForPos = new Long2IntOpenHashMap();
     private static final List<String> hatchElements;
     private static final String HATCH_ELEMENT;
     private static final MethodHandle HATCH_BUILDER_GETTER;
@@ -68,8 +68,11 @@ public class GTGuiMultiblockHandler extends GuiMultiblockHandler {
 
     private boolean highlightHatch = false;
 
-    static {
+    public GTGuiMultiblockHandler() {
         dotForPos.defaultReturnValue(9999);
+    }
+
+    static {
         HatchElementBuilder<?> builder = GTStructureUtility.buildHatchAdder().adder((a, b, c) -> true).casingIndex(1)
                 .hint(1);
         String hatchNoPlacement = builder.build().getClass().getName();
@@ -171,7 +174,7 @@ public class GTGuiMultiblockHandler extends GuiMultiblockHandler {
         ((ITurnable) tTileEntity).setFrontFacing(ForgeDirection.SOUTH);
         IMetaTileEntity mte = ((IGregTechTileEntity) tTileEntity).getMetaTileEntity();
 
-        setChannelTier(GTStructureChannels.HATCH.get(), 1);
+        setChannelTier(GTStructureChannels.HATCH.get(), 1, false);
         if (mte instanceof INEIPreviewModifier modifier) {
             modifier.onPreviewConstruct(getBuildTriggerStack());
         }

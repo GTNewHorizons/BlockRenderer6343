@@ -6,20 +6,25 @@ import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.item.ItemStack;
 
 import codechicken.nei.guihook.IContainerInputHandler;
+import codechicken.nei.guihook.IContainerObjectHandler;
 import codechicken.nei.guihook.IContainerTooltipHandler;
 
-public class InputHandler implements IContainerInputHandler, IContainerTooltipHandler {
-
-    private MultiblockHandler activeHandler;
+public class InputHandler implements IContainerInputHandler, IContainerTooltipHandler, IContainerObjectHandler {
 
     public boolean canHandle(GuiContainer gui) {
-        return (activeHandler = MultiblockHandler.getHandlerFromGui(gui)) != null;
+        return MultiblockHandler.getHandlerFromGui(gui) != null;
     }
 
     @Override
     public boolean mouseClicked(GuiContainer gui, int mousex, int mousey, int button) {
-        if (canHandle(gui)) {
-            return activeHandler.getGuiHandler().mouseClicked(button);
+        MultiblockHandler handler = MultiblockHandler.getHandlerFromGui(gui);
+        if (handler != null) {
+            if (handler.getCandidatePanel().handleClick(mousex, mousey, button)) {
+                handler.getGuiHandler().cancelCameraDrag();
+                return true;
+            }
+            handler.getGuiHandler().updateMousePosition(mousex, mousey);
+            return handler.getGuiHandler().mouseClicked(button);
         }
         return false;
     }
@@ -31,8 +36,9 @@ public class InputHandler implements IContainerInputHandler, IContainerTooltipHa
 
     @Override
     public List<String> handleTooltip(GuiContainer gui, int mouseX, int mouseY, List<String> currenttip) {
-        if (canHandle(gui)) {
-            currenttip.addAll(activeHandler.getGuiHandler().getTooltip());
+        MultiblockHandler handler = MultiblockHandler.getHandlerFromGui(gui);
+        if (handler != null && !handler.getCandidatePanel().contains(mouseX, mouseY)) {
+            currenttip.addAll(handler.getGuiHandler().getTooltip());
         }
         return currenttip;
     }
@@ -45,12 +51,15 @@ public class InputHandler implements IContainerInputHandler, IContainerTooltipHa
     @Override
     public List<String> handleItemTooltip(GuiContainer gui, ItemStack itemstack, int mousex, int mousey,
             List<String> currenttip) {
+        MultiblockHandler handler = MultiblockHandler.getHandlerFromGui(gui);
+        if (handler != null) handler.getCandidatePanel().appendItemTooltip(mousex, mousey, currenttip);
         return currenttip;
     }
 
     @Override
     public boolean keyTyped(GuiContainer gui, char keyChar, int keyCode) {
-        return canHandle(gui) && activeHandler.getGuiHandler().keyTyped(keyChar, keyCode);
+        MultiblockHandler handler = MultiblockHandler.getHandlerFromGui(gui);
+        return handler != null && handler.getGuiHandler().keyTyped(keyChar, keyCode);
     }
 
     @Override
@@ -61,15 +70,21 @@ public class InputHandler implements IContainerInputHandler, IContainerTooltipHa
 
     @Override
     public void onMouseUp(GuiContainer gui, int mousex, int mousey, int button) {
-        if (canHandle(gui) && button == 0) {
-            activeHandler.getGuiHandler().onMouseReleased();
+        MultiblockHandler handler = MultiblockHandler.getHandlerFromGui(gui);
+        if (handler != null) {
+            if (button == 0) handler.getCandidatePanel().mouseUp(mousex, mousey, button);
+            handler.getGuiHandler().updateMousePosition(mousex, mousey);
+            handler.getGuiHandler().onMouseReleased(button);
         }
     }
 
     @Override
     public boolean mouseScrolled(GuiContainer gui, int mousex, int mousey, int scrolled) {
-        if (canHandle(gui)) {
-            return activeHandler.getGuiHandler().handleMouseScrollUp(scrolled);
+        MultiblockHandler handler = MultiblockHandler.getHandlerFromGui(gui);
+        if (handler != null) {
+            if (handler.getCandidatePanel().onMouseWheel(scrolled, mousex, mousey)) return true;
+            handler.getGuiHandler().updateMousePosition(mousex, mousey);
+            return handler.getGuiHandler().handleMouseScrollUp(scrolled);
         }
         return false;
     }
@@ -79,8 +94,38 @@ public class InputHandler implements IContainerInputHandler, IContainerTooltipHa
 
     @Override
     public void onMouseDragged(GuiContainer gui, int amousex, int amousey, int button, long heldTime) {
-        if (canHandle(gui) && button == 0) {
-            activeHandler.getGuiHandler().onMouseDragged();
+        MultiblockHandler handler = MultiblockHandler.getHandlerFromGui(gui);
+        if (handler != null && button == 0) {
+            handler.getCandidatePanel().mouseDragged(amousex, amousey, button, heldTime);
+            handler.getGuiHandler().updateMousePosition(amousex, amousey);
+            handler.getGuiHandler().onMouseDragged();
         }
     }
+
+    @Override
+    public ItemStack getStackUnderMouse(GuiContainer gui, int mousex, int mousey) {
+        MultiblockHandler handler = MultiblockHandler.getHandlerFromGui(gui);
+        return handler == null ? null : handler.getCandidatePanel().getStackMouseOver(mousex, mousey);
+    }
+
+    @Override
+    public boolean objectUnderMouse(GuiContainer gui, int mousex, int mousey) {
+        MultiblockHandler handler = MultiblockHandler.getHandlerFromGui(gui);
+        return handler != null && handler.getCandidatePanel().contains(mousex, mousey);
+    }
+
+    @Override
+    public boolean shouldShowTooltip(GuiContainer gui) {
+        MultiblockHandler handler = MultiblockHandler.getHandlerFromGui(gui);
+        return handler == null || !handler.getCandidatePanel().getVerticalScroll().isMouseDragged();
+    }
+
+    @Override
+    public void guiTick(GuiContainer gui) {}
+
+    @Override
+    public void refresh(GuiContainer gui) {}
+
+    @Override
+    public void load(GuiContainer gui) {}
 }

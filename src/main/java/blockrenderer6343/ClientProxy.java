@@ -29,8 +29,10 @@ public class ClientProxy extends CommonProxy {
         } catch (IOException failure) {
             BlockRenderer6343.LOG.error("Unable to migrate legacy BlockRenderer6343 configuration", failure);
         }
-        GuiContainerManager.addInputHandler(new InputHandler());
-        GuiContainerManager.addTooltipHandler(new InputHandler());
+        InputHandler inputHandler = new InputHandler();
+        GuiContainerManager.addInputHandler(inputHandler);
+        GuiContainerManager.addTooltipHandler(inputHandler);
+        GuiContainerManager.addObjectHandler(inputHandler);
         if (BlockRenderer6343.isGT5uNHLoaded) {
             GregTechAPI.addDummyWorld(TrackedDummyWorld.class);
             GregTechAPI.addDummyWorld(ObserverWorld.class);

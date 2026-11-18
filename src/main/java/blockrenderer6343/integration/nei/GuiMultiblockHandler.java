@@ -39,6 +39,8 @@ import com.gtnewhorizon.structurelib.structure.ISurvivalBuildEnvironment;
 import blockrenderer6343.BlockRenderer6343;
 import blockrenderer6343.api.utils.CreativeItemSource;
 import blockrenderer6343.client.renderer.ImmediateWorldSceneRenderer;
+import blockrenderer6343.client.renderer.PreviewCamera;
+import blockrenderer6343.client.renderer.PreviewInteractionConfig;
 import blockrenderer6343.client.renderer.WorldSceneRenderer;
 import blockrenderer6343.client.utils.BRButton;
 import blockrenderer6343.client.utils.BRUtil;
@@ -116,6 +118,11 @@ public abstract class GuiMultiblockHandler {
     protected String lastSearch = "";
     private final Long2BooleanMap checkedBlocks = new Long2BooleanOpenHashMap();
     private int clearedStructureElementCount;
+    private final PreviewCamera camera = new PreviewCamera();
+    private int cameraDragButton = -1;
+    private boolean candidateClickPending;
+    private int candidateClickX;
+    private int candidateClickY;
     protected static Minecraft mc = Minecraft.getMinecraft();
 
     protected abstract void placeMultiblock();
@@ -128,6 +135,9 @@ public abstract class GuiMultiblockHandler {
         if (stackForm.stackSize == 0) stackForm.stackSize = 1;
         if (lastRenderingController != renderingController) {
             initGui();
+            if (buttonsInRow % 2 == 0) buttonsInRow++;
+            addButtonInRow("R").setTooltip(I18n.format("blockrenderer6343.nei.reset_camera"))
+                    .setClickAction(this::resetCameraPosition);
             loadNewMultiblock();
         } else {
             initializeSceneRenderer(false);
@@ -315,8 +325,6 @@ public abstract class GuiMultiblockHandler {
     private void updateRenderer() {
         if (renderer == null) return;
 
-        updateCamera();
-
         if (layerIndex > -1) {
             renderer.setRenderYLayer(layerIndex);
         } else {
@@ -364,11 +372,78 @@ public abstract class GuiMultiblockHandler {
     }
 
     private void updateCamera() {
-        TrackedDummyWorld world = renderer.world;
-        Vector3f size = world.getSize();
-        Vector3f minPos = world.getMinPos();
+        if (PreviewInteractionConfig.isLegacyControls()) {
+            camera.reset(center, zoom, rotationPitch, rotationYaw);
+        } else {
+            camera.update(center, zoom, rotationPitch, rotationYaw, cameraDragButton >= 0, System.nanoTime());
+        }
+        renderer.getEyePos().set(camera.getEyePosition());
+        renderer.getLookAt().set(camera.getLookAt());
+    }
+
+    private void resetCameraPosition() {
+        if (renderer == null) return;
+        Vector3f minPos = renderer.world.getMinPos();
+        Vector3f size = renderer.world.getSize();
         center.set(minPos.x + size.x / 2, minPos.y + size.y / 2, minPos.z + size.z / 2);
-        renderer.setCameraLookAt(center, zoom, Math.toRadians(rotationPitch), Math.toRadians(rotationYaw));
+        float max = Math.max(1, Math.max(Math.max(size.x, size.y), size.z));
+        float baseZoom = (float) (DEFAULT_RANGE_MULTIPLIER * Math.sqrt(max));
+        float sizeFactor = (float) (1.0f + Math.log(max) / Math.log(10));
+
+        zoom = PreviewCamera.clampDistance(baseZoom * sizeFactor / 1.5f);
+        rotationYaw = 20.0f;
+        rotationPitch = 50f;
+
+        camera.reset(center, zoom, rotationPitch, rotationYaw);
+        cancelCameraDrag();
+        scrolled = 0;
+        updateCamera();
+    }
+
+    private void focusCameraAtMouse() {
+        MovingObjectPosition hit = renderer.pick(guiMouseX, guiMouseY);
+        if (hit == null || hit.hitVec == null) return;
+        float pendingZoom = zoom / camera.getDistance();
+        if (camera
+                .focus(new Vector3f((float) hit.hitVec.xCoord, (float) hit.hitVec.yCoord, (float) hit.hitVec.zCoord))) {
+            center.set(camera.getPivot());
+            zoom = PreviewCamera.clampDistance(camera.getDistance() * pendingZoom);
+            renderer.getEyePos().set(camera.getEyePosition());
+            renderer.getLookAt().set(camera.getLookAt());
+        }
+    }
+
+    private void updateCameraInput(int viewportHeight) {
+        if (candidateClickPending
+                && (Math.abs(guiMouseX - candidateClickX) > 3 || Math.abs(guiMouseY - candidateClickY) > 3)) {
+            candidateClickPending = false;
+        }
+        if (cameraDragButton >= 0 && !Mouse.isButtonDown(cameraDragButton)) {
+            onMouseReleased(cameraDragButton);
+        }
+        applyCameraDrag(guiMouseX - lastGuiMouseX, guiMouseY - lastGuiMouseY, viewportHeight);
+        if (scrolled != 0) {
+            zoom = PreviewInteractionConfig.isLegacyControls() ? (float) MathHelper.clip(zoom - scrolled * 5, 3, 999)
+                    : PreviewCamera.clampDistance(zoom * (float) Math.pow(1.12, -scrolled));
+            scrolled = 0;
+        }
+    }
+
+    private void applyCameraDrag(int deltaX, int deltaY, int viewportHeight) {
+        boolean legacy = PreviewInteractionConfig.isLegacyControls();
+        if (cameraDragButton == PreviewInteractionConfig.getRotateButton()) {
+            rotationPitch = (rotationPitch + deltaX) % 360;
+            rotationYaw = (float) MathHelper.clip(rotationYaw + deltaY, -89.9, 89.9);
+        } else if (cameraDragButton == PreviewInteractionConfig.getZoomButton()) {
+            if (legacy) {
+                if (Math.abs(deltaY) > 1) zoom = (float) MathHelper.clip(zoom + Math.copySign(0.15f, deltaY), 3, 999);
+            } else {
+                zoom = PreviewCamera.clampDistance(zoom * (float) Math.exp(deltaY * 0.012));
+            }
+        } else if (cameraDragButton == PreviewInteractionConfig.getPanButton()) {
+            if (legacy) camera.pan(deltaX, deltaY, 0.15f, center);
+            else camera.pan(deltaX, deltaY, viewportHeight, center);
+        }
     }
 
     public void drawMultiblock(int recipeIndex) {
@@ -382,13 +457,15 @@ public abstract class GuiMultiblockHandler {
         int guiHeight = recipeGui.height;
         scaleFactor = Math.min((float) recipeGui.height / 500, 1f);
         int scaledScene = Math.round(SCENE_HEIGHT * scaleFactor);
+        updateCameraInput(scaledScene);
+        updateCamera();
         renderer.render(
                 RECIPE_LAYOUT_X + guiLeft,
                 RECIPE_LAYOUT_Y + guiTop,
                 RECIPE_WIDTH,
                 scaledScene,
-                lastGuiMouseX,
-                lastGuiMouseY);
+                guiMouseX,
+                guiMouseY);
 
         GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
 
@@ -397,41 +474,6 @@ public abstract class GuiMultiblockHandler {
         MovingObjectPosition rayTraceResult = renderer.getLastTraceResult();
         boolean leftClickHeld = Mouse.isButtonDown(0);
         boolean rightClickHeld = Mouse.isButtonDown(1);
-        boolean middleClickHeld = Mouse.isButtonDown(2);
-
-        if (isInsideView()) {
-            if (leftClickHeld) {
-                rotationPitch += guiMouseX - lastGuiMouseX + 360;
-                rotationPitch = rotationPitch % 360;
-                rotationYaw = (float) MathHelper.clip(rotationYaw + (guiMouseY - lastGuiMouseY), -89.9, 89.9);
-            } else if (rightClickHeld) {
-                int mouseDeltaY = guiMouseY - lastGuiMouseY;
-                if (Math.abs(mouseDeltaY) > 1) {
-                    zoom = (float) MathHelper.clip(zoom + (mouseDeltaY > 0 ? 0.15 : -0.15), 3, 999);
-                }
-            }
-            if (middleClickHeld) {
-                int mouseDeltaX = guiMouseX - lastGuiMouseX;
-                int mouseDeltaY = guiMouseY - lastGuiMouseY;
-                Vector3f lookAt = renderer.getLookAt();
-                Vector3f eyePos = renderer.getEyePos();
-                Vector3f worldUp = renderer.getWorldUp();
-                Vector3f lookDir = new Vector3f(lookAt).sub(eyePos);
-                Vector3f rightDir = lookDir.cross(worldUp, new Vector3f()).normalize();
-                Vector3f upDir = rightDir.cross(lookDir, new Vector3f()).normalize();
-                Vector3f offset = new Vector3f(
-                        -mouseDeltaX * rightDir.x() + mouseDeltaY * upDir.x(),
-                        -mouseDeltaX * rightDir.y() + mouseDeltaY * upDir.y(),
-                        -mouseDeltaX * rightDir.z() + mouseDeltaY * upDir.z()).mul(0.15f);
-                center.add(offset);
-            }
-            if (scrolled != 0) {
-                zoom = (float) MathHelper.clip(zoom - scrolled * 5, 3, 999);
-                scrolled = 0;
-            }
-
-            renderer.setCameraLookAt(center, zoom, Math.toRadians(rotationPitch), Math.toRadians(rotationYaw));
-        }
         Point recipePos = recipeGui.getRecipePosition(recipeIndex);
         relativeMousePos.set(guiMouseX - guiLeft - recipePos.x, guiMouseY - guiTop - recipePos.y);
 
@@ -474,17 +516,7 @@ public abstract class GuiMultiblockHandler {
 
     protected void initializeSceneRenderer(boolean resetCamera) {
         sceneRendererUpdatePending = false;
-        Vector3f eyePos = new Vector3f(), lookAt = new Vector3f(), worldUp = new Vector3f();
-
-        if (!resetCamera) {
-            try {
-                eyePos = renderer.getEyePos();
-                lookAt = renderer.getLookAt();
-                worldUp = renderer.getWorldUp();
-            } catch (NullPointerException e) {
-                BlockRenderer6343.error("please reset camera on your first renderer call!");
-            }
-        }
+        resetCamera |= renderer == null;
 
         if (renderer == null) {
             renderer = new ImmediateWorldSceneRenderer(new TrackedDummyWorld());
@@ -516,10 +548,6 @@ public abstract class GuiMultiblockHandler {
         }
         renderer.world.trimIfOversized();
 
-        Vector3f size = renderer.world.getSize();
-        Vector3f minPos = renderer.world.getMinPos();
-        center = new Vector3f(minPos.x + size.x / 2, minPos.y + size.y / 2, minPos.z + size.z / 2);
-
         renderer.setRenderAllBlocks();
         renderer.trimIfOversized();
 
@@ -535,17 +563,9 @@ public abstract class GuiMultiblockHandler {
         updateRenderer();
 
         if (resetCamera) {
-            float max = Math.max(Math.max(size.x, size.y), size.z);
-            float baseZoom = (float) (DEFAULT_RANGE_MULTIPLIER * Math.sqrt(max));
-            float sizeFactor = (float) (1.0f + Math.log(max) / Math.log(10));
-
-            zoom = baseZoom * sizeFactor / 1.5f;
-            rotationYaw = 20.0f;
-            rotationPitch = 50f;
-
-            updateCamera();
+            resetCameraPosition();
         } else {
-            renderer.setCameraLookAt(eyePos, lookAt, worldUp);
+            updateCamera();
         }
     }
 
@@ -568,7 +588,8 @@ public abstract class GuiMultiblockHandler {
 
     public boolean handleMouseScrollUp(int scrolled) {
         if (isInsideView()) {
-            this.scrolled = scrolled;
+            if (!PreviewInteractionConfig.isLegacyControls() && cameraDragButton < 0) focusCameraAtMouse();
+            this.scrolled += scrolled;
             return true;
         }
 
@@ -636,25 +657,54 @@ public abstract class GuiMultiblockHandler {
                 }
             }
         }
-        if (button == 1 && renderer != null) {
-            MovingObjectPosition rayTrace = renderer.getLastTraceResult();
-            if (rayTrace == null) {
-                if (selectedBlock.asLong() != NO_SELECTED_BLOCK) {
-                    selectedBlock.set(NO_SELECTED_BLOCK);
-                    onCandidateChanged.accept(Collections.emptyList());
-                    return true;
-                }
-                return false;
-            }
-            long pos = CoordinatePacker.pack(rayTrace.blockX, rayTrace.blockY, rayTrace.blockZ);
-            onCandidateChanged.accept(
-                    BRUtil.scanCandidates(
-                            getContextObject(),
-                            structureElementMap.get(pos),
-                            getOriginalTriggerStack(),
-                            selectedBlock.set(pos)));
+        boolean cameraDrag = beginCameraDrag(button);
+        if (button == 1 && cameraDrag && PreviewInteractionConfig.isLegacyControls()) {
+            showCandidatesAtMouse();
         }
-        return false;
+        return cameraDrag;
+    }
+
+    private void showCandidatesAtMouse() {
+        MovingObjectPosition rayTrace = renderer.pick(guiMouseX, guiMouseY);
+        if (rayTrace == null) {
+            if (selectedBlock.asLong() != NO_SELECTED_BLOCK) {
+                selectedBlock.set(NO_SELECTED_BLOCK);
+                onCandidateChanged.accept(Collections.emptyList());
+                return;
+            }
+            return;
+        }
+        long pos = CoordinatePacker.pack(rayTrace.blockX, rayTrace.blockY, rayTrace.blockZ);
+        onCandidateChanged.accept(
+                BRUtil.scanCandidates(
+                        getContextObject(),
+                        structureElementMap.get(pos),
+                        getOriginalTriggerStack(),
+                        selectedBlock.set(pos)));
+    }
+
+    private boolean beginCameraDrag(int button) {
+        if (renderer == null || button < 0 || button > 2 || !isInsideView()) return false;
+        if (!PreviewInteractionConfig.isLegacyControls() && button != PreviewInteractionConfig.getPanButton())
+            focusCameraAtMouse();
+        cameraDragButton = button;
+        candidateClickPending = button == 1 && !PreviewInteractionConfig.isLegacyControls();
+        candidateClickX = guiMouseX;
+        candidateClickY = guiMouseY;
+        lastGuiMouseX = guiMouseX;
+        lastGuiMouseY = guiMouseY;
+        return true;
+    }
+
+    public void updateMousePosition(int mouseX, int mouseY) {
+        relativeMousePos.add(mouseX - guiMouseX, mouseY - guiMouseY);
+        guiMouseX = mouseX;
+        guiMouseY = mouseY;
+    }
+
+    public void cancelCameraDrag() {
+        cameraDragButton = -1;
+        candidateClickPending = false;
     }
 
     public void onMouseDragged() {
@@ -667,6 +717,17 @@ public abstract class GuiMultiblockHandler {
         for (BRButton button : allButtons) {
             button.mouseReleased(relativeMousePos.x, relativeMousePos.y);
         }
+    }
+
+    public void onMouseReleased(int button) {
+        if (button == 0) onMouseReleased();
+        if (button != cameraDragButton) return;
+        boolean candidateClick = candidateClickPending && button == 1
+                && isInsideView()
+                && Math.abs(guiMouseX - candidateClickX) <= 3
+                && Math.abs(guiMouseY - candidateClickY) <= 3;
+        cancelCameraDrag();
+        if (candidateClick) showCandidatesAtMouse();
     }
 
     public boolean keyTyped(char keyChar, int keyCode) {

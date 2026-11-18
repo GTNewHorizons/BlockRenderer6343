@@ -34,13 +34,20 @@ public class DummyChunkProvider implements IChunkProvider {
     @Override
     public Chunk provideChunk(int x, int z) {
         long chunkKey = ChunkCoordIntPair.chunkXZ2Int(x, z);
-        if (loadedChunks.containsItem(chunkKey)) {
-            return (Chunk) loadedChunks.getValueByKey(chunkKey);
-        }
+        Chunk cached = (Chunk) loadedChunks.getValueByKey(chunkKey);
+        if (cached != null) return cached;
 
-        Chunk chunk = new Chunk(world, x, z);
+        Chunk chunk = createChunk(x, z);
         loadedChunks.add(chunkKey, chunk);
         return chunk;
+    }
+
+    protected Chunk createChunk(int x, int z) {
+        return new Chunk(world, x, z);
+    }
+
+    public void clear() {
+        loadedChunks = new LongHashMap();
     }
 
     @Override

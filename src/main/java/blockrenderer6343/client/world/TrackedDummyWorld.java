@@ -6,18 +6,21 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
+import net.minecraft.world.chunk.IChunkProvider;
 
 import org.joml.Vector3f;
 
 import com.gtnewhorizon.gtnhlib.util.CoordinatePacker;
 
 import blockrenderer6343.BlockRenderer6343;
+import blockrenderer6343.api.utils.world.DummyChunkProvider;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import it.unimi.dsi.fastutil.longs.Long2IntMap;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.longs.LongIterator;
 import it.unimi.dsi.fastutil.longs.LongSet;
 
 public class TrackedDummyWorld extends DummyWorld {
@@ -26,10 +29,12 @@ public class TrackedDummyWorld extends DummyWorld {
     public final Long2ObjectMap<TileEntity> tileMap = new Long2ObjectOpenHashMap<>();
     public final Long2IntMap blockMetaMap = new Long2IntOpenHashMap();
 
-    private final Vector3f minPos = new Vector3f(Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE);
-    private final Vector3f maxPos = new Vector3f(Integer.MIN_VALUE, Integer.MIN_VALUE, Integer.MIN_VALUE);
+    private final Vector3f minPos = new Vector3f();
+    private final Vector3f maxPos = new Vector3f();
     private final Vector3f size = new Vector3f();
     private boolean hasChanged;
+    private boolean boundsDirty;
+    private long revision;
     private int clearedBlockCount;
 
     private int visibleYLevel = -1;
@@ -40,7 +45,7 @@ public class TrackedDummyWorld extends DummyWorld {
             if (tile != null) {
                 try {
                     tile.invalidate();
-                } catch (Throwable e) {
+                } catch (RuntimeException | LinkageError e) {
                     BlockRenderer6343.LOG.error("Failed to invalidate preview tile entity", e);
                 }
             }
@@ -48,11 +53,19 @@ public class TrackedDummyWorld extends DummyWorld {
         tileMap.clear();
         blockMap.clear();
         blockMetaMap.clear();
-        minPos.set(Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE);
-        maxPos.set(Integer.MIN_VALUE, Integer.MIN_VALUE, Integer.MIN_VALUE);
+        if (chunkProvider instanceof DummyChunkProvider provider) provider.clear();
+        minPos.zero();
+        maxPos.zero();
         size.zero();
+        boundsDirty = false;
+        revision++;
         hasChanged = false;
         visibleYLevel = -1;
+    }
+
+    @Override
+    protected IChunkProvider createChunkProvider() {
+        return new PreviewChunkProvider(this);
     }
 
     public void trimIfOversized() {
@@ -67,34 +80,33 @@ public class TrackedDummyWorld extends DummyWorld {
 
     @Override
     public boolean setBlock(int x, int y, int z, Block block, int meta, int flags) {
+        if (block == null) return false;
         long pos = CoordinatePacker.pack(x, y, z);
+        Block previous = blockMap.get(pos);
+        int previousMeta = blockMetaMap.get(pos);
+        if (previous == null && block == Blocks.air) return false;
+        if (previous == block && previousMeta == meta) return false;
+        boolean wasEmpty = blockMap.isEmpty();
         if (block == Blocks.air) {
             blockMap.remove(pos);
             blockMetaMap.remove(pos);
-            if (block.hasTileEntity(meta)) {
-                removeTileEntity(x, y, z);
-            }
+            boundsDirty = true;
         } else {
             blockMap.put(pos, block);
             blockMetaMap.put(pos, meta);
-            if (block.hasTileEntity(meta)) {
-                TileEntity tile = block.createTileEntity(this, meta);
-                if (tile != null) {
-                    setTileEntity(x, y, z, tile);
-                }
+            if (wasEmpty) {
+                minPos.set(x, y, z);
+                maxPos.set(x, y, z);
+                boundsDirty = false;
+            } else {
+                expandBounds(x, y, z);
             }
-            block.onBlockAdded(this, x, y, z);
         }
-
         hasChanged = true;
-        minPos.x = Math.min(minPos.x, x);
-        minPos.y = Math.min(minPos.y, y);
-        minPos.z = Math.min(minPos.z, z);
-        maxPos.x = Math.max(maxPos.x, x);
-        maxPos.y = Math.max(maxPos.y, y);
-        maxPos.z = Math.max(maxPos.z, z);
-
-        return y >= 0 && y < 256;
+        revision++;
+        refreshTileEntity(x, y, z, previous == null ? Blocks.air : previous, block, previousMeta, meta);
+        if (block != Blocks.air && previous != block) block.onBlockAdded(this, x, y, z);
+        return true;
     }
 
     @Override
@@ -111,31 +123,63 @@ public class TrackedDummyWorld extends DummyWorld {
     @Override
     public boolean setBlockMetadataWithNotify(int x, int y, int z, int meta, int flag) {
         long pos = CoordinatePacker.pack(x, y, z);
-        if (!blockMap.containsKey(pos)) return false;
+        Block block = blockMap.get(pos);
+        if (block == null) return false;
+        int previousMeta = blockMetaMap.get(pos);
+        if (previousMeta == meta) return false;
         blockMetaMap.put(pos, meta);
+        hasChanged = true;
+        revision++;
+        refreshTileEntity(x, y, z, block, block, previousMeta, meta);
+        return true;
+    }
 
-        TileEntity tile = tileMap.get(pos);
-        if (tile != null) {
+    private void refreshTileEntity(int x, int y, int z, Block previous, Block block, int previousMeta, int meta) {
+        TileEntity tile = getTileEntity(x, y, z);
+        if (tile != null
+                && (block == Blocks.air || tile.shouldRefresh(previous, block, previousMeta, meta, this, x, y, z))) {
+            removeTileEntity(x, y, z);
+            tile = null;
+        }
+        if (tile == null && block != Blocks.air && block.hasTileEntity(meta)) {
+            tile = block.createTileEntity(this, meta);
+            if (tile != null) setTileEntity(x, y, z, tile);
+        } else if (tile != null) {
             tile.updateContainingBlockInfo();
             tile.blockMetadata = meta;
         }
-
-        return true;
     }
 
     @Override
     public void setTileEntity(int x, int y, int z, TileEntity tile) {
+        if (tile == null) {
+            removeTileEntity(x, y, z);
+            return;
+        }
+        long pos = CoordinatePacker.pack(x, y, z);
+        TileEntity previous = tileMap.get(pos);
+        if (previous != null && previous != tile) removeTileEntity(x, y, z);
         tile.setWorldObj(this);
         tile.xCoord = x;
         tile.yCoord = y;
         tile.zCoord = z;
+        tile.updateContainingBlockInfo();
+        tile.blockMetadata = getBlockMetadata(x, y, z);
+        tileMap.put(pos, tile);
+        revision++;
         tile.validate();
-        tileMap.put(CoordinatePacker.pack(x, y, z), tile);
     }
 
     @Override
     public void removeTileEntity(int x, int y, int z) {
-        tileMap.remove(CoordinatePacker.pack(x, y, z)).invalidate();
+        TileEntity removed = tileMap.remove(CoordinatePacker.pack(x, y, z));
+        if (removed == null) return;
+        revision++;
+        try {
+            removed.invalidate();
+        } catch (RuntimeException | LinkageError failure) {
+            BlockRenderer6343.LOG.error("Failed to invalidate preview tile entity", failure);
+        }
     }
 
     @Override
@@ -162,15 +206,61 @@ public class TrackedDummyWorld extends DummyWorld {
     }
 
     public Vector3f getSize() {
+        updateBounds();
+        if (blockMap.isEmpty()) return size.zero();
         return size.set(maxPos.x - minPos.x + 1, maxPos.y - minPos.y + 1, maxPos.z - minPos.z + 1);
     }
 
     public Vector3f getMinPos() {
+        updateBounds();
         return minPos;
     }
 
     public Vector3f getMaxPos() {
+        updateBounds();
         return maxPos;
+    }
+
+    private void updateBounds() {
+        if (!boundsDirty) return;
+        boundsDirty = false;
+        if (blockMap.isEmpty()) {
+            minPos.zero();
+            maxPos.zero();
+            return;
+        }
+        minPos.set(Float.POSITIVE_INFINITY);
+        maxPos.set(Float.NEGATIVE_INFINITY);
+        for (LongIterator positions = blockMap.keySet().iterator(); positions.hasNext();) {
+            long pos = positions.nextLong();
+            int x = CoordinatePacker.unpackX(pos);
+            int y = CoordinatePacker.unpackY(pos);
+            int z = CoordinatePacker.unpackZ(pos);
+            expandBounds(x, y, z);
+        }
+    }
+
+    private void expandBounds(int x, int y, int z) {
+        minPos.x = Math.min(minPos.x, x);
+        minPos.y = Math.min(minPos.y, y);
+        minPos.z = Math.min(minPos.z, z);
+        maxPos.x = Math.max(maxPos.x, x);
+        maxPos.y = Math.max(maxPos.y, y);
+        maxPos.z = Math.max(maxPos.z, z);
+    }
+
+    public long getRevision() {
+        return revision;
+    }
+
+    @Override
+    public void markBlockForUpdate(int x, int y, int z) {
+        revision++;
+    }
+
+    @Override
+    public void markTileEntityChunkModified(int x, int y, int z, TileEntity tile) {
+        revision++;
     }
 
     public void setVisibleYLevel(int visibleYLevel) {
@@ -194,7 +284,8 @@ public class TrackedDummyWorld extends DummyWorld {
                 Block block = this.getBlock(l, i1, j1);
                 int k1 = this.getBlockMetadata(l, i1, j1);
 
-                if (!ignoreBlockWithoutBoundingBox || block.getCollisionBoundingBoxFromPool(this, l, i1, j1) != null) {
+                if (targetedBlocks.contains(CoordinatePacker.pack(l, i1, j1)) && (!ignoreBlockWithoutBoundingBox
+                        || block.getCollisionBoundingBoxFromPool(this, l, i1, j1) != null)) {
                     if (block.canCollideCheck(k1, stopOnLiquid)) {
                         if (visibleYLevel == -1 || visibleYLevel == i1) {
                             MovingObjectPosition movingobjectposition = block
@@ -208,7 +299,9 @@ public class TrackedDummyWorld extends DummyWorld {
                 }
 
                 MovingObjectPosition movingobjectposition2 = null;
-                k1 = 200;
+                k1 = (int) Math.min(
+                        Integer.MAX_VALUE - 1L,
+                        1L + Math.abs((long) i - l) + Math.abs((long) j - i1) + Math.abs((long) k - j1));
 
                 while (k1-- >= 0) {
                     if (Double.isNaN(start.xCoord) || Double.isNaN(start.yCoord) || Double.isNaN(start.zCoord)) {
@@ -329,8 +422,8 @@ public class TrackedDummyWorld extends DummyWorld {
                     Block block1 = this.getBlock(l, i1, j1);
                     int l1 = this.getBlockMetadata(l, i1, j1);
 
-                    if (!ignoreBlockWithoutBoundingBox
-                            || block1.getCollisionBoundingBoxFromPool(this, l, i1, j1) != null) {
+                    if (targetedBlocks.contains(CoordinatePacker.pack(l, i1, j1)) && (!ignoreBlockWithoutBoundingBox
+                            || block1.getCollisionBoundingBoxFromPool(this, l, i1, j1) != null)) {
                         if (block1.canCollideCheck(l1, stopOnLiquid)) {
                             if (visibleYLevel == -1 || visibleYLevel == i1) {
                                 MovingObjectPosition movingobjectposition1 = block1

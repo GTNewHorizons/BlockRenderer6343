@@ -2,6 +2,7 @@ package blockrenderer6343.client.renderer;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ScaledResolution;
+import net.minecraft.util.MovingObjectPosition;
 
 import org.lwjgl.opengl.GL11;
 
@@ -14,14 +15,20 @@ import cpw.mods.fml.relauncher.SideOnly;
  *
  * @Author: KilaBash, backported by Quarri6343
  * @Date: 2021/8/24
- * @Description: Real-time rendering renderer. If you need to render scene as a texture, use the FBO
- *               {@link FBOWorldSceneRenderer}.
+ * @Description: Renders a preview directly into the current framebuffer.
  */
 @SideOnly(Side.CLIENT)
 public class ImmediateWorldSceneRenderer extends WorldSceneRenderer {
 
     public ImmediateWorldSceneRenderer(TrackedDummyWorld world) {
         super(world);
+    }
+
+    @Override
+    public MovingObjectPosition pick(int mouseX, int mouseY) {
+        Minecraft mc = Minecraft.getMinecraft();
+        ScaledResolution resolution = new ScaledResolution(mc, mc.displayWidth, mc.displayHeight);
+        return super.pick(getScaledX(mc, resolution, mouseX), mc.displayHeight - getScaledY(mc, resolution, mouseY));
     }
 
     @Override
@@ -36,7 +43,21 @@ public class ImmediateWorldSceneRenderer extends WorldSceneRenderer {
         int windowY = mc.displayHeight - getScaledY(mc, resolution, y) - windowHeight;
         int windowMouseX = getScaledX(mc, resolution, mouseX);
         int windowMouseY = mc.displayHeight - getScaledY(mc, resolution, mouseY);
-        super.render(windowX, windowY, windowWidth, windowHeight, windowMouseX, windowMouseY);
+        windowWidth = Math.max(0, windowWidth);
+        windowHeight = Math.max(0, windowHeight);
+        try {
+            super.render(windowX, windowY, windowWidth, windowHeight, windowMouseX, windowMouseY);
+        } finally {
+            GL11.glPushAttrib(GL11.GL_SCISSOR_BIT | GL11.GL_DEPTH_BUFFER_BIT);
+            try {
+                GL11.glEnable(GL11.GL_SCISSOR_TEST);
+                GL11.glScissor(windowX, windowY, windowWidth, windowHeight);
+                GL11.glDepthMask(true);
+                GL11.glClear(GL11.GL_DEPTH_BUFFER_BIT);
+            } finally {
+                GL11.glPopAttrib();
+            }
+        }
     }
 
     private int getScaledX(Minecraft mc, ScaledResolution res, int x) {
@@ -49,9 +70,13 @@ public class ImmediateWorldSceneRenderer extends WorldSceneRenderer {
 
     @Override
     protected void clearView(int x, int y, int width, int height) {
-        GL11.glEnable(GL11.GL_SCISSOR_TEST);
-        GL11.glScissor(x, y, width, height);
-        super.clearView(x, y, width, height);
-        GL11.glDisable(GL11.GL_SCISSOR_TEST);
+        GL11.glPushAttrib(GL11.GL_SCISSOR_BIT);
+        try {
+            GL11.glEnable(GL11.GL_SCISSOR_TEST);
+            GL11.glScissor(x, y, width, height);
+            super.clearView(x, y, width, height);
+        } finally {
+            GL11.glPopAttrib();
+        }
     }
 }

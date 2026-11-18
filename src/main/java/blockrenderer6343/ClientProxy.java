@@ -1,5 +1,9 @@
 package blockrenderer6343;
 
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.resources.SimpleReloadableResourceManager;
+
+import blockrenderer6343.client.renderer.PreviewGeometryCache;
 import blockrenderer6343.client.utils.BRUtil;
 import blockrenderer6343.client.world.ObserverWorld;
 import blockrenderer6343.client.world.TrackedDummyWorld;
@@ -29,6 +33,8 @@ public class ClientProxy extends CommonProxy {
     // load "Do your mod setup. Build whatever data structures you care about. Register recipes."
     public void init(FMLInitializationEvent event) {
         super.init(event);
+        ((SimpleReloadableResourceManager) Minecraft.getMinecraft().getResourceManager())
+                .registerReloadListener(PreviewGeometryCache.getInstance());
     }
 
     // postInit "Handle interaction with other mods, complete your setup based on this."

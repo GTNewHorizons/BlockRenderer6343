@@ -1,7 +1,6 @@
 package blockrenderer6343.integration.nei;
 
-import static blockrenderer6343.integration.nei.GuiMultiblockHandler.SLOT_SIZE;
-
+import java.awt.Point;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -17,12 +16,15 @@ import net.minecraft.util.StatCollector;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.opengl.GL11;
 
 import com.gtnewhorizon.gtnhlib.eventbus.EventBusSubscriber;
 import com.gtnewhorizon.structurelib.alignment.constructable.IConstructable;
 
 import blockrenderer6343.client.utils.ConstructableData;
+import codechicken.lib.gui.GuiDraw;
 import codechicken.nei.LayoutManager;
+import codechicken.nei.NEIClientUtils;
 import codechicken.nei.PositionedStack;
 import codechicken.nei.RecipeSearchField;
 import codechicken.nei.SearchField;
@@ -46,6 +48,7 @@ public abstract class MultiblockHandler extends TemplateRecipeHandler {
     private ItemStack lastStack;
     private List<ItemStack> lastPositionedIngredients;
     private List<List<PositionedStack>> currentIngredientStacks;
+    private final CandidatePanel candidatePanel = new CandidatePanel();
     protected RecipeCacher recipeCacher = new RecipeCacher();
     protected GuiMultiblockHandler guiHandler;
     protected IConstructable[] currentMultiblocks;
@@ -162,6 +165,27 @@ public abstract class MultiblockHandler extends TemplateRecipeHandler {
 
         guiHandler.recalculateSearch(recipeSearchField.text());
         guiHandler.drawMultiblock(recipe);
+        GuiRecipe<?> gui = (GuiRecipe<?>) NEIClientUtils.getGuiContainer();
+        Point origin = gui.getRecipePosition(recipe);
+        int sceneHeight = Math.round(GuiMultiblockHandler.SCENE_HEIGHT * Math.min(gui.height / 500f, 1f));
+        candidatePanel.layout(
+                gui.guiLeft + GuiMultiblockHandler.RECIPE_LAYOUT_X + GuiMultiblockHandler.RECIPE_WIDTH - 2,
+                gui.guiTop + GuiMultiblockHandler.RECIPE_LAYOUT_Y + 2,
+                GuiMultiblockHandler.RECIPE_WIDTH - 4,
+                sceneHeight - 4);
+        candidatePanel.setCycle(cycleticks / 20);
+        Point mouse = GuiDraw.getMousePosition();
+        GL11.glPushMatrix();
+        try {
+            GL11.glTranslatef(-gui.guiLeft - origin.x, -gui.guiTop - origin.y, 0);
+            candidatePanel.draw(mouse.x, mouse.y);
+        } finally {
+            GL11.glPopMatrix();
+        }
+    }
+
+    public CandidatePanel getCandidatePanel() {
+        return candidatePanel;
     }
 
     public static @Nullable MultiblockHandler getHandlerFromGui(GuiScreen gui) {
@@ -246,7 +270,7 @@ public abstract class MultiblockHandler extends TemplateRecipeHandler {
 
     @Override
     public List<PositionedStack> getOtherStacks(int recipe) {
-        return arecipes.isEmpty() ? Collections.emptyList() : arecipes.get(0).getOtherStacks();
+        return Collections.emptyList();
     }
 
     public void resetPositionedIngredients(List<ItemStack> ingredients) {
@@ -276,25 +300,8 @@ public abstract class MultiblockHandler extends TemplateRecipeHandler {
 
     public class RecipeCacher extends CachedRecipe {
 
-        private List<PositionedStack> positionedResults = new ArrayList<>();
-
         public void setResults(List<List<ItemStack>> results) {
-            if (positionedResults.size() > results.size() * 4L + 32) {
-                positionedResults = new ArrayList<>(results.size());
-            } else {
-                positionedResults.clear();
-            }
-            int columnCount = results.size() / CANDIDATE_IN_COlUMN + 1;
-            int realCandidateInColumn = results.size() % columnCount == 0 ? results.size() / columnCount
-                    : results.size() / columnCount + 1;
-            for (int i = 0; i < results.size(); i++) {
-                PositionedStack result = new PositionedStack(
-                        results.get(i),
-                        CANDIDATE_SLOTS_X - (columnCount - 1) * SLOT_SIZE + (i / realCandidateInColumn) * SLOT_SIZE,
-                        CANDIDATE_SLOTS_Y + (i % realCandidateInColumn) * SLOT_SIZE);
-                result.generatePermutations();
-                positionedResults.add(result);
-            }
+            candidatePanel.setCandidates(results);
         }
 
         @Override
@@ -304,7 +311,7 @@ public abstract class MultiblockHandler extends TemplateRecipeHandler {
 
         @Override
         public List<PositionedStack> getOtherStacks() {
-            return getCycledIngredients(cycleticks / 20, positionedResults);
+            return Collections.emptyList();
         }
     }
 

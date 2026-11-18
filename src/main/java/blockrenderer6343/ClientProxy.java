@@ -1,5 +1,7 @@
 package blockrenderer6343;
 
+import java.io.IOException;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.SimpleReloadableResourceManager;
 
@@ -7,6 +9,7 @@ import blockrenderer6343.client.renderer.PreviewGeometryCache;
 import blockrenderer6343.client.utils.BRUtil;
 import blockrenderer6343.client.world.ObserverWorld;
 import blockrenderer6343.client.world.TrackedDummyWorld;
+import blockrenderer6343.config.ConfigLoader;
 import blockrenderer6343.integration.gregtech.GTNEIUtil;
 import blockrenderer6343.integration.nei.InputHandler;
 import codechicken.nei.guihook.GuiContainerManager;
@@ -21,6 +24,11 @@ public class ClientProxy extends CommonProxy {
     // etc, and register them with the GameRegistry."
     public void preInit(FMLPreInitializationEvent event) {
         super.preInit(event);
+        try {
+            ConfigLoader.load(event.getModConfigurationDirectory().toPath());
+        } catch (IOException failure) {
+            BlockRenderer6343.LOG.error("Unable to migrate legacy BlockRenderer6343 configuration", failure);
+        }
         GuiContainerManager.addInputHandler(new InputHandler());
         GuiContainerManager.addTooltipHandler(new InputHandler());
         if (BlockRenderer6343.isGT5uNHLoaded) {

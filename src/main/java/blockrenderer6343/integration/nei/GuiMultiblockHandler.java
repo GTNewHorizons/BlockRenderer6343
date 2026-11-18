@@ -31,10 +31,13 @@ import com.gtnewhorizon.structurelib.StructureEvent;
 import com.gtnewhorizon.structurelib.StructureLibAPI;
 import com.gtnewhorizon.structurelib.alignment.constructable.ChannelDataAccessor;
 import com.gtnewhorizon.structurelib.alignment.constructable.IConstructable;
+import com.gtnewhorizon.structurelib.alignment.constructable.ISurvivalConstructable;
 import com.gtnewhorizon.structurelib.structure.IChannelDefinition;
 import com.gtnewhorizon.structurelib.structure.IStructureElement;
+import com.gtnewhorizon.structurelib.structure.ISurvivalBuildEnvironment;
 
 import blockrenderer6343.BlockRenderer6343;
+import blockrenderer6343.api.utils.CreativeItemSource;
 import blockrenderer6343.client.renderer.ImmediateWorldSceneRenderer;
 import blockrenderer6343.client.renderer.WorldSceneRenderer;
 import blockrenderer6343.client.utils.BRButton;
@@ -600,8 +603,13 @@ public abstract class GuiMultiblockHandler {
         int x = CoordinatePacker.unpackX(pos);
         int y = CoordinatePacker.unpackY(pos);
         int z = CoordinatePacker.unpackZ(pos);
-        Block block = renderer.world.getBlock(x, y, z);
-        renderBlocks.renderBlockUsingTexture(block, x, y, z, icon);
+        // Selection is a cube overlay and must not invoke the selected mod's renderer again.
+        renderBlocks.setOverrideBlockTexture(icon);
+        try {
+            renderBlocks.renderStandardBlock(Blocks.glass, x, y, z);
+        } finally {
+            renderBlocks.clearOverrideBlockTexture();
+        }
     }
 
     public boolean mouseClicked(int button) {
@@ -675,7 +683,21 @@ public abstract class GuiMultiblockHandler {
         return DEFAULT_TRIGGER;
     }
 
-    @NotNull
+    protected void placeSurvivalPreview(ISurvivalConstructable constructable) {
+        ISurvivalBuildEnvironment environment = ISurvivalBuildEnvironment
+                .create(CreativeItemSource.instance, FAKE_PLAYER);
+        renderer.world.hasChanged();
+        for (int round = 0; round < MAX_PLACE_ROUNDS; round++) {
+            int result = constructable.survivalConstruct(getBuildTriggerStack(), Integer.MAX_VALUE, environment);
+            // Multipart builders can sum completion codes to -2 after making progress.
+            if (renderer.world.hasChanged()) continue;
+            if (round == 0 && result == -2) {
+                constructable.construct(getBuildTriggerStack(), false);
+            }
+            return;
+        }
+    }
+
     protected ItemStack getBuildTriggerStack() {
         return trigger;
     }

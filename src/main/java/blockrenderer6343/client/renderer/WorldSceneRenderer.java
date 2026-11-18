@@ -8,12 +8,14 @@ import static org.lwjgl.opengl.GL11.GL_COLOR_BUFFER_BIT;
 import static org.lwjgl.opengl.GL11.GL_CULL_FACE;
 import static org.lwjgl.opengl.GL11.GL_DEPTH_BUFFER_BIT;
 import static org.lwjgl.opengl.GL11.GL_DEPTH_TEST;
+import static org.lwjgl.opengl.GL11.GL_GREATER;
 import static org.lwjgl.opengl.GL11.GL_LIGHTING;
 import static org.lwjgl.opengl.GL11.GL_MODELVIEW;
 import static org.lwjgl.opengl.GL11.GL_ONE_MINUS_SRC_ALPHA;
 import static org.lwjgl.opengl.GL11.GL_PROJECTION;
 import static org.lwjgl.opengl.GL11.GL_SRC_ALPHA;
 import static org.lwjgl.opengl.GL11.GL_TEXTURE_2D;
+import static org.lwjgl.opengl.GL11.glAlphaFunc;
 import static org.lwjgl.opengl.GL11.glBlendFunc;
 import static org.lwjgl.opengl.GL11.glClear;
 import static org.lwjgl.opengl.GL11.glClearColor;
@@ -31,10 +33,14 @@ import static org.lwjgl.opengl.GL11.glPushClientAttrib;
 import static org.lwjgl.opengl.GL11.glPushMatrix;
 import static org.lwjgl.opengl.GL11.glViewport;
 
+import java.util.ArrayList;
+import java.util.UUID;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.Tessellator;
@@ -44,6 +50,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
 import net.minecraftforge.client.ForgeHooksClient;
+import net.minecraftforge.client.MinecraftForgeClient;
 
 import org.joml.Vector3f;
 import org.joml.Vector4i;
@@ -51,14 +58,19 @@ import org.lwjgl.opengl.GL12;
 import org.lwjgl.util.glu.GLU;
 
 import com.gtnewhorizon.gtnhlib.util.CoordinatePacker;
+import com.mojang.authlib.GameProfile;
 
+import blockrenderer6343.BlockRenderer6343;
 import blockrenderer6343.client.utils.ColorUtils;
 import blockrenderer6343.client.utils.ProjectionUtils;
+import blockrenderer6343.client.utils.RevisionedLongSet;
+import blockrenderer6343.client.world.ClientFakePlayer;
 import blockrenderer6343.client.world.TrackedDummyWorld;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMaps;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 import it.unimi.dsi.fastutil.longs.LongCollection;
+import it.unimi.dsi.fastutil.longs.LongIterator;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
 
@@ -74,13 +86,21 @@ public abstract class WorldSceneRenderer {
     // you have to place blocks in the world before use
     public final TrackedDummyWorld world;
     // the Blocks which this renderer needs to render
-    public final LongSet renderedBlocks = new LongOpenHashSet();
+    public final LongSet renderedBlocks = new RevisionedLongSet();
     public final LongArrayList renderTranslucentBlocks = new LongArrayList();
     private Consumer<WorldSceneRenderer> beforeRender;
     private Consumer<WorldSceneRenderer> onRender;
     private Consumer<MovingObjectPosition> onLookingAt;
     private Consumer<WorldSceneRenderer> onPostBlockRendered;
     private MovingObjectPosition lastTraceResult;
+    private final LongArrayList translucentCandidates = new LongArrayList();
+    private final TranslucentBlockSorter translucentSorter = new TranslucentBlockSorter();
+    private final TranslucentBlockSorter ghostSorter = new TranslucentBlockSorter();
+    private final ArrayList<TileEntity> visibleTiles = new ArrayList<>();
+    private final LongSet[] failedBlockPasses = { new LongOpenHashSet(), new LongOpenHashSet() };
+    private final LongSet[] failedTilePasses = { new LongOpenHashSet(), new LongOpenHashSet() };
+    private long failureRevision = Long.MIN_VALUE;
+    private final ClientFakePlayer previewViewer;
     private int clearedRenderedBlockCount;
     private int clearedTranslucentBlockCount;
     private final Vector3f eyePos = new Vector3f(0, 0, -10f);
@@ -89,9 +109,16 @@ public abstract class WorldSceneRenderer {
     protected Vector4i rect = new Vector4i();
     private boolean renderAllFaces = false;
     private final RenderBlocks bufferBuilder = new RenderBlocks();
+    private Predicate<Block> staticBlockPredicate = block -> false;
+    private final LongArrayList staticOpaqueBlocks = new LongArrayList();
+    private final LongArrayList dynamicBlocks = new LongArrayList();
+    private long opaqueWorldRevision = Long.MIN_VALUE;
+    private long opaqueSelectionRevision = Long.MIN_VALUE;
+    private long geometryRevision;
 
     public WorldSceneRenderer(TrackedDummyWorld world) {
         this.world = world;
+        previewViewer = new ClientFakePlayer(world, new GameProfile(new UUID(0, 0), "MultiblockViewer"));
     }
 
     public WorldSceneRenderer setBeforeWorldRender(Consumer<WorldSceneRenderer> callback) {
@@ -136,11 +163,22 @@ public abstract class WorldSceneRenderer {
     }
 
     public void setRenderAllFaces(boolean renderAllFaces) {
+        if (this.renderAllFaces != renderAllFaces) opaqueWorldRevision = Long.MIN_VALUE;
         this.renderAllFaces = renderAllFaces;
+    }
+
+    public void setStaticBlockPredicate(Predicate<Block> predicate) {
+        staticBlockPredicate = predicate;
+        opaqueWorldRevision = Long.MIN_VALUE;
     }
 
     public MovingObjectPosition getLastTraceResult() {
         return lastTraceResult;
+    }
+
+    public MovingObjectPosition pick(int mouseX, int mouseY) {
+        if (rect.z <= 0 || rect.w <= 0 || !isInsideRect(mouseX, mouseY)) return null;
+        return rayTrace(ProjectionUtils.unProject(rect, eyePos, lookAt, mouseX, mouseY));
     }
 
     public void resetRenderedBlocks() {
@@ -152,15 +190,29 @@ public abstract class WorldSceneRenderer {
         }
         renderedBlocks.clear();
         renderTranslucentBlocks.clear();
+        translucentCandidates.clear();
+        translucentSorter.clear();
+        ghostSorter.clear();
+        staticOpaqueBlocks.clear();
+        dynamicBlocks.clear();
+        opaqueWorldRevision = Long.MIN_VALUE;
+        clearRenderFailures();
+        lastTraceResult = null;
     }
 
     public void trimIfOversized() {
         if ((long) renderedBlocks.size() * 4L + 64L < clearedRenderedBlockCount) {
-            ((LongOpenHashSet) renderedBlocks).trim();
+            ((RevisionedLongSet) renderedBlocks).trim();
+            translucentCandidates.trim();
+            translucentSorter.trim();
+            visibleTiles.trimToSize();
+            staticOpaqueBlocks.trim();
+            dynamicBlocks.trim();
             clearedRenderedBlockCount = renderedBlocks.size();
         }
         if ((long) renderTranslucentBlocks.size() * 4L + 64L < clearedTranslucentBlockCount) {
             renderTranslucentBlocks.trim();
+            ghostSorter.trim();
             clearedTranslucentBlockCount = renderTranslucentBlocks.size();
         }
     }
@@ -171,25 +223,47 @@ public abstract class WorldSceneRenderer {
      * gui coordinates. It will return matrices of projection and view in previous state after rendering
      */
     public void render(int x, int y, int width, int height, int mouseX, int mouseY) {
+        if (width <= 0 || height <= 0) {
+            lastTraceResult = null;
+            return;
+        }
         rect.set(x, y, width, height);
         // setupCamera
         setupCamera();
 
-        // render TrackedDummyWorld
-        drawWorld();
+        try {
+            updatePreviewViewer();
+            try (PreviewRenderContext ignored = new PreviewRenderContext(world, previewViewer)) {
+                drawWorld();
 
-        // check lookingAt
-        this.lastTraceResult = null;
-        if (onLookingAt != null && isInsideRect(mouseX, mouseY)) {
-            Vector3f lookVec = ProjectionUtils.unProject(rect, eyePos, lookAt, mouseX, mouseY);
-            MovingObjectPosition result = rayTrace(lookVec);
-            if (result != null) {
-                this.lastTraceResult = result;
-                onLookingAt.accept(result);
+                this.lastTraceResult = null;
+                if (onLookingAt != null && isInsideRect(mouseX, mouseY)) {
+                    MovingObjectPosition result = rayTrace(
+                            ProjectionUtils.unProject(rect, eyePos, lookAt, mouseX, mouseY));
+                    if (result != null) {
+                        this.lastTraceResult = result;
+                        onLookingAt.accept(result);
+                    }
+                }
             }
+        } finally {
+            resetCamera();
         }
+    }
 
-        resetCamera();
+    private void updatePreviewViewer() {
+        previewViewer.setPosition(eyePos.x, eyePos.y, eyePos.z);
+        previewViewer.prevPosX = previewViewer.lastTickPosX = eyePos.x;
+        previewViewer.prevPosY = previewViewer.lastTickPosY = eyePos.y;
+        previewViewer.prevPosZ = previewViewer.lastTickPosZ = eyePos.z;
+        double dx = lookAt.x - eyePos.x;
+        double dy = lookAt.y - eyePos.y;
+        double dz = lookAt.z - eyePos.z;
+        previewViewer.prevRotationYaw = previewViewer.rotationYaw = (float) Math.toDegrees(Math.atan2(-dx, dz));
+        previewViewer.prevRotationPitch = previewViewer.rotationPitch = (float) -Math
+                .toDegrees(Math.atan2(dy, Math.sqrt(dx * dx + dz * dz)));
+        Minecraft mc = Minecraft.getMinecraft();
+        previewViewer.ticksExisted = mc.thePlayer == null ? 0 : mc.thePlayer.ticksExisted;
     }
 
     public Vector3f getEyePos() {
@@ -229,6 +303,7 @@ public abstract class WorldSceneRenderer {
         mc.entityRenderer.disableLightmap(0);
         glDisable(GL_LIGHTING);
         glEnable(GL_DEPTH_TEST);
+        glDepthMask(true);
         glEnable(GL_BLEND);
 
         // setup viewport and clear GL buffers
@@ -284,115 +359,309 @@ public abstract class WorldSceneRenderer {
         glPopAttrib();
     }
 
-    private double getDistanceSq(long coord) {
-        int x = CoordinatePacker.unpackX(coord);
-        int y = CoordinatePacker.unpackY(coord);
-        int z = CoordinatePacker.unpackZ(coord);
-
-        double xd = eyePos.x - x;
-        double yd = eyePos.y - y;
-        double zd = eyePos.z - z;
-
-        return xd * xd + yd * yd + zd * zd;
-    }
-
     protected void drawWorld() {
-        if (beforeRender != null) {
-            beforeRender.accept(this);
+        if (beforeRender != null) beforeRender.accept(this);
+        if (failureRevision != world.getRevision()) {
+            clearRenderFailures();
+            failureRevision = world.getRevision();
         }
 
         Minecraft mc = Minecraft.getMinecraft();
-        glEnable(GL_CULL_FACE);
-        glEnable(GL12.GL_RESCALE_NORMAL);
-        RenderHelper.disableStandardItemLighting();
-        mc.entityRenderer.disableLightmap(0);
-        mc.renderEngine.bindTexture(TextureMap.locationBlocksTexture);
-        glDisable(GL_LIGHTING);
-        glEnable(GL_TEXTURE_2D);
-        glEnable(GL_ALPHA_TEST);
-
-        if (!renderTranslucentBlocks.isEmpty()) {
-            renderTranslucentBlocks.sort((a, b) -> -Double.compare(getDistanceSq(a), getDistanceSq(b)));
-        }
-
         Tessellator tessellator = Tessellator.instance;
-        renderBlocks(tessellator, renderedBlocks, false);
-        renderBlocks(tessellator, renderTranslucentBlocks, true);
-
-        if (onPostBlockRendered != null) {
-            onPostBlockRendered.accept(this);
+        int savedAo = mc.gameSettings.ambientOcclusion;
+        int previousPass = MinecraftForgeClient.getRenderPass();
+        int previousWorldPass = ForgeHooksClient.getWorldRenderPass();
+        mc.gameSettings.ambientOcclusion = 0;
+        try {
+            collectVisibleTiles();
+            collectOpaqueBlocks();
+            if (!staticOpaqueBlocks.isEmpty()) {
+                prepareBlockState(0);
+                PreviewGeometryCache.getInstance().render(
+                        this,
+                        geometryRevision,
+                        () -> renderBlockPass(tessellator, staticOpaqueBlocks, false, 0));
+            }
+            renderBlockPass(tessellator, dynamicBlocks, false, 0);
+            renderTileEntityPass(0);
+            collectTranslucentBlocks(dynamicBlocks);
+            renderBlockPass(tessellator, translucentSorter.sort(translucentCandidates, eyePos, lookAt), false, 1);
+            renderTileEntityPass(1);
+            renderBlocks(tessellator, ghostSorter.sort(renderTranslucentBlocks, eyePos, lookAt), true);
+            renderSelectionOverlay(tessellator);
+            if (onPostBlockRendered != null) onPostBlockRendered.accept(this);
+        } finally {
+            visibleTiles.clear();
+            bufferBuilder.blockAccess = null;
+            ForgeHooksClient.setRenderPass(previousPass);
+            ForgeHooksClient.worldRenderPass = previousWorldPass;
+            mc.gameSettings.ambientOcclusion = savedAo;
+            tessellator.setTranslation(0, 0, 0);
         }
+    }
 
-        RenderHelper.enableStandardItemLighting();
-        glEnable(GL_LIGHTING);
+    private void clearRenderFailures() {
+        for (LongSet failures : failedBlockPasses) failures.clear();
+        for (LongSet failures : failedTilePasses) failures.clear();
+    }
 
-        // render TESR
-        TileEntityRendererDispatcher tesr = TileEntityRendererDispatcher.instance;
-        for (int pass = 0; pass < 2; pass++) {
-            ForgeHooksClient.setRenderPass(pass);
-            setDefaultPassRenderState(pass);
-            for (Long2ObjectMap.Entry<TileEntity> entry : Long2ObjectMaps.fastIterable(world.tileMap)) {
-                long pos = entry.getLongKey();
-                if (!renderedBlocks.contains(pos)) continue;
-                TileEntity tile = entry.getValue();
-                if (tile == null || !tesr.hasSpecialRenderer(tile) || !tile.shouldRenderInPass(pass)) continue;
+    private void collectOpaqueBlocks() {
+        long worldRevision = world.getRevision();
+        long selectionRevision = ((RevisionedLongSet) renderedBlocks).getRevision();
+        if (opaqueWorldRevision == worldRevision && opaqueSelectionRevision == selectionRevision) return;
+        staticOpaqueBlocks.clear();
+        dynamicBlocks.clear();
+        ForgeHooksClient.setRenderPass(0);
+        ForgeHooksClient.worldRenderPass = 0;
+        for (LongIterator iterator = renderedBlocks.iterator(); iterator.hasNext();) {
+            long pos = iterator.nextLong();
+            Block block = world.blockMap.get(pos);
+            if (block == null) continue;
+            boolean cacheable = false;
+            try {
+                cacheable = !world.tileMap.containsKey(pos) && !block.hasTileEntity(world.blockMetaMap.get(pos))
+                        && staticBlockPredicate.test(block)
+                        && block.getRenderBlockPass() == 0
+                        && !block.canRenderInPass(1);
+            } catch (RuntimeException | LinkageError failure) {
+                // Keep unsupported blocks on the normal rendering path and its failure handling.
+            }
+            if (cacheable) staticOpaqueBlocks.add(pos);
+            else dynamicBlocks.add(pos);
+        }
+        opaqueWorldRevision = worldRevision;
+        opaqueSelectionRevision = selectionRevision;
+        geometryRevision++;
+    }
 
-                setDefaultPassRenderState(pass);
-                tesr.renderTileEntityAt(
-                        tile,
-                        CoordinatePacker.unpackX(pos),
-                        CoordinatePacker.unpackY(pos),
-                        CoordinatePacker.unpackZ(pos),
-                        0);
+    private void collectVisibleTiles() {
+        visibleTiles.clear();
+        TileEntityRendererDispatcher dispatcher = TileEntityRendererDispatcher.instance;
+        for (Long2ObjectMap.Entry<TileEntity> entry : Long2ObjectMaps.fastIterable(world.tileMap)) {
+            TileEntity tile = entry.getValue();
+            long pos = entry.getLongKey();
+            if (tile == null || tile.isInvalid()
+                    || !renderedBlocks.contains(pos)
+                    || (failedTilePasses[0].contains(pos) && failedTilePasses[1].contains(pos)))
+                continue;
+            try {
+                if (dispatcher.hasSpecialRenderer(tile)) visibleTiles.add(tile);
+            } catch (RuntimeException | LinkageError failure) {
+                reportRenderFailure(failedTilePasses[0], pos, tile, 0, failure);
+                failedTilePasses[1].add(pos);
             }
         }
-        ForgeHooksClient.setRenderPass(-1);
-        glEnable(GL_DEPTH_TEST);
-        glDisable(GL_BLEND);
-        glDepthMask(true);
+    }
+
+    private void collectTranslucentBlocks(LongCollection positions) {
+        translucentCandidates.clear();
+        ForgeHooksClient.setRenderPass(1);
+        ForgeHooksClient.worldRenderPass = 1;
+        for (LongIterator iterator = positions.iterator(); iterator.hasNext();) {
+            long pos = iterator.nextLong();
+            if (failedBlockPasses[1].contains(pos)) continue;
+            Block block = world.blockMap.get(pos);
+            if (block == null) continue;
+            try {
+                if (block.canRenderInPass(1)) translucentCandidates.add(pos);
+            } catch (RuntimeException | LinkageError failure) {
+                reportRenderFailure(failedBlockPasses[1], pos, block, 1, failure);
+            }
+        }
+    }
+
+    private void renderTileEntityPass(int pass) {
+        if (visibleTiles.isEmpty()) return;
+        ForgeHooksClient.setRenderPass(pass);
+        ForgeHooksClient.worldRenderPass = pass;
+        TileEntityRendererDispatcher dispatcher = TileEntityRendererDispatcher.instance;
+        for (TileEntity tile : visibleTiles) {
+            long pos = CoordinatePacker.pack(tile.xCoord, tile.yCoord, tile.zCoord);
+            if (tile.isInvalid() || failedTilePasses[pass].contains(pos)) continue;
+            try {
+                if (!tile.shouldRenderInPass(pass)) continue;
+            } catch (RuntimeException | LinkageError failure) {
+                reportRenderFailure(failedTilePasses[pass], pos, tile, pass, failure);
+                continue;
+            }
+            glPushAttrib(GL_ALL_ATTRIB_BITS);
+            glPushClientAttrib(GL_ALL_CLIENT_ATTRIB_BITS);
+            glMatrixMode(GL_PROJECTION);
+            glPushMatrix();
+            glMatrixMode(GL_MODELVIEW);
+            glPushMatrix();
+            float brightnessX = OpenGlHelper.lastBrightnessX;
+            float brightnessY = OpenGlHelper.lastBrightnessY;
+            try {
+                setDefaultPassRenderState(pass);
+                RenderHelper.enableStandardItemLighting();
+                glEnable(GL12.GL_RESCALE_NORMAL);
+                OpenGlHelper.setActiveTexture(OpenGlHelper.defaultTexUnit);
+                glEnable(GL_TEXTURE_2D);
+                OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240, 240);
+                dispatcher.renderTileEntityAt(tile, tile.xCoord, tile.yCoord, tile.zCoord, 0);
+            } catch (RuntimeException | LinkageError failure) {
+                reportRenderFailure(failedTilePasses[pass], pos, tile, pass, failure);
+            } finally {
+                try {
+                    finishDrawing(Tessellator.instance);
+                } finally {
+                    Tessellator.instance.setTranslation(0, 0, 0);
+                    glMatrixMode(GL_MODELVIEW);
+                    glPopMatrix();
+                    glMatrixMode(GL_PROJECTION);
+                    glPopMatrix();
+                    glMatrixMode(GL_MODELVIEW);
+                    OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, brightnessX, brightnessY);
+                    glPopClientAttrib();
+                    glPopAttrib();
+                }
+            }
+        }
     }
 
     public void renderBlocks(Tessellator tessellator, LongCollection blocksToRender, boolean transparent) {
         if (blocksToRender.isEmpty()) return;
         Minecraft mc = Minecraft.getMinecraft();
-        final int savedAo = mc.gameSettings.ambientOcclusion;
+        int savedAo = mc.gameSettings.ambientOcclusion;
+        int previousPass = MinecraftForgeClient.getRenderPass();
+        int previousWorldPass = ForgeHooksClient.getWorldRenderPass();
         mc.gameSettings.ambientOcclusion = 0;
-        tessellator.startDrawingQuads();
         try {
-            if (transparent) {
-                tessellator.setColorRGBA_F(1f, 1f, 1f, 0.3f);
-                tessellator.disableColor();
-            }
-            tessellator.setBrightness(15 << 20 | 15 << 4);
-            for (int i = 0; i < 2; i++) {
-                for (long pos : blocksToRender) {
-                    Block block = world.blockMap.get(pos);
-                    if (block == null || !block.canRenderInPass(i)) continue;
-
-                    int x = CoordinatePacker.unpackX(pos);
-                    int y = CoordinatePacker.unpackY(pos);
-                    int z = CoordinatePacker.unpackZ(pos);
-
-                    bufferBuilder.blockAccess = world;
-                    bufferBuilder.setRenderBounds(0, 0, 0, 1, 1, 1);
-                    bufferBuilder.renderAllFaces = renderAllFaces;
-                    bufferBuilder.renderBlockByRenderType(block, x, y, z);
-                }
-            }
-            if (onRender != null) {
-                onRender.accept(this);
+            for (int pass = 0; pass < 2; pass++) {
+                renderBlockPass(tessellator, blocksToRender, transparent, pass);
             }
         } finally {
+            bufferBuilder.blockAccess = null;
+            ForgeHooksClient.setRenderPass(previousPass);
+            ForgeHooksClient.worldRenderPass = previousWorldPass;
             mc.gameSettings.ambientOcclusion = savedAo;
-            tessellator.draw();
             tessellator.setTranslation(0, 0, 0);
         }
     }
 
+    private void renderBlockPass(Tessellator tessellator, LongCollection positions, boolean transparent, int pass) {
+        if (positions.isEmpty()) return;
+        ForgeHooksClient.setRenderPass(pass);
+        ForgeHooksClient.worldRenderPass = pass;
+        prepareBlockState(transparent ? 1 : pass);
+        beginDrawing(tessellator, transparent);
+        try {
+            for (LongIterator iterator = positions.iterator(); iterator.hasNext();) {
+                long pos = iterator.nextLong();
+                if (failedBlockPasses[pass].contains(pos)) continue;
+                Block block = world.blockMap.get(pos);
+                if (block == null) continue;
+                try {
+                    if (!block.canRenderInPass(pass)) continue;
+                    resetBlockRenderer();
+                    tessellator.setTranslation(0, 0, 0);
+                    tessellator.setBrightness(15 << 20 | 15 << 4);
+                    if (!transparent) tessellator.setColorOpaque_F(1, 1, 1);
+                    bufferBuilder.renderBlockByRenderType(
+                            block,
+                            CoordinatePacker.unpackX(pos),
+                            CoordinatePacker.unpackY(pos),
+                            CoordinatePacker.unpackZ(pos));
+                } catch (RuntimeException | LinkageError failure) {
+                    reportRenderFailure(failedBlockPasses[pass], pos, block, pass, failure);
+                    // Flush complete geometry before restarting a batch left by an incompatible renderer.
+                    finishDrawing(tessellator);
+                    prepareBlockState(transparent ? 1 : pass);
+                    beginDrawing(tessellator, transparent);
+                }
+                // Some legacy renderers finish the shared batch themselves.
+                if (!tessellator.isDrawing) {
+                    prepareBlockState(transparent ? 1 : pass);
+                    beginDrawing(tessellator, transparent);
+                }
+            }
+        } finally {
+            try {
+                finishDrawing(tessellator);
+            } finally {
+                tessellator.setTranslation(0, 0, 0);
+            }
+        }
+    }
+
+    private void resetBlockRenderer() {
+        bufferBuilder.blockAccess = world;
+        bufferBuilder.clearOverrideBlockTexture();
+        bufferBuilder.renderAllFaces = renderAllFaces;
+        bufferBuilder.useInventoryTint = false;
+        bufferBuilder.enableAO = false;
+        bufferBuilder.renderFromInside = false;
+        bufferBuilder.flipTexture = false;
+        bufferBuilder.field_152631_f = false;
+        bufferBuilder.lockBlockBounds = false;
+        bufferBuilder.uvRotateEast = 0;
+        bufferBuilder.uvRotateWest = 0;
+        bufferBuilder.uvRotateSouth = 0;
+        bufferBuilder.uvRotateNorth = 0;
+        bufferBuilder.uvRotateTop = 0;
+        bufferBuilder.uvRotateBottom = 0;
+        bufferBuilder.setRenderBounds(0, 0, 0, 1, 1, 1);
+        bufferBuilder.partialRenderBounds = false;
+    }
+
+    private static void prepareBlockState(int pass) {
+        setDefaultPassRenderState(pass);
+        OpenGlHelper.setActiveTexture(OpenGlHelper.defaultTexUnit);
+        Minecraft mc = Minecraft.getMinecraft();
+        mc.entityRenderer.disableLightmap(0);
+        mc.renderEngine.bindTexture(TextureMap.locationBlocksTexture);
+        RenderHelper.disableStandardItemLighting();
+        glDisable(GL_LIGHTING);
+        glEnable(GL_CULL_FACE);
+        glEnable(GL12.GL_RESCALE_NORMAL);
+        glEnable(GL_TEXTURE_2D);
+    }
+
+    private static void beginDrawing(Tessellator tessellator, boolean transparent) {
+        tessellator.startDrawingQuads();
+        tessellator.setTranslation(0, 0, 0);
+        tessellator.setBrightness(15 << 20 | 15 << 4);
+        tessellator.setColorRGBA_F(1, 1, 1, transparent ? 0.3f : 1);
+        if (transparent) tessellator.disableColor();
+    }
+
+    private static void finishDrawing(Tessellator tessellator) {
+        if (tessellator.isDrawing) tessellator.draw();
+    }
+
+    private void renderSelectionOverlay(Tessellator tessellator) {
+        if (onRender == null) return;
+        ForgeHooksClient.setRenderPass(1);
+        ForgeHooksClient.worldRenderPass = 1;
+        prepareBlockState(1);
+        beginDrawing(tessellator, false);
+        try {
+            onRender.accept(this);
+        } finally {
+            finishDrawing(tessellator);
+            tessellator.setTranslation(0, 0, 0);
+        }
+    }
+
+    private static void reportRenderFailure(LongSet failures, long pos, Object rendered, int pass, Throwable failure) {
+        if (!failures.add(pos)) return;
+        BlockRenderer6343.LOG.warn(
+                "Skipping preview renderer {} at ({}, {}, {}) in pass {} until the scene changes",
+                rendered.getClass().getName(),
+                CoordinatePacker.unpackX(pos),
+                CoordinatePacker.unpackY(pos),
+                CoordinatePacker.unpackZ(pos),
+                pass,
+                failure);
+    }
+
     public static void setDefaultPassRenderState(int pass) {
         glColor4f(1, 1, 1, 1);
+        glEnable(GL_DEPTH_TEST);
+        glEnable(GL_ALPHA_TEST);
+        glAlphaFunc(GL_GREATER, 0.1f);
         if (pass == 0) { // SOLID
-            glEnable(GL_DEPTH_TEST);
             glDisable(GL_BLEND);
             glDepthMask(true);
         } else { // TRANSLUCENT
@@ -408,11 +677,11 @@ public abstract class WorldSceneRenderer {
 
     public MovingObjectPosition rayTrace(Vector3f lookVec) {
         Vec3 startPos = Vec3.createVectorHelper(this.eyePos.x, this.eyePos.y, this.eyePos.z);
-        lookVec.mul(100); // range: 100 Blocks
+        lookVec.mul(eyePos.distance(lookAt) + world.getSize().length() + 1);
         Vec3 endPos = Vec3.createVectorHelper(
                 (lookVec.x + startPos.xCoord),
                 (lookVec.y + startPos.yCoord),
                 (lookVec.z + startPos.zCoord));
-        return this.world.rayTraceBlocksWithTargetMap(startPos, endPos, world.blockMap.keySet());
+        return this.world.rayTraceBlocksWithTargetMap(startPos, endPos, renderedBlocks);
     }
 }

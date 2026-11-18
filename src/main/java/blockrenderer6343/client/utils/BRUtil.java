@@ -54,6 +54,7 @@ import gregtech.api.interfaces.metatileentity.IMetaTileEntity;
 import gregtech.api.interfaces.tileentity.IGregTechTileEntity;
 import gregtech.api.metatileentity.implementations.MTEHatch;
 import gregtech.api.metatileentity.implementations.MTEMultiBlockBase;
+import it.unimi.dsi.fastutil.longs.LongIterator;
 import it.unimi.dsi.fastutil.longs.LongSet;
 
 public class BRUtil {
@@ -291,6 +292,34 @@ public class BRUtil {
         t.draw();
 
         GL11.glPopMatrix();
+    }
+
+    public static void renderOverlays(LongSet positions, LongSet visiblePositions, int color, int alpha) {
+        Tessellator tessellator = Tessellator.instance;
+        tessellator.startDrawingQuads();
+        tessellator.setColorRGBA_I(color, alpha);
+        try {
+            for (LongIterator iterator = positions.iterator(); iterator.hasNext();) {
+                long pos = iterator.nextLong();
+                if (!visiblePositions.contains(pos)) continue;
+                int x = CoordinatePacker.unpackX(pos);
+                int y = CoordinatePacker.unpackY(pos);
+                int z = CoordinatePacker.unpackZ(pos);
+                tessellator.setTranslation(x, y, z);
+                for (ForgeDirection side : ForgeDirection.VALID_DIRECTIONS) {
+                    long neighbor = CoordinatePacker.pack(x + side.offsetX, y + side.offsetY, z + side.offsetZ);
+                    if (!positions.contains(neighbor) || !visiblePositions.contains(neighbor)) {
+                        renderBlockOverlaySide(tessellator, side);
+                    }
+                }
+            }
+        } finally {
+            try {
+                tessellator.draw();
+            } finally {
+                tessellator.setTranslation(0, 0, 0);
+            }
+        }
     }
 
     public static void renderBlockOverlaySide(Tessellator tessellator, ForgeDirection side) {

@@ -26,9 +26,7 @@ import com.gtnewhorizon.structurelib.alignment.constructable.IConstructable;
 import com.gtnewhorizon.structurelib.alignment.constructable.IConstructableProvider;
 import com.gtnewhorizon.structurelib.alignment.constructable.ISurvivalConstructable;
 import com.gtnewhorizon.structurelib.structure.IStructureElement;
-import com.gtnewhorizon.structurelib.structure.ISurvivalBuildEnvironment;
 
-import blockrenderer6343.api.utils.CreativeItemSource;
 import blockrenderer6343.client.renderer.WorldSceneRenderer;
 import blockrenderer6343.client.utils.BRUtil;
 import blockrenderer6343.client.utils.EnumColor;
@@ -42,7 +40,9 @@ import gregtech.api.interfaces.tileentity.ITurnable;
 import gregtech.api.threads.RunnableMachineUpdate;
 import gregtech.api.util.GTStructureUtility;
 import gregtech.api.util.HatchElementBuilder;
+import gregtech.common.blocks.BlockCasingsAbstract;
 import gregtech.common.misc.GTStructureChannels;
+import gregtech.common.render.GTRendererCasing;
 import it.unimi.dsi.fastutil.ints.Int2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
@@ -126,36 +126,42 @@ public class GTGuiMultiblockHandler extends GuiMultiblockHandler {
     protected void onPostBlocksRendered(WorldSceneRenderer renderer) {
         if (!highlightHatch || hatchGroupPositions.isEmpty()) return;
         GL11.glPushMatrix();
-        GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_DEPTH_BUFFER_BIT);
-
-        GL11.glDisable(GL11.GL_DEPTH_TEST);
-        GL11.glDisable(GL11.GL_TEXTURE_2D);
-
-        for (Int2ObjectMap.Entry<LongSet> entry : hatchGroupPositions.int2ObjectEntrySet()) {
-            LongSet positions = entry.getValue();
-            if (positions.isEmpty()) continue;
-
-            int color = EnumColor.VALUES[entry.getIntKey() % EnumColor.VALUES.length].color;
-            for (long pos : positions) {
-                if (!renderer.renderedBlocks.contains(pos)) continue;
-                BRUtil.renderOverlay(positions, pos, color, 150);
+        GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_DEPTH_BUFFER_BIT | GL11.GL_COLOR_BUFFER_BIT);
+        try {
+            GL11.glDisable(GL11.GL_DEPTH_TEST);
+            GL11.glDepthMask(false);
+            GL11.glDisable(GL11.GL_TEXTURE_2D);
+            GL11.glEnable(GL11.GL_BLEND);
+            GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+            for (Int2ObjectMap.Entry<LongSet> entry : hatchGroupPositions.int2ObjectEntrySet()) {
+                LongSet positions = entry.getValue();
+                if (positions.isEmpty()) continue;
+                int color = EnumColor.VALUES[entry.getIntKey() % EnumColor.VALUES.length].color;
+                BRUtil.renderOverlays(positions, renderer.renderedBlocks, color, 150);
             }
-
+        } finally {
+            GL11.glPopAttrib();
+            GL11.glPopMatrix();
         }
-
-        GL11.glPopAttrib();
-        GL11.glPopMatrix();
     }
 
     @Override
     protected void placeMultiblock() {
+        renderer.setStaticBlockPredicate(
+                block -> block instanceof BlockCasingsAbstract && block.getRenderType() == GTRendererCasing.mRenderID);
         dotForPos.clear();
         hatchGroupPositions.clear();
 
-        if (RunnableMachineUpdate.isCurrentThreadEnabled()) {
-            RunnableMachineUpdate.setCurrentThreadEnabled(false);
+        boolean updatesEnabled = RunnableMachineUpdate.isCurrentThreadEnabled();
+        if (updatesEnabled) RunnableMachineUpdate.setCurrentThreadEnabled(false);
+        try {
+            placeControllerAndStructure();
+        } finally {
+            RunnableMachineUpdate.setCurrentThreadEnabled(updatesEnabled);
         }
+    }
 
+    private void placeControllerAndStructure() {
         IConstructable constructable = null;
         ItemStack copy = stackForm.copy();
         copy.getItem().onItemUse(
@@ -174,38 +180,31 @@ public class GTGuiMultiblockHandler extends GuiMultiblockHandler {
         ((ITurnable) tTileEntity).setFrontFacing(ForgeDirection.SOUTH);
         IMetaTileEntity mte = ((IGregTechTileEntity) tTileEntity).getMetaTileEntity();
 
-        setChannelTier(GTStructureChannels.HATCH.get(), 1, false);
-        if (mte instanceof INEIPreviewModifier modifier) {
-            modifier.onPreviewConstruct(getBuildTriggerStack());
-        }
+        String hatchChannel = GTStructureChannels.HATCH.get();
+        boolean addedHatchChannel = !ChannelDataAccessor.hasSubChannel(trigger, hatchChannel);
+        if (addedHatchChannel) ChannelDataAccessor.setChannelData(trigger, hatchChannel, 1);
+        try {
+            if (mte instanceof INEIPreviewModifier modifier) {
+                modifier.onPreviewConstruct(getBuildTriggerStack());
+            }
 
-        if (mte instanceof ISurvivalConstructable survivalConstructable) {
-            int iterations = 0;
-            do {
-                survivalConstructable.survivalConstruct(
-                        getBuildTriggerStack(),
-                        Integer.MAX_VALUE,
-                        ISurvivalBuildEnvironment.create(CreativeItemSource.instance, FAKE_PLAYER));
-                iterations++;
-            } while (renderer.world.hasChanged() && iterations < MAX_PLACE_ROUNDS);
-        } else if (tTileEntity instanceof IConstructableProvider iConstructableProvider) {
-            constructable = iConstructableProvider.getConstructable();
-        } else if (tTileEntity instanceof IConstructable iConstructable) {
-            constructable = iConstructable;
-        }
+            if (mte instanceof ISurvivalConstructable survivalConstructable) {
+                placeSurvivalPreview(survivalConstructable);
+            } else if (tTileEntity instanceof IConstructableProvider iConstructableProvider) {
+                constructable = iConstructableProvider.getConstructable();
+            } else if (tTileEntity instanceof IConstructable iConstructable) {
+                constructable = iConstructable;
+            }
 
-        if (constructable != null) {
-            constructable.construct(getBuildTriggerStack(), false);
-        }
+            if (constructable != null) {
+                constructable.construct(getBuildTriggerStack(), false);
+            }
 
-        if (mte instanceof INEIPreviewModifier modifier) {
-            modifier.onPreviewStructureComplete(getBuildTriggerStack());
-        }
-
-        ChannelDataAccessor.unsetChannelData(trigger, GTStructureChannels.HATCH.get());
-
-        if (!RunnableMachineUpdate.isCurrentThreadEnabled()) {
-            RunnableMachineUpdate.setCurrentThreadEnabled(true);
+            if (mte instanceof INEIPreviewModifier modifier) {
+                modifier.onPreviewStructureComplete(getBuildTriggerStack());
+            }
+        } finally {
+            if (addedHatchChannel) ChannelDataAccessor.unsetChannelData(trigger, hatchChannel);
         }
     }
 

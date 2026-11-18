@@ -20,3 +20,13 @@ nei.options.blockrenderer6343.auto_fill_pattern.false=No
 nei.options.blockrenderer6343.filter_hatch=Filter GT hatches in NEI Overlay
 nei.options.blockrenderer6343.filter_hatch.true=Yes
 nei.options.blockrenderer6343.filter_hatch.false=No
+
+blockrenderer6343.config=General
+blockrenderer6343.config.legacycontrols=Legacy preview controls
+blockrenderer6343.config.legacycontrols.tooltip=Restore legacy buttons and disable camera smoothing and local orbit picking.
+blockrenderer6343.config.sceneswapmousebuttons=GuideNH mouse buttons
+blockrenderer6343.config.sceneswapmousebuttons.tooltip=Enabled: left drag rotates and right drag pans. Disabled: left drag pans and right drag rotates. Middle drag zooms. Ignored in legacy mode.
+blockrenderer6343.config.autofillpattern=Auto fill fake pattern
+blockrenderer6343.config.autofillpattern.tooltip=Automatically fill the fake pattern output when exporting through NEI Overlay.
+blockrenderer6343.config.filterhatch=Filter GregTech hatches
+blockrenderer6343.config.filterhatch.tooltip=Exclude GregTech hatches and buses when exporting through NEI Overlay.

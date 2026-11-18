@@ -18,3 +18,13 @@ nei.options.blockrenderer6343.auto_fill_pattern.false=否
 nei.options.blockrenderer6343.filter_hatch=NEI Overlay导入时过滤GT仓室
 nei.options.blockrenderer6343.filter_hatch.true=是
 nei.options.blockrenderer6343.filter_hatch.false=否
+
+blockrenderer6343.config=常规
+blockrenderer6343.config.legacycontrols=旧版预览操作
+blockrenderer6343.config.legacycontrols.tooltip=恢复旧版鼠标操作，并关闭镜头平滑和局部旋转中心拾取。
+blockrenderer6343.config.sceneswapmousebuttons=GuideNH 鼠标按键
+blockrenderer6343.config.sceneswapmousebuttons.tooltip=开启：左键拖动旋转，右键拖动平移；关闭：左键拖动平移，右键拖动旋转。中键拖动缩放。旧版模式忽略此项。
+blockrenderer6343.config.autofillpattern=自动填入样板
+blockrenderer6343.config.autofillpattern.tooltip=通过 NEI Overlay 导出时，自动填入伪合成样板输出。
+blockrenderer6343.config.filterhatch=过滤 GregTech 仓室
+blockrenderer6343.config.filterhatch.tooltip=通过 NEI Overlay 导出时，排除 GregTech 仓室和总线。
